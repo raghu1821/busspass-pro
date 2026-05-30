@@ -49,13 +49,14 @@
         just instant access to seamless public transit across 50+ routes.
       </p>
 
-      <div class="hero-actions">
+      <div class="hero-actions animate-fade-up animate-delay-3">
         <a href="/register" class="btn btn-primary btn-lg">
           🚀 Get Started
         </a>
         <a href="/login" class="btn btn-ghost btn-lg">
           🔑 Login
         </a>
+        <button id="installAppBtn" class="btn btn-ghost btn-lg" style="display:none; background: rgba(79,142,247,0.15); border-color: var(--accent);">📱 Install App</button>
       </div>
 
       <!-- Trust pills -->
@@ -215,14 +216,44 @@
   </footer>
 
 </body>
-<script>
-  // Register PWA Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
-        .catch(err => console.warn('[PWA] SW registration failed:', err));
-    });
-  }
-</script>
+  <script>
+    // Register PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW registration failed:', err));
+      });
+    }
+
+    // PWA Install Button Logic
+    let deferredPrompt;
+    const installBtn = document.getElementById('installAppBtn');
+    
+    if (installBtn) {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'inline-block';
+      });
+
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            installBtn.style.display = 'none';
+          }
+          deferredPrompt = null;
+        } else {
+          // If on iOS or already installed, show a toast tip
+          if (window.showToast) {
+             showToast('📱 Installation', 'Tap the Share button and select "Add to Home Screen" to install the app!', 'info');
+          } else {
+             alert('To install on iPhone: Tap the Share button (square with arrow) at the bottom and select "Add to Home Screen".');
+          }
+        }
+      });
+    }
+  </script>
 </html>
