@@ -10,6 +10,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="BusPass Pro" />
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="/static/icons/icon-192.png" />
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
@@ -231,14 +233,23 @@
     const installBtn = document.getElementById('installAppBtn');
     
     if (installBtn) {
+      // Check if already installed
+      const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      
+      // If not installed, show the button to everyone (critical for iPhone users)
+      if (!isInstalled) {
+        installBtn.style.display = 'inline-block';
+      }
+
+      // Capture the automatic install prompt on Android/Chrome
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        installBtn.style.display = 'inline-block';
       });
 
       installBtn.addEventListener('click', async () => {
         if (deferredPrompt) {
+          // Android / Chrome: Show native install modal
           deferredPrompt.prompt();
           const { outcome } = await deferredPrompt.userChoice;
           if (outcome === 'accepted') {
@@ -246,7 +257,7 @@
           }
           deferredPrompt = null;
         } else {
-          // If on iOS or already installed, show a toast tip
+          // iPhone / iOS Safari: Native modal isn't supported, so tell them how to do it manually
           if (window.showToast) {
              showToast('📱 Installation', 'Tap the Share button and select "Add to Home Screen" to install the app!', 'info');
           } else {
