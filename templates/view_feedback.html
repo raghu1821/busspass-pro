@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Passenger Feedback — BusPass Pro Admin</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .feedback-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .feedback-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .feedback-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255,255,255,0.18);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .feedback-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .fb-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--gradient-btn);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .fb-name { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
+    .fb-date { font-size: 0.75rem; color: var(--text-muted); }
+    .fb-message {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      border-left: 3px solid var(--glass-border);
+      padding-left: 12px;
+    }
+    .page-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .count-badge {
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: #fbbf24;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  {% include 'admin_navbar.html' %}
+
+  <div class="page-wrapper">
+
+    <div class="page-header animate-fade-up">
+      <div class="page-title">💬 Passenger Feedback</div>
+      <div class="page-subtitle">Messages submitted by passengers</div>
+    </div>
+
+    <div class="page-top-row animate-fade-up animate-delay-1">
+      <h3 style="font-size:1rem; font-weight:700;">
+        All Feedback
+        {% if feedbacks %}
+        <span class="count-badge">{{ feedbacks | length }} message{{ 's' if feedbacks | length != 1 }}</span>
+        {% endif %}
+      </h3>
+    </div>
+
+    {% if feedbacks %}
+    <div class="feedback-grid">
+      {% for fb in feedbacks %}
+      <div class="feedback-card animate-fade-up" style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+        <div class="feedback-top">
+          <div class="fb-avatar">{{ fb.passenger_name[0] | upper }}</div>
+          <div>
+            <div class="fb-name">👤 {{ fb.passenger_name }}</div>
+            <div class="fb-date">
+              {% if fb.submitted_at %}
+                🕐 {{ fb.submitted_at }}
+              {% else %}
+                🕐 Recently submitted
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="fb-message">
+          {{ fb.message }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="glass-card animate-fade-up animate-delay-2" style="text-align:center; padding:4rem;">
+      <div style="font-size:4rem; opacity:0.25; margin-bottom:1rem;">💬</div>
+      <h3 style="margin-bottom:8px;">No Feedback Yet</h3>
+      <p style="color:var(--text-muted);">No feedback has been submitted by passengers yet.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

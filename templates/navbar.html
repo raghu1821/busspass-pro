@@ -1,0 +1,43 @@
+<!-- User navigation bar -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <span class="bus-icon">🚌</span>
+    BusPass Pro
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/dashboard">📊 Dashboard</a></li>
+    <li><a href="/view_pass">🎫 My Pass</a></li>
+    <li><a href="/apply_pass">📝 Apply</a></li>
+    <li><a href="/profile">👤 Profile</a></li>
+    <li><a href="/feedback">💬 Feedback</a></li>
+    <li><a href="/logout" class="nav-logout">🚪 Logout</a></li>
+  </ul>
+
+  <div style="display:flex; align-items:center; gap:10px;">
+    <!-- Theme toggle -->
+    <span class="theme-icon" id="themeIcon">🌙</span>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" aria-label="Toggle theme"></button>
+
+    <!-- Hamburger (mobile only) -->
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile nav drawer -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="/">🏠 Home</a>
+  <a href="/dashboard">📊 Dashboard</a>
+  <a href="/view_pass">🎫 My Pass</a>
+  <a href="/apply_pass">📝 Apply</a>
+  <a href="/profile">👤 Profile</a>
+  <a href="/feedback">💬 Feedback</a>
+  <a href="/logout" class="nav-logout">🚪 Logout</a>
+</div>
+
+<!-- Global toast + theme script -->
+<script src="/static/toast.js"></script>
+<script src="/static/theme.js"></script>

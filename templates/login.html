@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .auth-wrapper { position: relative; overflow: hidden; }
+    .auth-orb {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+      filter: blur(80px); opacity: 0.15;
+    }
+    .auth-orb-1 { width: 400px; height: 400px; background: var(--accent);    top: -100px; left: -100px; }
+    .auth-orb-2 { width: 300px; height: 300px; background: var(--accent-2);  bottom: -50px; right: -50px; }
+    .auth-card  { position: relative; z-index: 1; }
+    .divider    { display: flex; align-items: center; gap: 12px; margin: 1.2rem 0; }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--glass-border);
+    }
+    .divider span { color: var(--text-muted); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+  <div class="auth-orb auth-orb-1"></div>
+  <div class="auth-orb auth-orb-2"></div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card animate-fade-up">
+      <div class="auth-logo">
+        <div class="logo-icon">🚌</div>
+        <h1>Welcome Back</h1>
+        <p>Sign in to your BusPass Pro account</p>
+      </div>
+
+      <form method="POST" id="loginForm">
+        <div class="form-group">
+          <label class="form-label">📧 Email Address</label>
+          <input type="email" name="email" class="form-control" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">🔐 Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Enter your password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">
+          🔑 Sign In
+        </button>
+      </form>
+
+      <div class="divider"><span>OR</span></div>
+
+      <div class="text-center" style="color: var(--text-secondary); font-size:0.9rem;">
+        Don't have an account?
+        <a href="/register" style="color: var(--accent); font-weight:600; margin-left:4px;">
+          Create one →
+        </a>
+      </div>
+
+      <div class="text-center" style="margin-top:1rem;">
+        <a href="/admin_login" style="color: var(--text-muted); font-size:0.8rem;">
+          🛡️ Admin Login
+        </a>
+      </div>
+    </div>
+  </div>
+  <script src="/static/toast.js"></script>
+  <script src="/static/theme.js"></script>
+</body>
+</html>

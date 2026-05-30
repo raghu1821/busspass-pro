@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bus Pass — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .pass-card {
+      max-width: 720px; margin: 0 auto;
+      background: linear-gradient(135deg, #1a3a6e 0%, #2563eb 40%, #7c3aed 100%);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      box-shadow: 0 0 60px rgba(79,142,247,0.35), var(--shadow-lg);
+      position: relative; overflow: hidden;
+    }
+    .pass-card::before {
+      content:''; position:absolute; top:-80px; right:-60px;
+      width:300px; height:300px; background:rgba(255,255,255,0.06); border-radius:50%;
+    }
+    .pass-card::after {
+      content:''; position:absolute; bottom:-60px; left:-40px;
+      width:200px; height:200px; background:rgba(255,255,255,0.04); border-radius:50%;
+    }
+    .pass-top {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1.5rem; position:relative; z-index:1;
+    }
+    .pass-brand { display:flex; align-items:center; gap:8px; }
+    .pass-brand-icon { font-size:1.6rem; }
+    .pass-brand-name { font-size:0.75rem; font-weight:700; letter-spacing:2px;
+      text-transform:uppercase; color:rgba(255,255,255,0.8); }
+    .pass-body-row {
+      display:flex; gap:1.5rem; align-items:flex-start;
+      position:relative; z-index:1; flex-wrap:wrap;
+    }
+    .pass-photo-wrap { flex-shrink:0; }
+    .pass-photo {
+      width:110px; height:110px; border-radius:var(--radius-md);
+      border:3px solid rgba(255,255,255,0.35); object-fit:cover;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .pass-info-wrap { flex:1; min-width:180px; }
+    .pass-name-big { font-size:1.4rem; font-weight:800; color:#fff; margin-bottom:1rem; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+    .detail-item { display:flex; flex-direction:column; }
+    .detail-lbl {
+      font-size:0.65rem; font-weight:700; letter-spacing:1px;
+      text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:2px;
+    }
+    .detail-val { font-size:0.95rem; font-weight:700; color:#fff; }
+    .pass-qr-area {
+      display:flex; flex-direction:column; align-items:center;
+      position:relative; z-index:1; flex-shrink:0;
+    }
+    .pass-qr-img {
+      background:#fff; padding:8px; border-radius:10px;
+      width:130px; height:130px; object-fit:contain;
+    }
+    .pass-qr-lbl {
+      font-size:0.65rem; color:rgba(255,255,255,0.55); margin-top:6px; letter-spacing:0.5px;
+    }
+    .pass-footer {
+      margin-top:1.5rem; padding-top:1.2rem;
+      border-top:1px solid rgba(255,255,255,0.15);
+      display:flex; gap:10px; position:relative; z-index:1; flex-wrap:wrap;
+    }
+    .status-active  { background:rgba(16,185,129,0.25); color:#6ee7b7; border:1px solid rgba(16,185,129,0.4); }
+    .status-expired { background:rgba(100,116,139,0.25); color:#94a3b8; border:1px solid rgba(100,116,139,0.4); }
+    .pass-status-badge {
+      padding:5px 12px; border-radius:20px; font-size:0.75rem; font-weight:700;
+    }
+  </style>
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <div class="page-wrapper">
+    <div class="page-header animate-fade-up">
+      <div class="page-title">🎫 My Digital Pass</div>
+      <div class="page-subtitle">Your current active bus pass</div>
+    </div>
+
+    {% if pass_data %}
+
+    <div class="pass-card animate-fade-up animate-delay-1">
+
+      <!-- Top Row -->
+      <div class="pass-top">
+        <div class="pass-brand">
+          <span class="pass-brand-icon">🚌</span>
+          <span class="pass-brand-name">BusPass Pro</span>
+        </div>
+        <span class="pass-status-badge {% if pass_data.status == 'Active' %}status-active{% else %}status-expired{% endif %}">
+          {% if pass_data.status == 'Active' %}✅ Active{% else %}⏰ {{ pass_data.status }}{% endif %}
+        </span>
+      </div>
+
+      <!-- Body -->
+      <div class="pass-body-row">
+        <!-- Photo -->
+        <div class="pass-photo-wrap">
+          <img
+            src="/static/uploads/{{ pass_data.photo }}"
+            class="pass-photo"
+            alt="Passenger Photo"
+            onerror="this.src='https://via.placeholder.com/110x110?text=Photo'"
+          />
+        </div>
+
+        <!-- Info -->
+        <div class="pass-info-wrap">
+          <div class="pass-name-big">{{ pass_data.passenger_name }}</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-lbl">Pass ID</span>
+              <span class="detail-val">#{{ pass_data.pass_id }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-lbl">Pass Type</span>
+              <span class="detail-val">{{ pass_data.pass_type }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-lbl">Valid Until</span>
+              <span class="detail-val">{{ pass_data.valid_until }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-lbl">Status</span>
+              <span class="detail-val">{{ pass_data.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="pass-qr-area">
+          <img
+            src="/static/qrcodes/pass_{{ pass_data.pass_id }}.png"
+            class="pass-qr-img"
+            alt="QR Code"
+            onerror="this.style.display='none'"
+          />
+          <span class="pass-qr-lbl">SCAN TO VERIFY</span>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="pass-footer">
+        <button
+          class="btn btn-ghost btn-sm"
+          id="downloadBtn"
+          onclick="downloadFile('/download_pass/{{ pass_data.pass_id }}', this)">
+          📄 Download PDF
+        </button>
+        <button
+          class="btn btn-ghost btn-sm"
+          id="qrBtn"
+          onclick="ajaxAction('/generate_qr/{{ pass_data.pass_id }}', {
+            btn: this,
+            loadingText: 'Generating…',
+            successTitle: 'QR Refreshed!',
+            successMsg: 'Your QR code has been regenerated.',
+            reload: true,
+            reloadDelay: 1500
+          })">
+          🔄 Refresh QR
+        </button>
+        <a href="/apply_pass" class="btn btn-ghost btn-sm">📝 Renew Pass</a>
+      </div>
+
+    </div>
+
+    {% else %}
+
+    <div class="glass-card animate-fade-up animate-delay-1" style="padding:3rem; text-align:center; max-width:480px; margin:0 auto;">
+      <div style="font-size:4rem; margin-bottom:1rem;">🎫</div>
+      <h2 style="margin-bottom:8px;">No Active Pass Found</h2>
+      <p style="margin-bottom:2rem; color:var(--text-secondary);">
+        You don't have an active bus pass yet. Apply for one and get approved to access your digital pass.
+      </p>
+      <a href="/apply_pass" class="btn btn-primary btn-lg">📝 Apply for Pass</a>
+    </div>
+
+    {% endif %}
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Users — BusPass Pro Admin</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .page-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--glass-border);
+      display: block;
+    }
+    .user-avatar-fallback {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--gradient-btn);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: #fff; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .user-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .count-badge {
+      background: rgba(79,142,247,0.15);
+      border: 1px solid rgba(79,142,247,0.3);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  {% include 'admin_navbar.html' %}
+
+  <div class="page-wrapper">
+
+    <div class="page-header animate-fade-up">
+      <div class="page-title">👥 Manage Users</div>
+      <div class="page-subtitle">View and manage all registered passengers</div>
+    </div>
+
+    <div class="page-top-row animate-fade-up animate-delay-1">
+      <h3 style="font-size:1rem; font-weight:700;">
+        All Registered Users
+        {% if users %}
+        <span class="count-badge">{{ users | length }} total</span>
+        {% endif %}
+      </h3>
+    </div>
+
+    {% if users %}
+    <div class="table-container animate-fade-up animate-delay-2">
+      <table>
+        <thead>
+          <tr>
+            <th>#ID</th>
+            <th>Photo</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Category</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td style="color:var(--text-muted); font-size:0.82rem;">#{{ user.passenger_id }}</td>
+            <td>
+              <img
+                src="/static/uploads/{{ user.photo }}"
+                class="user-avatar"
+                alt="{{ user.full_name }}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              />
+              <div class="user-avatar-fallback" style="display:none;">
+                {{ user.full_name[0] | upper }}
+              </div>
+            </td>
+            <td>
+              <span style="font-weight:600;">{{ user.full_name }}</span>
+            </td>
+            <td style="color:var(--text-secondary);">{{ user.email }}</td>
+            <td style="color:var(--text-secondary);">{{ user.phone }}</td>
+            <td>
+              <span class="badge badge-info">{{ user.category }}</span>
+            </td>
+            <td>
+              <button
+                class="btn btn-danger btn-sm"
+                onclick="ajaxAction('/delete_user/{{ user.passenger_id }}', {
+                  btn: this,
+                  loadingText: 'Deleting…',
+                  successTitle: '🗑️ Deleted',
+                  successMsg: '{{ user.full_name }} has been removed.',
+                  reload: true,
+                  reloadDelay: 1200
+                })">
+                🗑️ Delete
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="glass-card animate-fade-up animate-delay-2" style="text-align:center; padding:3.5rem;">
+      <div style="font-size:3.5rem; opacity:0.3; margin-bottom:1rem;">👥</div>
+      <h3 style="margin-bottom:8px;">No Users Registered</h3>
+      <p style="color:var(--text-muted);">No passengers have registered in the system yet.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

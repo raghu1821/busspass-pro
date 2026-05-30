@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    @media(max-width:900px){ .stats-row { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:540px){ .stats-row { grid-template-columns: 1fr; } }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .search-row h3 { font-size: 1rem; font-weight: 700; }
+    .search-form { display: flex; gap: 8px; }
+    .search-form .form-control { width: 240px; }
+
+    .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+    .text-muted-sm { color: var(--text-muted); font-size: 0.82rem; font-style: italic; }
+  </style>
+</head>
+<body>
+  {% include 'admin_navbar.html' %}
+
+  <div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="page-header animate-fade-up">
+      <div class="page-title">📋 Applications</div>
+      <div class="page-subtitle">Review and manage all bus pass applications</div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stats-row">
+      <div class="stat-card blue animate-fade-up animate-delay-1">
+        <div class="stat-icon">📋</div>
+        <div class="stat-value">{{ total_apps }}</div>
+        <div class="stat-label">Total Applications</div>
+      </div>
+      <div class="stat-card green animate-fade-up animate-delay-2">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">{{ approved }}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+      <div class="stat-card orange animate-fade-up animate-delay-3">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value">{{ pending }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card purple animate-fade-up animate-delay-4">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">{{ users }}</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+    </div>
+
+    <!-- Search + Table -->
+    <div class="search-row animate-fade-up animate-delay-2">
+      <h3>All Applications</h3>
+      <form method="GET" class="search-form">
+        <input
+          type="text" name="search" class="form-control"
+          placeholder="🔍 Search passenger..."
+          value="{{ request.args.get('search', '') }}"
+        />
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        {% if request.args.get('search') %}
+        <a href="/admin" class="btn btn-ghost btn-sm">✕ Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    {% if applications %}
+    <div class="table-container animate-fade-up animate-delay-3">
+      <table>
+        <thead>
+          <tr>
+            <th>#ID</th>
+            <th>Passenger</th>
+            <th>Route</th>
+            <th>Pass Type</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+          <tr>
+            <td style="color:var(--text-muted); font-size:0.82rem;">#{{ app.application_id }}</td>
+            <td>
+              <span style="font-weight:600;">{{ app.passenger_name }}</span>
+            </td>
+            <td>
+              <span style="color:var(--text-secondary);">{{ app.source }}</span>
+              <span style="color:var(--accent); margin:0 4px;">→</span>
+              <span>{{ app.destination }}</span>
+            </td>
+            <td>{{ app.pass_type }}</td>
+            <td>{{ app.duration_months }} mo.</td>
+            <td>
+              {% if app.status == 'Pending' %}
+                <span class="badge badge-pending">⏳ Pending</span>
+              {% elif app.status == 'Approved' %}
+                <span class="badge badge-approved">✅ Approved</span>
+              {% elif app.status == 'Rejected' %}
+                <span class="badge badge-rejected">❌ Rejected</span>
+              {% else %}
+                <span class="badge">{{ app.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions-cell">
+                {% if app.status == 'Pending' %}
+                  <button class="btn btn-success btn-sm"
+                    onclick="ajaxAction('/approve/{{ app.application_id }}', {
+                      btn: this,
+                      loadingText: 'Approving…',
+                      successTitle: '✅ Approved!',
+                      successMsg: '{{ app.passenger_name }}\'s application has been approved.',
+                      reload: true,
+                      reloadDelay: 1500
+                    })">
+                    ✅ Approve
+                  </button>
+                  <button class="btn btn-danger btn-sm"
+                    onclick="ajaxAction('/reject/{{ app.application_id }}', {
+                      btn: this,
+                      loadingText: 'Rejecting…',
+                      successTitle: '❌ Rejected',
+                      successMsg: '{{ app.passenger_name }}\'s application has been rejected.',
+                      reload: true,
+                      reloadDelay: 1500
+                    })">
+                    ❌ Reject
+                  </button>
+                {% else %}
+                  <span class="text-muted-sm">Processed</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="glass-card animate-fade-up animate-delay-3" style="text-align:center; padding:3.5rem;">
+      <div style="font-size:3.5rem; opacity:0.3; margin-bottom:1rem;">📋</div>
+      <h3 style="margin-bottom:8px;">No Applications Found</h3>
+      <p style="color:var(--text-muted);">
+        {% if request.args.get('search') %}
+          No results for "{{ request.args.get('search') }}".
+          <a href="/admin">Clear search</a>
+        {% else %}
+          No applications have been submitted yet.
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

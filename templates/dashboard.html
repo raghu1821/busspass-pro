@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(124,58,237,0.15));
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem 2rem;
+      margin-bottom: 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .welcome-text h2 { font-size: 1.6rem; margin-bottom: 4px; }
+    .welcome-text p  { color: var(--text-secondary); font-size: 0.9rem; }
+    .action-card .action-icon.blue   { background: rgba(79,142,247,0.15);  }
+    .action-card .action-icon.purple { background: rgba(124,58,237,0.15); }
+    .action-card .action-icon.teal   { background: rgba(6,182,212,0.15);  }
+    .action-card .action-icon.orange { background: rgba(245,158,11,0.15); }
+    .section-title-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .section-heading { font-size: 1.1rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <div class="page-wrapper">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner animate-fade-up">
+      <div class="welcome-text">
+        <h2>Welcome back, {{ user }}! 👋</h2>
+        <p>Manage your bus pass, view your applications and update your profile.</p>
+      </div>
+      <div style="font-size:3rem; opacity:0.6;">🚌</div>
+    </div>
+
+    <!-- Quick Action Cards -->
+    <div class="page-header animate-fade-up animate-delay-1">
+      <div class="page-title">Quick Actions</div>
+      <div class="page-subtitle">Everything you need at a glance</div>
+    </div>
+
+    <div class="action-grid animate-fade-up animate-delay-2">
+
+      <a href="/apply_pass" class="action-card">
+        <div class="action-icon blue">📝</div>
+        <h3>Apply for Pass</h3>
+        <p>Submit a new bus pass application</p>
+      </a>
+
+      <a href="/view_pass" class="action-card">
+        <div class="action-icon purple">🎫</div>
+        <h3>View My Pass</h3>
+        <p>See your digital bus pass & QR code</p>
+      </a>
+
+      <a href="/profile" class="action-card">
+        <div class="action-icon teal">👤</div>
+        <h3>My Profile</h3>
+        <p>View and edit your account details</p>
+      </a>
+
+      <a href="/feedback" class="action-card">
+        <div class="action-icon orange">💬</div>
+        <h3>Send Feedback</h3>
+        <p>Share your experience with us</p>
+      </a>
+
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="section-title-row animate-fade-up animate-delay-3" style="margin-top: 2.5rem;">
+      <span class="section-heading">📋 My Applications</span>
+      <a href="/apply_pass" class="btn btn-ghost btn-sm">+ New Application</a>
+    </div>
+
+    {% if applications %}
+    <div class="table-container animate-fade-up animate-delay-4">
+      <table>
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Pass Type</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+          <tr>
+            <td>
+              <span style="color:var(--text-secondary);">{{ app.source }}</span>
+              <span style="margin:0 6px;color:var(--accent);">→</span>
+              <span>{{ app.destination }}</span>
+            </td>
+            <td>{{ app.pass_type }}</td>
+            <td>{{ app.duration_months }} month(s)</td>
+            <td>
+              {% if app.status == 'Pending' %}
+                <span class="badge badge-pending">⏳ Pending</span>
+              {% elif app.status == 'Approved' %}
+                <span class="badge badge-approved">✅ Approved</span>
+              {% elif app.status == 'Rejected' %}
+                <span class="badge badge-rejected">❌ Rejected</span>
+              {% else %}
+                <span class="badge">{{ app.status }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state glass-card animate-fade-up animate-delay-4">
+      <div class="empty-icon">📋</div>
+      <h3 style="margin-bottom:8px; color: var(--text-primary);">No Applications Yet</h3>
+      <p style="margin-bottom:1.5rem;">You haven't applied for a bus pass yet. Get started now!</p>
+      <a href="/apply_pass" class="btn btn-primary">📝 Apply Now</a>
+    </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

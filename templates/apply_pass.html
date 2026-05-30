@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apply for Bus Pass — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .apply-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media(max-width:900px){ .apply-layout { grid-template-columns: 1fr; } }
+    .apply-form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+    }
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+    }
+    .steps-list { list-style:none; padding:0; margin:0; }
+    .steps-list li {
+      display:flex; gap:12px; align-items:flex-start;
+      padding:12px 0; border-bottom:1px solid var(--glass-border);
+    }
+    .steps-list li:last-child { border-bottom:none; }
+    .step-num {
+      width:28px; height:28px; border-radius:50%;
+      background: var(--gradient-btn);
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.75rem; font-weight:800; color:#fff; flex-shrink:0;
+    }
+    .step-text strong { display:block; font-size:0.9rem; margin-bottom:2px; color:var(--text-primary); }
+    .step-text span { font-size:0.8rem; color:var(--text-secondary); }
+    .route-option { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <div class="page-wrapper">
+    <div class="page-header animate-fade-up">
+      <div class="page-title">📝 Apply for Bus Pass</div>
+      <div class="page-subtitle">Fill out the form below to submit your application</div>
+    </div>
+
+    <div class="apply-layout">
+
+      <!-- Form -->
+      <div class="apply-form-card animate-fade-up animate-delay-1">
+        <h3 style="margin-bottom:1.5rem; font-size:1.1rem;">Application Details</h3>
+
+        <form method="POST">
+
+          <div class="form-group">
+            <label class="form-label">🗺️ Select Route</label>
+            <select name="route_id" class="form-control" required>
+              <option value="" disabled selected>Choose your route...</option>
+              {% for route in routes %}
+              <option value="{{ route.route_id }}" class="route-option">
+                {{ route.source }} → {{ route.destination }} (₹{{ route.fare }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🎫 Pass Type</label>
+            <select name="pass_type" class="form-control" required>
+              <option value="" disabled selected>Choose pass type...</option>
+              <option value="Daily">🌅 Daily Pass</option>
+              <option value="Monthly">📅 Monthly Pass</option>
+              <option value="Yearly">📆 Yearly Pass</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">⏱️ Duration (Months)</label>
+            <input
+              type="number" name="duration_months" class="form-control"
+              placeholder="e.g. 3" min="1" max="12" required
+            />
+            <span style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; display:block;">
+              Enter number of months (1-12)
+            </span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">
+            🚀 Submit Application
+          </button>
+        </form>
+      </div>
+
+      <!-- Info Side Panel -->
+      <div class="animate-fade-up animate-delay-2">
+        <div class="info-card" style="margin-bottom:1rem;">
+          <h4 style="margin-bottom:1rem; font-size:0.95rem;">📋 How it works</h4>
+          <ul class="steps-list">
+            <li>
+              <div class="step-num">1</div>
+              <div class="step-text">
+                <strong>Fill the Form</strong>
+                <span>Select your route, pass type, and duration</span>
+              </div>
+            </li>
+            <li>
+              <div class="step-num">2</div>
+              <div class="step-text">
+                <strong>Admin Review</strong>
+                <span>Our admin will review and approve within 24h</span>
+              </div>
+            </li>
+            <li>
+              <div class="step-num">3</div>
+              <div class="step-text">
+                <strong>Get Your Pass</strong>
+                <span>Download PDF or use QR code at the gate</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="info-card" style="border-color:rgba(79,142,247,0.3); background:rgba(79,142,247,0.06);">
+          <div style="font-size:1.3rem; margin-bottom:8px;">ℹ️</div>
+          <p style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
+            You can only have <strong style="color:var(--accent);">one pending application</strong> at a time.
+            If you have an active pass, renew it after it expires.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

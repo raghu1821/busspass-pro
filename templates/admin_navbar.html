@@ -1,0 +1,38 @@
+<!-- Admin navigation bar -->
+<nav class="navbar">
+  <a href="/admin" class="navbar-brand">
+    <span class="bus-icon">🛡️</span>
+    BusPass Admin
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="/admin">📋 Applications</a></li>
+    <li><a href="/stats">📈 Statistics</a></li>
+    <li><a href="/manage_users">👥 Users</a></li>
+    <li><a href="/manage_routes">🗺️ Routes</a></li>
+    <li><a href="/view_feedback">💬 Feedback</a></li>
+    <li><a href="/logout" class="nav-logout">🚪 Logout</a></li>
+  </ul>
+
+  <div style="display:flex; align-items:center; gap:10px;">
+    <span class="theme-icon" id="themeIcon">🌙</span>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" aria-label="Toggle theme"></button>
+
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile nav drawer -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="/admin">📋 Applications</a>
+  <a href="/stats">📈 Statistics</a>
+  <a href="/manage_users">👥 Users</a>
+  <a href="/manage_routes">🗺️ Routes</a>
+  <a href="/view_feedback">💬 Feedback</a>
+  <a href="/logout" class="nav-logout">🚪 Logout</a>
+</div>
+
+<script src="/static/toast.js"></script>
+<script src="/static/theme.js"></script>
