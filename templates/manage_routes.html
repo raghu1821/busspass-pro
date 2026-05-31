@@ -122,23 +122,43 @@
                 <th>#ID</th>
                 <th>Source</th>
                 <th>Destination</th>
-                <th>Fare</th>
+                <th>Fare (₹)</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for route in routes %}
               <tr>
                 <td style="color:var(--text-muted); font-size:0.82rem;">#{{ route.route_id }}</td>
-                <td>
-                  <span style="font-weight:600;">{{ route.source }}</span>
-                </td>
+                <td><span style="font-weight:600;">{{ route.source }}</span></td>
                 <td>
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span style="color:var(--accent);">→</span>
                     <span>{{ route.destination }}</span>
                   </div>
                 </td>
-                <td class="fare-cell">₹{{ route.fare }}</td>
+                <td class="fare-cell">
+                  {% if route.fare %}
+                    ₹{{ route.fare }}
+                  {% else %}
+                    <span style="color:var(--danger);font-size:.8rem;">Not set</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                    <!-- Inline fare edit -->
+                    <form method="POST" action="/update_route_fare/{{ route.route_id }}" style="display:flex;gap:.35rem;">
+                      <input type="number" name="fare" placeholder="₹ fare" min="1"
+                        value="{{ route.fare or '' }}"
+                        style="width:80px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-size:.8rem;"/>
+                      <button type="submit" class="btn btn-success btn-sm">✓</button>
+                    </form>
+                    <!-- Delete route -->
+                    <a href="/delete_route/{{ route.route_id }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Delete this route?')">🗑️</a>
+                  </div>
+                </td>
               </tr>
               {% endfor %}
             </tbody>

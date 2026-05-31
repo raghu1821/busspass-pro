@@ -1025,6 +1025,25 @@ def manage_routes():
     )
 
 
+@app.route("/delete_route/<int:id>")
+def delete_route(id):
+    if "admin" not in session:
+        return redirect("/admin_login")
+    cursor = get_db().cursor()
+    cursor.execute("DELETE FROM Route WHERE route_id=%s", (id,))
+    get_db().commit()
+    return redirect("/manage_routes?msg=Route+deleted+successfully.&type=success")
+
+@app.route("/update_route_fare/<int:id>", methods=["POST"])
+def update_route_fare(id):
+    if "admin" not in session:
+        return redirect("/admin_login")
+    fare = request.form.get("fare")
+    cursor = get_db().cursor()
+    cursor.execute("UPDATE Route SET fare=%s WHERE route_id=%s", (fare, id))
+    get_db().commit()
+    return redirect("/manage_routes?msg=Fare+updated+successfully!&type=success")
+
 # ── Feature 1: Forgot Password / OTP ────────────────────────────────────────
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
