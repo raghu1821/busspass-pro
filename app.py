@@ -7,6 +7,7 @@ from reportlab.pdfgen import canvas
 import os
 import random
 import string
+import threading
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -1045,28 +1046,38 @@ def forgot_password():
         session["otp_email"]   = email
         session["otp_expires"] = expires.isoformat()
 
-        # Send real email
-        try:
+        # Send real email in background thread so request doesn't block/timeout
+        mail_user = os.getenv("MAIL_USER", "")
+        if mail_user:
+            def send_async(app_ctx, message):
+                with app_ctx:
+                    try:
+                        mail.send(message)
+                    except Exception:
+                        pass
+
             msg = Message(
-                subject="🔐 BusPass Pro — Your Password Reset OTP",
+                subject="BusPass Pro - Your Password Reset OTP",
                 recipients=[email]
             )
             msg.html = f"""
             <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
-              <h2 style="color:#4f8ef7;">🚌 BusPass Pro</h2>
+              <h2 style="color:#4f8ef7;">BusPass Pro</h2>
               <h3>Password Reset Request</h3>
               <p>Use the OTP below to reset your password. It expires in <strong>10 minutes</strong>.</p>
               <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:24px;margin:24px 0;">
                 <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#4f8ef7;">{otp}</span>
               </div>
-              <p style="color:#8b949e;font-size:13px;">If you didn't request this, ignore this email. Your password won't change.</p>
+              <p style="color:#8b949e;font-size:13px;">If you didn't request this, ignore this email.</p>
             </div>"""
-            mail.send(msg)
-        except Exception as e:
-            # If email fails (no credentials set), show OTP in toast for dev/demo
+
+            t = threading.Thread(target=send_async, args=(app.app_context(), msg), daemon=True)
+            t.start()
+            return redirect(f"/verify_otp?email={email}")
+        else:
+            # No mail configured — demo mode: show OTP on screen
             return redirect(f"/verify_otp?demo_otp={otp}&email={email}")
 
-        return redirect(f"/verify_otp?email={email}")
     return render_template("forgot_password.html")
 
 @app.route("/verify_otp", methods=["GET", "POST"])
