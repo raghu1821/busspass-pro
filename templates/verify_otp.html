@@ -26,8 +26,9 @@
 
       {% if demo_otp %}
       <div class="demo-otp-box">
-        📧 Email not configured — Your OTP is:
+        🔐 Your OTP Code:
         <strong>{{ demo_otp }}</strong>
+        <small style="display:block;margin-top:.35rem;color:var(--text-secondary);">Also check your email inbox & spam folder.</small>
       </div>
       {% else %}
       <div class="demo-otp-box" style="background:rgba(34,197,94,.08);border-color:var(--success);">

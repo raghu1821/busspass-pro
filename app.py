@@ -1046,7 +1046,8 @@ def forgot_password():
         session["otp_email"]   = email
         session["otp_expires"] = expires.isoformat()
 
-        # Send real email in background thread so request doesn't block/timeout
+        # Always show OTP on screen (reliable fallback)
+        # Also try to send email in background if configured
         mail_user = os.getenv("MAIL_USER", "")
         if mail_user:
             def send_async(app_ctx, message):
@@ -1064,19 +1065,16 @@ def forgot_password():
             <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
               <h2 style="color:#4f8ef7;">BusPass Pro</h2>
               <h3>Password Reset Request</h3>
-              <p>Use the OTP below to reset your password. It expires in <strong>10 minutes</strong>.</p>
+              <p>Your OTP is below. It expires in <strong>10 minutes</strong>.</p>
               <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:24px;margin:24px 0;">
                 <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#4f8ef7;">{otp}</span>
               </div>
-              <p style="color:#8b949e;font-size:13px;">If you didn't request this, ignore this email.</p>
             </div>"""
-
             t = threading.Thread(target=send_async, args=(app.app_context(), msg), daemon=True)
             t.start()
-            return redirect(f"/verify_otp?email={email}")
-        else:
-            # No mail configured — demo mode: show OTP on screen
-            return redirect(f"/verify_otp?demo_otp={otp}&email={email}")
+
+        # Always redirect with OTP visible on screen
+        return redirect(f"/verify_otp?demo_otp={otp}&email={email}")
 
     return render_template("forgot_password.html")
 
