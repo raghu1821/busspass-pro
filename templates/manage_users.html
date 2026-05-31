@@ -84,7 +84,7 @@
             <td style="color:var(--text-muted); font-size:0.82rem;">#{{ user.passenger_id }}</td>
             <td>
               <img
-                src="/static/uploads/{{ user.photo }}"
+                src="{{ user.photo }}"
                 class="user-avatar"
                 alt="{{ user.full_name }}"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"

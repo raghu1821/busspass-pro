@@ -151,7 +151,7 @@
         <!-- Photo -->
         <div class="pass-photo-wrap">
           <img
-            src="/static/uploads/{{ pass_data.photo }}"
+            src="{{ pass_data.photo }}"
             class="pass-photo"
             alt="Passenger Photo"
             onerror="this.src='https://ui-avatars.com/api/?name={{ pass_data.passenger_name }}&background=4f8ef7&color=fff&size=110'"
@@ -184,7 +184,7 @@
         <!-- QR Code -->
         <div class="pass-qr-area">
           <img
-            src="/static/qrcodes/pass_{{ pass_data.pass_id }}.png"
+            src="{{ pass_data.qr_code }}"
             class="pass-qr-img"
             alt="QR Code"
             onerror="this.style.display='none'"

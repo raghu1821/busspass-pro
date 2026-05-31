@@ -107,12 +107,9 @@
           <div class="profile-banner-area"></div>
 
           <div class="profile-avatar-section">
-            <img
-              src="/static/uploads/{{ data.photo }}"
-              class="profile-avatar-img"
-              alt="Profile Photo"
-              onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ data.full_name | urlencode }}&background=4f8ef7&color=fff&size=96';"
-            />
+            <div class="profile-avatar-wrapper">
+              <img src="{{ data.photo }}" class="profile-avatar" alt="User Avatar" onerror="this.src='https://ui-avatars.com/api/?name={{ data.full_name }}&background=4f8ef7&color=fff&size=100'" />
+            </div>
             <div class="profile-name">{{ data.full_name }}</div>
             <div class="profile-email">{{ data.email }}</div>
             <span class="badge badge-info">{{ data.category }}</span>

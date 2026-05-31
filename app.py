@@ -58,6 +58,16 @@ def get_db():
 
 print("Database helper ready")
 
+# ── Auto-Migrations (Ensure columns are LONGTEXT for Base64) ───────────────
+try:
+    _db = get_db()
+    _c = _db.cursor()
+    _c.execute("ALTER TABLE Passenger MODIFY COLUMN photo LONGTEXT")
+    _c.execute("ALTER TABLE Pass MODIFY COLUMN qr_code LONGTEXT")
+    _db.commit()
+    print("Database migrations applied successfully")
+except Exception as e:
+    print("Migration error (ignored if already applied):", e)
 # ── Error Handlers ───────────────────────────────────────────────────────────
 @app.errorhandler(404)
 def not_found(e):
@@ -237,19 +247,24 @@ def view_pass():
 
     pass_data = cursor.fetchone()
 
-    # Auto-regenerate QR if missing (Render ephemeral storage wipes files on deploy)
-    if pass_data:
-        qr_path = os.path.join(os.getcwd(), "static", "qrcodes", f"pass_{pass_data['pass_id']}.png")
+    # Auto-regenerate QR if missing (fallback for old passes with file paths)
+    if pass_data and pass_data.get('qr_code') and not pass_data['qr_code'].startswith('data:'):
+        qr_path = os.path.join(os.getcwd(), "static", "qrcodes", pass_data['qr_code'])
         if not os.path.exists(qr_path):
             base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
             qr_data_str = f"{base_url}/verify/{pass_data['pass_id']}"
-            import qrcode
+            import qrcode, io, base64
             qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
             qr.add_data(qr_data_str)
             qr.make(fit=True)
             img = qr.make_image(fill_color="#0d1117", back_color="white")
-            os.makedirs(os.path.dirname(qr_path), exist_ok=True)
-            img.save(qr_path)
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            qr_uri = f"data:image/png;base64,{b64_str}"
+            cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_data['pass_id']))
+            get_db().commit()
+            pass_data['qr_code'] = qr_uri
 
     # Check if they have an approved but unpaid application
     cursor.execute("""
@@ -533,7 +548,6 @@ def activate_pass(app_id):
         INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
         VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
     """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
-    db.commit()
     
     # Generate QR Code immediately for new pass
     cursor.execute("SELECT pass_id FROM Pass ORDER BY pass_id DESC LIMIT 1")
@@ -543,17 +557,18 @@ def activate_pass(app_id):
     base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
     qr_data = f"{base_url}/verify/{pass_id}"
     
+    import qrcode, io, base64
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="#0d1117", back_color="white")
     
-    folder_path = os.path.join(os.getcwd(), "static", "qrcodes")
-    os.makedirs(folder_path, exist_ok=True)
-    qr_file = f"pass_{pass_id}.png"
-    img.save(os.path.join(folder_path, qr_file))
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    qr_uri = f"data:image/png;base64,{b64_str}"
     
-    cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_file, pass_id))
+    cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_id))
     db.commit()
 
     return "OK"
@@ -749,15 +764,17 @@ def download_pass(pass_id):
         c.drawString(180, start_y - (i * 35), values[i])
 
     # Passenger Photo
-    photo_path = f"static/uploads/{pass_data.get('photo', '')}"
-    if os.path.exists(photo_path) and os.path.isfile(photo_path):
+    photo_data = pass_data.get('photo', '')
+    if photo_data and photo_data.startswith('data:image'):
         try:
-            # Draw standard square photo with border
+            import base64
+            img_data = base64.b64decode(photo_data.split(',')[1])
+            img_reader = ImageReader(io.BytesIO(img_data))
             photo_size = 130
             c.setStrokeColorRGB(0.8, 0.8, 0.8)
             c.setLineWidth(1)
             c.rect(W - 70 - photo_size, H - 380, photo_size, photo_size)
-            c.drawImage(photo_path, W - 70 - photo_size, H - 380, width=photo_size, height=photo_size, preserveAspectRatio=True)
+            c.drawImage(img_reader, W - 70 - photo_size, H - 380, width=photo_size, height=photo_size)
         except Exception:
             pass
 
@@ -770,10 +787,15 @@ def download_pass(pass_id):
     c.setLineWidth(1)
     c.line(70, H - 515, W - 70, H - 515)
 
-    qr_path = f"static/qrcodes/pass_{pass_id}.png"
-    if os.path.exists(qr_path):
-        qr_size = 160
-        c.drawImage(qr_path, 70, H - 700, width=qr_size, height=qr_size)
+    qr_uri = pass_data.get("qr_code", "")
+    if qr_uri and qr_uri.startswith('data:image'):
+        try:
+            import base64
+            qr_img_data = base64.b64decode(qr_uri.split(',')[1])
+            qr_reader = ImageReader(io.BytesIO(qr_img_data))
+            qr_size = 160
+            c.drawImage(qr_reader, 70, H - 700, width=qr_size, height=qr_size)
+        except: pass
         
         c.setFont("Helvetica-Bold", 12)
         c.setFillColorRGB(0.2, 0.2, 0.2)
@@ -924,53 +946,25 @@ def edit_profile():
 
         phone = request.form["phone"]
         address = request.form["address"]
-
         photo = request.files.get("photo")
 
-        if photo and photo.filename:
-            if not allowed_file(photo.filename):
-                return redirect("/profile?msg=Invalid+photo+format.+Only+images+allowed.&type=error")
+        query = "UPDATE Passenger SET phone=%s, address=%s"
+        values = [phone, address]
 
-            filename = secure_filename(photo.filename)
+        if photo and allowed_file(photo.filename):
+            import base64
+            photo_bytes = photo.read()
+            mime = photo.mimetype or "image/jpeg"
+            b64 = base64.b64encode(photo_bytes).decode('utf-8')
+            new_photo = f"data:{mime};base64,{b64}"
+            
+            query += ", photo=%s"
+            values.append(new_photo)
 
-            photo.save(
-                os.path.join(
-                    "static/uploads",
-                    filename
-                )
-            )
+        query += " WHERE full_name=%s"
+        values.append(session["user"])
 
-            query = """
-            UPDATE Passenger
-            SET phone=%s,
-                address=%s,
-                photo=%s
-            WHERE full_name=%s
-            """
-
-            values = (
-                phone,
-                address,
-                filename,
-                session["user"]
-            )
-
-        else:
-
-            query = """
-            UPDATE Passenger
-            SET phone=%s,
-                address=%s
-            WHERE full_name=%s
-            """
-
-            values = (
-                phone,
-                address,
-                session["user"]
-            )
-
-        cursor.execute(query, values)
+        cursor.execute(query, tuple(values))
         get_db().commit()
 
         return redirect("/profile")
