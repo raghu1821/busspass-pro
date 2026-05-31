@@ -63,7 +63,8 @@
         <div class="field-grid">
           <div class="form-group">
             <label class="form-label">📞 Phone Number</label>
-            <input type="text" name="phone" class="form-control" placeholder="+91 99999 99999" required />
+            <input type="tel" name="phone" id="phone" class="form-control" required />
+            <div id="phone-error" style="color:var(--danger); font-size:0.75rem; margin-top:4px; display:none;">Invalid phone number</div>
           </div>
           <div class="form-group">
             <label class="form-label">📷 Profile Photo</label>
@@ -109,6 +110,58 @@
     </div>
   </div>
   <script src="/static/toast.js"></script>
-  <script src="/static/theme.js"></script>
+  <script src="/static/toast.js"></script>
+  
+  <!-- intl-tel-input library -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/css/intlTelInput.css">
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/js/intlTelInput.min.js"></script>
+  
+  <style>
+    /* Fix intl-tel-input styling inside our dark theme */
+    .iti { width: 100%; }
+    .iti__country-list { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); }
+    .iti__country-list .iti__country.iti__highlight { background: rgba(255,255,255,0.05); }
+    .iti__search-input { background: #0f172a; color: white; border: 1px solid rgba(255,255,255,0.1); }
+    .iti__flag-container { padding: 2px; }
+  </style>
+
+  <script>
+    const phoneInput = document.querySelector("#phone");
+    const errorMsg = document.querySelector("#phone-error");
+    const form = document.querySelector("form");
+
+    // Initialize the library
+    const iti = window.intlTelInput(phoneInput, {
+      initialCountry: "auto",
+      geoIpLookup: callback => {
+        fetch("https://ipapi.co/json")
+          .then(res => res.json())
+          .then(data => callback(data.country_code))
+          .catch(() => callback("in")); // Default to India if lookup fails
+      },
+      utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/js/utils.js",
+      strictMode: true,
+      separateDialCode: true,
+    });
+
+    // Validate on form submit
+    form.addEventListener("submit", function(e) {
+      if (phoneInput.value.trim() && !iti.isValidNumber()) {
+        e.preventDefault(); // Stop submission
+        errorMsg.style.display = "block";
+        phoneInput.style.borderColor = "var(--danger)";
+      } else {
+        errorMsg.style.display = "none";
+        // Set the hidden full number to be submitted
+        phoneInput.value = iti.getNumber();
+      }
+    });
+
+    // Reset error on type
+    phoneInput.addEventListener('input', () => {
+      errorMsg.style.display = "none";
+      phoneInput.style.borderColor = "rgba(255, 255, 255, 0.15)";
+    });
+  </script>
 </body>
 </html>

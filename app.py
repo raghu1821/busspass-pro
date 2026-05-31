@@ -14,6 +14,10 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 app.secret_key = os.getenv("SECRET_KEY", "buspasssecret2024xK9")
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # ── Flask-Mail (OTP emails) ─────────────────────────────────────────────────
 app.config["MAIL_SERVER"]   = "smtp.gmail.com"
 app.config["MAIL_PORT"]     = 587
@@ -105,8 +109,8 @@ def register():
 
         # Photo Upload
         photo = request.files.get("photo")
-        if not photo:
-            return redirect("/register?msg=No+photo+uploaded.+Please+select+a+photo.&type=error")
+        if not photo or not allowed_file(photo.filename):
+            return redirect("/register?msg=Invalid+photo.+Only+PNG,+JPG,+or+WEBP+allowed.&type=error")
 
         filename = secure_filename(photo.filename)
 
@@ -916,6 +920,8 @@ def edit_profile():
         photo = request.files.get("photo")
 
         if photo and photo.filename:
+            if not allowed_file(photo.filename):
+                return redirect("/profile?msg=Invalid+photo+format.+Only+images+allowed.&type=error")
 
             filename = secure_filename(photo.filename)
 
