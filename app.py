@@ -500,16 +500,17 @@ WHERE application_id=%s
 
     app_data = cursor.fetchone()
 
-    # Insert into Pass table
+    # Insert into Pass table using actual duration requested
     query3 = """
     INSERT INTO Pass
     (passenger_name, pass_type, valid_until, status)
-    VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL 30 DAY), %s)
+    VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), %s)
     """
 
     values = (
         app_data["passenger_name"],
         app_data["pass_type"],
+        app_data["duration_months"],
         "Active"
     )
 
