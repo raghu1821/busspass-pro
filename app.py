@@ -590,78 +590,174 @@ WHERE application_id=%s
 
 @app.route("/download_pass/<int:pass_id>")
 def download_pass(pass_id):
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas as pdf_canvas
+    from reportlab.lib.utils import ImageReader
+    from PIL import Image as PILImage
+    import io
 
     cursor = get_db().cursor(dictionary=True)
-
-    query = """
-    SELECT * FROM Pass
-    WHERE pass_id=%s
-    """
-
-    cursor.execute(query, (pass_id,))
-
+    cursor.execute("""
+        SELECT Pass.*, Passenger.photo, Passenger.category, Passenger.phone, Passenger.email
+        FROM Pass
+        JOIN Passenger ON Pass.passenger_name = Passenger.full_name
+        WHERE Pass.pass_id = %s
+    """, (pass_id,))
     pass_data = cursor.fetchone()
 
     if not pass_data:
-        return "Pass Not Found"
+        return redirect("/view_pass?msg=Pass+not+found.&type=error")
 
+    os.makedirs("static/pdfs", exist_ok=True)
     pdf_file = f"static/pdfs/buspass_{pass_id}.pdf"
 
-    c = canvas.Canvas(pdf_file)
+    # Card dimensions (credit-card aspect ratio, centered on A4)
+    W, H = A4  # 595 x 842 pts
+    cw, ch = 420, 245  # card width, height in pts
+    cx = (W - cw) / 2   # card x origin
+    cy = (H - ch) / 2   # card y origin
 
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(180, 800, "BUS PASS")
+    c = pdf_canvas.Canvas(pdf_file, pagesize=A4)
 
-    c.setFont("Helvetica", 14)
-    c.drawString(
-    100,
-    780,
-    f"Pass ID: {pass_data['pass_id']}"
-)
+    # ── Drop shadow ──────────────────────────────────────────────────────────
+    c.setFillColorRGB(0, 0, 0, 0.15)
+    c.roundRect(cx + 4, cy - 4, cw, ch, 14, fill=1, stroke=0)
 
-    c.drawString(
-        100,
-        740,
-        f"Passenger Name: {pass_data['passenger_name']}"
-    )
+    # ── Card background (dark) ───────────────────────────────────────────────
+    c.setFillColorRGB(0.07, 0.09, 0.14)
+    c.roundRect(cx, cy, cw, ch, 14, fill=1, stroke=0)
 
-    c.drawString(
-        100,
-        700,
-        f"Pass Type: {pass_data['pass_type']}"
-    )
+    # ── Header gradient band ─────────────────────────────────────────────────
+    header_h = 72
+    c.setFillColorRGB(0.18, 0.38, 0.82)   # blue
+    c.roundRect(cx, cy + ch - header_h, cw, header_h, 14, fill=1, stroke=0)
+    # Cover bottom-left/right rounded corners of header (flat bottom)
+    c.setFillColorRGB(0.18, 0.38, 0.82)
+    c.rect(cx, cy + ch - header_h, cw, 14, fill=1, stroke=0)
 
-    c.drawString(
-        100,
-        660,
-        f"Valid Until: {pass_data['valid_until']}"
-    )
+    # ── Header text ──────────────────────────────────────────────────────────
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(cx + 16, cy + ch - 32, "BusPass Pro")
+    c.setFont("Helvetica", 9)
+    c.setFillColorRGB(0.8, 0.88, 1)
+    c.drawString(cx + 16, cy + ch - 47, "DIGITAL BUS PASS")
 
-    c.drawString(
-        100,
-        620,
-        f"Status: {pass_data['status']}"
-    )
-    
+    # Pass ID badge (top right)
+    c.setFillColorRGB(0, 0, 0, 0.25)
+    c.roundRect(cx + cw - 80, cy + ch - 50, 70, 22, 6, fill=1, stroke=0)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawCentredString(cx + cw - 45, cy + ch - 40, f"#PASS {pass_id:04d}")
 
+    # Status badge
+    status = pass_data.get("status", "")
+    if status == "Active":
+        c.setFillColorRGB(0.06, 0.73, 0.51)
+    elif status == "Expired":
+        c.setFillColorRGB(0.86, 0.15, 0.15)
+    else:
+        c.setFillColorRGB(0.5, 0.5, 0.5)
+    c.roundRect(cx + cw - 80, cy + ch - 75, 70, 20, 6, fill=1, stroke=0)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawCentredString(cx + cw - 45, cy + ch - 65, status.upper())
+
+    # ── Passenger photo ───────────────────────────────────────────────────────
+    photo_x, photo_y = cx + 16, cy + ch - header_h - 86
+    photo_size = 72
+    photo_path = f"static/uploads/{pass_data.get('photo', '')}"
+    try:
+        if os.path.exists(photo_path):
+            # Draw circular clip using a white circle border
+            c.setFillColorRGB(0.18, 0.38, 0.82)
+            c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2 + 3, fill=1, stroke=0)
+            c.drawImage(photo_path, photo_x, photo_y, width=photo_size, height=photo_size, mask='auto')
+    except Exception:
+        # Draw placeholder circle
+        c.setFillColorRGB(0.2, 0.25, 0.35)
+        c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2, fill=1, stroke=0)
+        c.setFillColorRGB(0.5, 0.6, 0.8)
+        c.setFont("Helvetica-Bold", 24)
+        initials = pass_data['passenger_name'][0].upper() if pass_data.get('passenger_name') else "?"
+        c.drawCentredString(photo_x + photo_size/2, photo_y + photo_size/2 - 8, initials)
+
+    # ── Passenger name & category ─────────────────────────────────────────────
+    name_x = cx + 100
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(name_x, cy + ch - header_h - 22, pass_data.get("passenger_name", ""))
+    c.setFont("Helvetica", 9)
+    c.setFillColorRGB(0.55, 0.65, 0.85)
+    c.drawString(name_x, cy + ch - header_h - 36, pass_data.get("category", "Passenger"))
+
+    # ── Divider line ──────────────────────────────────────────────────────────
+    divider_y = cy + 108
+    c.setStrokeColorRGB(0.18, 0.25, 0.4)
+    c.setLineWidth(0.5)
+    c.line(cx + 16, divider_y, cx + cw - 16, divider_y)
+
+    # ── Pass details grid ─────────────────────────────────────────────────────
+    def draw_field(label, value, x, y):
+        c.setFont("Helvetica", 7)
+        c.setFillColorRGB(0.45, 0.55, 0.75)
+        c.drawString(x, y + 11, label.upper())
+        c.setFont("Helvetica-Bold", 10)
+        c.setFillColorRGB(1, 1, 1)
+        c.drawString(x, y, str(value))
+
+    col1_x = cx + 16
+    col2_x = cx + 155
+    col3_x = cx + 285
+
+    draw_field("Pass Type",    pass_data.get("pass_type", "—"),   col1_x, cy + 82)
+    draw_field("Valid Until",  str(pass_data.get("valid_until", "—")), col2_x, cy + 82)
+    draw_field("Phone",        pass_data.get("phone", "—"),        col3_x, cy + 82)
+
+    draw_field("Email",        pass_data.get("email", "—")[:28],  col1_x, cy + 50)
+
+    # ── QR Code ───────────────────────────────────────────────────────────────
     qr_path = f"static/qrcodes/pass_{pass_id}.png"
-
     if os.path.exists(qr_path):
+        qr_size = 68
+        qr_x = cx + cw - qr_size - 14
+        qr_y = cy + 20
+        # White bg for QR
+        c.setFillColorRGB(1, 1, 1)
+        c.roundRect(qr_x - 4, qr_y - 4, qr_size + 8, qr_size + 8, 4, fill=1, stroke=0)
+        c.drawImage(qr_path, qr_x, qr_y, width=qr_size, height=qr_size)
 
-        c.drawImage(
-            qr_path,
-            350,
-            580,
-            width=150,
-            height=150
-        )
+    # ── Scan me label ─────────────────────────────────────────────────────────
+    c.setFillColorRGB(0.45, 0.55, 0.75)
+    c.setFont("Helvetica", 6.5)
+    c.drawCentredString(cx + cw - 14 - 34, cy + 13, "SCAN TO VERIFY")
+
+    # ── Footer strip ─────────────────────────────────────────────────────────
+    c.setFillColorRGB(0.1, 0.14, 0.22)
+    c.rect(cx, cy, cw, 20, fill=1, stroke=0)
+    # Round bottom corners
+    c.setFillColorRGB(0.07, 0.09, 0.14)
+    c.roundRect(cx, cy, cw, 20, 14, fill=1, stroke=0)
+    c.setFillColorRGB(0.07, 0.09, 0.14)
+    c.rect(cx, cy + 10, cw, 10, fill=1, stroke=0)
+    c.setFillColorRGB(0.3, 0.4, 0.6)
+    c.setFont("Helvetica", 6.5)
+    c.drawCentredString(cx + cw/2, cy + 6, "BusPass Pro  •  busspass-pro.onrender.com  •  Issued digitally")
+
+    # ── Page watermark (faint) ────────────────────────────────────────────────
+    c.saveState()
+    c.setFillColorRGB(0.07, 0.09, 0.14, 0.04)
+    c.setFont("Helvetica-Bold", 72)
+    c.rotate(30)
+    c.drawString(200, 100, "BUSPASS PRO")
+    c.restoreState()
 
     c.save()
 
-    return send_file(
-    pdf_file,
-    as_attachment=True
-)
+    return send_file(pdf_file, as_attachment=True, download_name=f"BusPass_{pass_data['passenger_name'].replace(' ','_')}.pdf")
+
 
 @app.route("/logout")
 def logout():
