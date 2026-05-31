@@ -627,159 +627,118 @@ def download_pass(pass_id):
     os.makedirs(os.path.join(os.getcwd(), "static", "pdfs"), exist_ok=True)
     pdf_file = f"static/pdfs/buspass_{pass_id}.pdf"
 
-    # Card dimensions (credit-card aspect ratio, centered on A4)
-    W, H = A4  # 595 x 842 pts
-    cw, ch = 420, 245  # card width, height in pts
-    cx = (W - cw) / 2   # card x origin
-    cy = (H - ch) / 2   # card y origin
-
     c = pdf_canvas.Canvas(pdf_file, pagesize=A4)
+    W, H = A4
 
-    # ── Drop shadow ──────────────────────────────────────────────────────────
-    c.saveState()
-    c.setFillColorRGB(0, 0, 0, 0.15)
-    c.roundRect(cx + 4, cy - 4, cw, ch, 14, fill=1, stroke=0)
-    c.restoreState()
+    # ── Outer Border ────────────────────────────────────────────────────────
+    c.setStrokeColorRGB(0.18, 0.38, 0.82)
+    c.setLineWidth(3)
+    c.rect(40, 40, W - 80, H - 80)
 
-    # ── Card background (dark) ───────────────────────────────────────────────
-    c.setFillColorRGB(0.07, 0.09, 0.14)
-    c.roundRect(cx, cy, cw, ch, 14, fill=1, stroke=0)
-
-    # ── Header gradient band ─────────────────────────────────────────────────
-    header_h = 72
-    c.setFillColorRGB(0.18, 0.38, 0.82)   # blue
-    c.roundRect(cx, cy + ch - header_h, cw, header_h, 14, fill=1, stroke=0)
-    # Cover bottom-left/right rounded corners of header (flat bottom)
+    # ── Header Banner ───────────────────────────────────────────────────────
     c.setFillColorRGB(0.18, 0.38, 0.82)
-    c.rect(cx, cy + ch - header_h, cw, 14, fill=1, stroke=0)
+    c.rect(40, H - 140, W - 80, 100, fill=1, stroke=0)
 
-    # ── Header text ──────────────────────────────────────────────────────────
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 32)
+    c.drawString(70, H - 90, "BUSPASS PRO")
+    
+    c.setFont("Helvetica", 14)
+    c.setFillColorRGB(0.8, 0.9, 1.0)
+    c.drawString(70, H - 115, "OFFICIAL DIGITAL BUS PASS")
+
+    # Pass ID and Status in Header
     c.setFillColorRGB(1, 1, 1)
     c.setFont("Helvetica-Bold", 18)
-    c.drawString(cx + 16, cy + ch - 32, "BusPass Pro")
-    c.setFont("Helvetica", 9)
-    c.setFillColorRGB(0.8, 0.88, 1)
-    c.drawString(cx + 16, cy + ch - 47, "DIGITAL BUS PASS")
-
-    # Pass ID badge (top right)
-    c.setFillColorRGB(0, 0, 0, 0.25)
-    c.roundRect(cx + cw - 80, cy + ch - 50, 70, 22, 6, fill=1, stroke=0)
-    c.setFillColorRGB(1, 1, 1)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawCentredString(cx + cw - 45, cy + ch - 40, f"#PASS {pass_id:04d}")
-
-    # Status badge
+    c.drawRightString(W - 70, H - 90, f"PASS ID: #{pass_id:04d}")
+    
     status = pass_data.get("status", "")
     if status == "Active":
-        c.setFillColorRGB(0.06, 0.73, 0.51)
+        c.setFillColorRGB(0.5, 1.0, 0.5)
     elif status == "Expired":
-        c.setFillColorRGB(0.86, 0.15, 0.15)
+        c.setFillColorRGB(1.0, 0.5, 0.5)
     else:
-        c.setFillColorRGB(0.5, 0.5, 0.5)
-    c.roundRect(cx + cw - 80, cy + ch - 75, 70, 20, 6, fill=1, stroke=0)
-    c.setFillColorRGB(1, 1, 1)
-    c.setFont("Helvetica-Bold", 8)
-    c.drawCentredString(cx + cw - 45, cy + ch - 65, status.upper())
-
-    # ── Passenger photo ───────────────────────────────────────────────────────
-    photo_x, photo_y = cx + 16, cy + ch - header_h - 86
-    photo_size = 72
-    photo_path = f"static/uploads/{pass_data.get('photo', '')}"
-    try:
-        if os.path.exists(photo_path) and os.path.isfile(photo_path):
-            c.saveState()
-            # Draw blue border ring
-            c.setFillColorRGB(0.18, 0.38, 0.82)
-            c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2 + 2, fill=1, stroke=0)
-            
-            # Create a circular clipping path for the image
-            path = c.beginPath()
-            path.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2)
-            c.clipPath(path, stroke=0, fill=0)
-            
-            # Draw the image (it will be clipped to the circle)
-            c.drawImage(photo_path, photo_x, photo_y, width=photo_size, height=photo_size)
-            c.restoreState()
-        else:
-            raise Exception("Photo not found")
-    except Exception:
-        # Draw placeholder circle with initials
-        c.setFillColorRGB(0.2, 0.25, 0.35)
-        c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2, fill=1, stroke=0)
-        c.setFillColorRGB(0.5, 0.6, 0.8)
-        c.setFont("Helvetica-Bold", 24)
-        initials = pass_data.get('passenger_name', '?')[0].upper()
-        c.drawCentredString(photo_x + photo_size/2, photo_y + photo_size/2 - 8, initials)
-
-    # ── Passenger name & category ─────────────────────────────────────────────
-    name_x = cx + 100
-    c.setFillColorRGB(1, 1, 1)
+        c.setFillColorRGB(0.9, 0.9, 0.9)
     c.setFont("Helvetica-Bold", 14)
-    c.drawString(name_x, cy + ch - header_h - 22, pass_data.get("passenger_name", ""))
-    c.setFont("Helvetica", 9)
-    c.setFillColorRGB(0.55, 0.65, 0.85)
-    c.drawString(name_x, cy + ch - header_h - 36, pass_data.get("category", "Passenger"))
+    c.drawRightString(W - 70, H - 115, f"STATUS: {status.upper()}")
 
-    # ── Divider line ──────────────────────────────────────────────────────────
-    divider_y = cy + 108
-    c.setStrokeColorRGB(0.18, 0.25, 0.4)
-    c.setLineWidth(0.5)
-    c.line(cx + 16, divider_y, cx + cw - 16, divider_y)
+    # ── Passenger Information Section ────────────────────────────────────────
+    c.setFillColorRGB(0.1, 0.1, 0.1)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(70, H - 190, "PASSENGER INFORMATION")
+    
+    c.setStrokeColorRGB(0.8, 0.8, 0.8)
+    c.setLineWidth(1)
+    c.line(70, H - 205, W - 70, H - 205)
 
-    # ── Pass details grid ─────────────────────────────────────────────────────
-    def draw_field(label, value, x, y):
-        c.setFont("Helvetica", 7)
-        c.setFillColorRGB(0.45, 0.55, 0.75)
-        c.drawString(x, y + 11, label.upper())
-        c.setFont("Helvetica-Bold", 10)
-        c.setFillColorRGB(1, 1, 1)
-        c.drawString(x, y, str(value))
+    # Details Grid
+    c.setFont("Helvetica", 12)
+    c.setFillColorRGB(0.4, 0.4, 0.4)
+    
+    labels = ["Full Name:", "Pass Type:", "Category:", "Phone:", "Email:", "Valid Until:"]
+    values = [
+        pass_data.get("passenger_name", ""),
+        pass_data.get("pass_type", ""),
+        pass_data.get("category", ""),
+        pass_data.get("phone", ""),
+        pass_data.get("email", ""),
+        str(pass_data.get("valid_until", ""))
+    ]
 
-    col1_x = cx + 16
-    col2_x = cx + 155
-    col3_x = cx + 285
+    start_y = H - 250
+    for i in range(len(labels)):
+        # Label
+        c.setFont("Helvetica", 12)
+        c.setFillColorRGB(0.4, 0.4, 0.4)
+        c.drawString(70, start_y - (i * 35), labels[i])
+        # Value
+        c.setFont("Helvetica-Bold", 14)
+        c.setFillColorRGB(0.1, 0.1, 0.1)
+        c.drawString(180, start_y - (i * 35), values[i])
 
-    draw_field("Pass Type",    pass_data.get("pass_type", "—"),   col1_x, cy + 82)
-    draw_field("Valid Until",  str(pass_data.get("valid_until", "—")), col2_x, cy + 82)
-    draw_field("Phone",        pass_data.get("phone", "—"),        col3_x, cy + 82)
+    # Passenger Photo
+    photo_path = f"static/uploads/{pass_data.get('photo', '')}"
+    if os.path.exists(photo_path) and os.path.isfile(photo_path):
+        try:
+            # Draw standard square photo with border
+            photo_size = 130
+            c.setStrokeColorRGB(0.8, 0.8, 0.8)
+            c.setLineWidth(1)
+            c.rect(W - 70 - photo_size, H - 380, photo_size, photo_size)
+            c.drawImage(photo_path, W - 70 - photo_size, H - 380, width=photo_size, height=photo_size, preserveAspectRatio=True)
+        except Exception:
+            pass
 
-    draw_field("Email",        pass_data.get("email", "—")[:28],  col1_x, cy + 50)
+    # ── Verification Section ─────────────────────────────────────────────────
+    c.setFillColorRGB(0.1, 0.1, 0.1)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(70, H - 500, "VERIFICATION")
+    
+    c.setStrokeColorRGB(0.8, 0.8, 0.8)
+    c.setLineWidth(1)
+    c.line(70, H - 515, W - 70, H - 515)
 
-    # ── QR Code ───────────────────────────────────────────────────────────────
     qr_path = f"static/qrcodes/pass_{pass_id}.png"
     if os.path.exists(qr_path):
-        qr_size = 68
-        qr_x = cx + cw - qr_size - 14
-        qr_y = cy + 20
-        # White bg for QR
-        c.setFillColorRGB(1, 1, 1)
-        c.roundRect(qr_x - 4, qr_y - 4, qr_size + 8, qr_size + 8, 4, fill=1, stroke=0)
-        c.drawImage(qr_path, qr_x, qr_y, width=qr_size, height=qr_size)
+        qr_size = 160
+        c.drawImage(qr_path, 70, H - 700, width=qr_size, height=qr_size)
+        
+        c.setFont("Helvetica-Bold", 12)
+        c.setFillColorRGB(0.2, 0.2, 0.2)
+        c.drawString(250, H - 580, "Scan to Verify Authenticity")
+        
+        c.setFont("Helvetica", 11)
+        c.setFillColorRGB(0.4, 0.4, 0.4)
+        c.drawString(250, H - 605, "1. Open your smartphone camera or QR scanner.")
+        c.drawString(250, H - 625, "2. Point the camera at the QR code on the left.")
+        c.drawString(250, H - 645, "3. Open the secure verification link.")
+        c.drawString(250, H - 665, "4. Confirm the pass matches the passenger's identity.")
 
-    # ── Scan me label ─────────────────────────────────────────────────────────
-    c.setFillColorRGB(0.45, 0.55, 0.75)
-    c.setFont("Helvetica", 6.5)
-    c.drawCentredString(cx + cw - 14 - 34, cy + 13, "SCAN TO VERIFY")
-
-    # ── Footer strip ─────────────────────────────────────────────────────────
-    c.setFillColorRGB(0.1, 0.14, 0.22)
-    c.rect(cx, cy, cw, 20, fill=1, stroke=0)
-    # Round bottom corners
-    c.setFillColorRGB(0.07, 0.09, 0.14)
-    c.roundRect(cx, cy, cw, 20, 14, fill=1, stroke=0)
-    c.setFillColorRGB(0.07, 0.09, 0.14)
-    c.rect(cx, cy + 10, cw, 10, fill=1, stroke=0)
-    c.setFillColorRGB(0.3, 0.4, 0.6)
-    c.setFont("Helvetica", 6.5)
-    c.drawCentredString(cx + cw/2, cy + 6, "BusPass Pro  •  busspass-pro.onrender.com  •  Issued digitally")
-
-    # ── Page watermark (faint) ────────────────────────────────────────────────
-    c.saveState()
-    c.setFillColorRGB(0.07, 0.09, 0.14, 0.04)
-    c.setFont("Helvetica-Bold", 72)
-    c.rotate(30)
-    c.drawString(200, 100, "BUSPASS PRO")
-    c.restoreState()
+    # ── Footer ───────────────────────────────────────────────────────────────
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(0.5, 0.5, 0.5)
+    c.drawCentredString(W / 2, 75, "This is a computer-generated document. No physical signature is required.")
+    c.drawCentredString(W / 2, 55, "BusPass Pro - https://busspass-pro.onrender.com")
 
     c.save()
 
