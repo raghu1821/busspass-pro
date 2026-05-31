@@ -27,19 +27,24 @@
     }
     
     @media print {
+      body { 
+        background: transparent !important; 
+      }
       .pass-card {
         transform: none !important;
         animation: none !important;
         box-shadow: none !important;
-        background: #fff !important;
-        color: #000 !important;
+        /* Force browsers to print the gradient background! */
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       .pass-card::before, .pass-card::after {
         display: none !important;
       }
-      .pass-status-badge { border: 1px solid #000; color: #000 !important; }
-      .pass-brand-name { color: #000 !important; }
-      body { background: #fff !important; }
+      /* Hide navbar and buttons when printing */
+      .navbar, .pass-footer, .page-header {
+        display: none !important;
+      }
     }
     
     /* Holographic Shimmer Overlay */
