@@ -1,17 +1,17 @@
 <!-- Admin navigation bar -->
 <nav class="navbar">
   <a href="/admin" class="navbar-brand">
-    <span class="bus-icon">🛡️</span>
+    <i data-lucide="shield-check" style="color:var(--accent); margin-right:4px;"></i>
     BusPass Admin
   </a>
 
   <ul class="nav-links">
-    <li><a href="/admin" id="appsLink">📋 Applications <span id="pendingBadge" style="display:none;background:var(--danger);color:#fff;border-radius:999px;font-size:.7rem;padding:1px 7px;margin-left:4px;font-weight:700;"></span></a></li>
-    <li><a href="/stats">📈 Statistics</a></li>
-    <li><a href="/manage_users">👥 Users</a></li>
-    <li><a href="/manage_routes">🗺️ Routes</a></li>
-    <li><a href="/view_feedback">💬 Feedback</a></li>
-    <li><a href="/logout" class="nav-logout">🚪 Logout</a></li>
+    <li><a href="/admin" id="appsLink"><i data-lucide="clipboard-list" style="width:16px;height:16px;margin-right:4px;"></i> Applications <span id="pendingBadge" style="display:none;background:var(--danger);color:#fff;border-radius:999px;font-size:.7rem;padding:1px 7px;margin-left:4px;font-weight:700;"></span></a></li>
+    <li><a href="/stats"><i data-lucide="bar-chart-2" style="width:16px;height:16px;margin-right:4px;"></i> Statistics</a></li>
+    <li><a href="/manage_users"><i data-lucide="users" style="width:16px;height:16px;margin-right:4px;"></i> Users</a></li>
+    <li><a href="/manage_routes"><i data-lucide="map" style="width:16px;height:16px;margin-right:4px;"></i> Routes</a></li>
+    <li><a href="/view_feedback"><i data-lucide="message-square" style="width:16px;height:16px;margin-right:4px;"></i> Feedback</a></li>
+    <li><a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;"></i> Logout</a></li>
   </ul>
 
   <div style="display:flex; align-items:center; gap:10px;">
@@ -26,17 +26,22 @@
 
 <!-- Mobile nav drawer -->
 <div class="mobile-nav" id="mobileNav">
-  <a href="/admin">📋 Applications</a>
-  <a href="/stats">📈 Statistics</a>
-  <a href="/manage_users">👥 Users</a>
-  <a href="/manage_routes">🗺️ Routes</a>
-  <a href="/view_feedback">💬 Feedback</a>
-  <a href="/logout" class="nav-logout">🚪 Logout</a>
+  <a href="/admin"><i data-lucide="clipboard-list" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Applications</a>
+  <a href="/stats"><i data-lucide="bar-chart-2" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Statistics</a>
+  <a href="/manage_users"><i data-lucide="users" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Users</a>
+  <a href="/manage_routes"><i data-lucide="map" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Routes</a>
+  <a href="/view_feedback"><i data-lucide="message-square" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Feedback</a>
+  <a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Logout</a>
 </div>
 
+<!-- Global scripts -->
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="/static/toast.js"></script>
 <script src="/static/theme.js"></script>
 <script>
+  // Initialize icons
+  lucide.createIcons();
+
   // Real-time pending badge
   function fetchPending() {
     fetch('/api/pending_count')

@@ -1,18 +1,18 @@
 <!-- User navigation bar -->
 <nav class="navbar">
   <a href="/" class="navbar-brand">
-    <span class="bus-icon">🚌</span>
+    <i data-lucide="bus" style="color:var(--accent); margin-right:4px;"></i>
     BusPass Pro
   </a>
 
   <ul class="nav-links">
-    <li><a href="/">🏠 Home</a></li>
-    <li><a href="/dashboard">📊 Dashboard</a></li>
-    <li><a href="/view_pass">🎫 My Pass</a></li>
-    <li><a href="/apply_pass">📝 Apply</a></li>
-    <li><a href="/profile">👤 Profile</a></li>
-    <li><a href="/feedback">💬 Feedback</a></li>
-    <li><a href="/logout" class="nav-logout">🚪 Logout</a></li>
+    <li><a href="/"><i data-lucide="home" style="width:16px;height:16px;margin-right:4px;"></i> Home</a></li>
+    <li><a href="/dashboard"><i data-lucide="layout-dashboard" style="width:16px;height:16px;margin-right:4px;"></i> Dashboard</a></li>
+    <li><a href="/view_pass"><i data-lucide="credit-card" style="width:16px;height:16px;margin-right:4px;"></i> My Pass</a></li>
+    <li><a href="/apply_pass"><i data-lucide="file-text" style="width:16px;height:16px;margin-right:4px;"></i> Apply</a></li>
+    <li><a href="/profile"><i data-lucide="user" style="width:16px;height:16px;margin-right:4px;"></i> Profile</a></li>
+    <li><a href="/feedback"><i data-lucide="message-square" style="width:16px;height:16px;margin-right:4px;"></i> Feedback</a></li>
+    <li><a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;"></i> Logout</a></li>
   </ul>
 
   <div style="display:flex; align-items:center; gap:10px;">
@@ -29,15 +29,20 @@
 
 <!-- Mobile nav drawer -->
 <div class="mobile-nav" id="mobileNav">
-  <a href="/">🏠 Home</a>
-  <a href="/dashboard">📊 Dashboard</a>
-  <a href="/view_pass">🎫 My Pass</a>
-  <a href="/apply_pass">📝 Apply</a>
-  <a href="/profile">👤 Profile</a>
-  <a href="/feedback">💬 Feedback</a>
-  <a href="/logout" class="nav-logout">🚪 Logout</a>
+  <a href="/"><i data-lucide="home" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Home</a>
+  <a href="/dashboard"><i data-lucide="layout-dashboard" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Dashboard</a>
+  <a href="/view_pass"><i data-lucide="credit-card" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> My Pass</a>
+  <a href="/apply_pass"><i data-lucide="file-text" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Apply</a>
+  <a href="/profile"><i data-lucide="user" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Profile</a>
+  <a href="/feedback"><i data-lucide="message-square" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Feedback</a>
+  <a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Logout</a>
 </div>
 
-<!-- Global toast + theme script -->
+<!-- Global scripts -->
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="/static/toast.js"></script>
 <script src="/static/theme.js"></script>
+<script>
+  // Initialize icons
+  lucide.createIcons();
+</script>
