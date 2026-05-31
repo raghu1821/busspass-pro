@@ -197,13 +197,13 @@
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" id="duration-group">
             <label class="form-label">⏱️ Duration (Months)</label>
             <input
               type="number" name="duration_months" id="duration-months" class="form-control"
               placeholder="e.g. 3" min="1" max="12" required
             />
-            <span style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; display:block;">
+            <span style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; display:block;" id="duration-hint">
               Enter number of months (1–12)
             </span>
           </div>
@@ -358,6 +358,21 @@
       const opt = routeSelect.options[routeSelect.selectedIndex];
       const baseFare  = parseFloat(opt.dataset.fare || 0);
       const passType  = passTypeEl.value;
+      
+      const durationGroup = document.getElementById('duration-group');
+      const durationHint = document.getElementById('duration-hint');
+      
+      // Auto-set duration based on pass type
+      if (passType === 'Yearly') {
+        durationEl.value = '12';
+        durationGroup.style.display = 'none';
+      } else if (passType === 'Daily') {
+        durationEl.value = '1'; // In this system, 1 unit
+        durationGroup.style.display = 'none';
+      } else {
+        durationGroup.style.display = 'block';
+      }
+      
       const duration  = parseInt(durationEl.value || 0);
       const src = opt.dataset.src || ''; const dst = opt.dataset.dst || '';
 
@@ -368,7 +383,15 @@
 
       document.getElementById('fp-route').textContent    = src + ' → ' + dst;
       document.getElementById('fp-fare').textContent     = '₹' + baseFare;
-      document.getElementById('fp-duration').textContent = duration + ' month(s) × ' + passType;
+      
+      if (passType === 'Yearly') {
+        document.getElementById('fp-duration').textContent = '1 Year';
+      } else if (passType === 'Daily') {
+        document.getElementById('fp-duration').textContent = '1 Day';
+      } else {
+        document.getElementById('fp-duration').textContent = duration + ' month(s) × ' + passType;
+      }
+      
       document.getElementById('fp-total').textContent    = '₹' + total.toFixed(2);
       farePreview.style.display = 'block';
 
