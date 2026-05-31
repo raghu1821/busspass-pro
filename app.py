@@ -230,6 +230,20 @@ def view_pass():
 
     pass_data = cursor.fetchone()
 
+    # Auto-regenerate QR if missing (Render ephemeral storage wipes files on deploy)
+    if pass_data:
+        qr_path = os.path.join(os.getcwd(), "static", "qrcodes", f"pass_{pass_data['pass_id']}.png")
+        if not os.path.exists(qr_path):
+            base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
+            qr_data_str = f"{base_url}/verify/{pass_data['pass_id']}"
+            import qrcode
+            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+            qr.add_data(qr_data_str)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="#0d1117", back_color="white")
+            os.makedirs(os.path.dirname(qr_path), exist_ok=True)
+            img.save(qr_path)
+
     return render_template(
         "view_pass.html",
         pass_data=pass_data
@@ -670,18 +684,29 @@ def download_pass(pass_id):
     photo_size = 72
     photo_path = f"static/uploads/{pass_data.get('photo', '')}"
     try:
-        if os.path.exists(photo_path):
-            # Draw circular clip using a white circle border
+        if os.path.exists(photo_path) and os.path.isfile(photo_path):
+            c.saveState()
+            # Draw blue border ring
             c.setFillColorRGB(0.18, 0.38, 0.82)
-            c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2 + 3, fill=1, stroke=0)
-            c.drawImage(photo_path, photo_x, photo_y, width=photo_size, height=photo_size, mask='auto')
+            c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2 + 2, fill=1, stroke=0)
+            
+            # Create a circular clipping path for the image
+            path = c.beginPath()
+            path.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2)
+            c.clipPath(path, stroke=0, fill=0)
+            
+            # Draw the image (it will be clipped to the circle)
+            c.drawImage(photo_path, photo_x, photo_y, width=photo_size, height=photo_size)
+            c.restoreState()
+        else:
+            raise Exception("Photo not found")
     except Exception:
-        # Draw placeholder circle
+        # Draw placeholder circle with initials
         c.setFillColorRGB(0.2, 0.25, 0.35)
         c.circle(photo_x + photo_size/2, photo_y + photo_size/2, photo_size/2, fill=1, stroke=0)
         c.setFillColorRGB(0.5, 0.6, 0.8)
         c.setFont("Helvetica-Bold", 24)
-        initials = pass_data['passenger_name'][0].upper() if pass_data.get('passenger_name') else "?"
+        initials = pass_data.get('passenger_name', '?')[0].upper()
         c.drawCentredString(photo_x + photo_size/2, photo_y + photo_size/2 - 8, initials)
 
     # ── Passenger name & category ─────────────────────────────────────────────
