@@ -624,8 +624,8 @@ def download_pass(pass_id):
     if not pass_data:
         return redirect("/view_pass?msg=Pass+not+found.&type=error")
 
-    os.makedirs("static/pdfs", exist_ok=True)
-    pdf_file = f"static/pdfs/buspass_{pass_id}.pdf"
+    # Stream PDF in-memory instead of saving to disk
+    pdf_buffer = io.BytesIO()
 
     # Card dimensions (credit-card aspect ratio, centered on A4)
     W, H = A4  # 595 x 842 pts
@@ -633,7 +633,7 @@ def download_pass(pass_id):
     cx = (W - cw) / 2   # card x origin
     cy = (H - ch) / 2   # card y origin
 
-    c = pdf_canvas.Canvas(pdf_file, pagesize=A4)
+    c = pdf_canvas.Canvas(pdf_buffer, pagesize=A4)
 
     # ── Drop shadow ──────────────────────────────────────────────────────────
     c.setFillColorRGB(0, 0, 0, 0.15)
@@ -780,8 +780,19 @@ def download_pass(pass_id):
     c.restoreState()
 
     c.save()
+    pdf_buffer.seek(0)
 
-    return send_file(pdf_file, as_attachment=True, download_name=f"BusPass_{pass_data['passenger_name'].replace(' ','_')}.pdf")
+    # Disable cache to ensure they always get the latest version
+    response = send_file(
+        pdf_buffer, 
+        as_attachment=True, 
+        download_name=f"BusPass_{pass_data['passenger_name'].replace(' ','_')}.pdf",
+        mimetype="application/pdf"
+    )
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @app.route("/logout")

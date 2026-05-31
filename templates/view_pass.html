@@ -145,12 +145,13 @@
 
       <!-- Footer Actions -->
       <div class="pass-footer">
-        <button
+        <a
+          href="/download_pass/{{ pass_data.pass_id }}"
           class="btn btn-ghost btn-sm"
           id="downloadBtn"
-          onclick="downloadFile('/download_pass/{{ pass_data.pass_id }}', this)">
+          download="BusPass_{{ pass_data.passenger_name | replace(' ', '_') }}.pdf">
           📄 Download PDF
-        </button>
+        </a>
         <button
           class="btn btn-ghost btn-sm"
           id="qrBtn"
