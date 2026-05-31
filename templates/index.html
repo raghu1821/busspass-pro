@@ -25,8 +25,16 @@
     </a>
     <ul class="nav-links">
       <li><a href="/">🏠 Home</a></li>
-      <li><a href="/login" class="nav-btn">🔑 Login</a></li>
-      <li><a href="/register" class="nav-btn" style="background: var(--accent); color:#fff;">✨ Register</a></li>
+      {% if session.get('user') %}
+        <li><a href="/dashboard" class="nav-btn">📊 Dashboard</a></li>
+        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;">🚪 Logout</a></li>
+      {% elif session.get('admin') %}
+        <li><a href="/admin" class="nav-btn">🛡️ Admin Panel</a></li>
+        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;">🚪 Logout</a></li>
+      {% else %}
+        <li><a href="/login" class="nav-btn">🔑 Login</a></li>
+        <li><a href="/register" class="nav-btn" style="background: var(--accent); color:#fff;">✨ Register</a></li>
+      {% endif %}
     </ul>
   </nav>
 
@@ -52,12 +60,25 @@
       </p>
 
       <div class="hero-actions animate-fade-up animate-delay-3">
-        <a href="/register" class="btn btn-primary btn-lg">
-          🚀 Get Started
-        </a>
-        <a href="/login" class="btn btn-ghost btn-lg">
-          🔑 Login
-        </a>
+        {% if session.get('user') %}
+          <a href="/dashboard" class="btn btn-primary btn-lg">
+            🚀 Go to Dashboard
+          </a>
+          <a href="/view_pass" class="btn btn-ghost btn-lg">
+            🎫 My Pass
+          </a>
+        {% elif session.get('admin') %}
+          <a href="/admin" class="btn btn-primary btn-lg">
+            🛡️ Go to Admin Panel
+          </a>
+        {% else %}
+          <a href="/register" class="btn btn-primary btn-lg">
+            🚀 Get Started
+          </a>
+          <a href="/login" class="btn btn-ghost btn-lg">
+            🔑 Login
+          </a>
+        {% endif %}
         <button id="installAppBtn" class="btn btn-ghost btn-lg" style="display:none; background: rgba(79,142,247,0.15); border-color: var(--accent);">📱 Install App</button>
       </div>
 

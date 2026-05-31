@@ -148,6 +148,8 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if "user" in session:
+        return redirect("/dashboard")
 
     if request.method == "POST":
 
@@ -1072,6 +1074,8 @@ def feedback():
 
 @app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
+    if "admin" in session:
+        return redirect("/admin")
     
     if request.method == "POST":
 
