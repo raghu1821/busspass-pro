@@ -1115,6 +1115,45 @@ def verify_otp():
                            email=request.args.get("email", ""),
                            demo_otp=request.args.get("demo_otp", ""))
 
+# ── Resend OTP ───────────────────────────────────────────────────────────────
+@app.route("/resend_otp")
+def resend_otp():
+    email = session.get("otp_email")
+    if not email:
+        return redirect("/forgot_password?msg=Session+expired.+Please+enter+your+email+again.&type=error")
+
+    # Generate a fresh OTP
+    otp = ''.join(random.choices(string.digits, k=6))
+    expires = datetime.now() + timedelta(minutes=10)
+    session["otp_code"]    = otp
+    session["otp_expires"] = expires.isoformat()
+
+    mail_user = os.getenv("MAIL_USER", "")
+    if mail_user:
+        def send_async(app_ctx, message):
+            with app_ctx:
+                try:
+                    mail.send(message)
+                except Exception:
+                    pass
+
+        msg = Message(subject="BusPass Pro - Your New OTP", recipients=[email])
+        msg.html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
+          <h2 style="color:#4f8ef7;">BusPass Pro</h2>
+          <h3>Your New OTP</h3>
+          <p>Your previous OTP was resent. It expires in <strong>10 minutes</strong>.</p>
+          <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:24px;margin:24px 0;">
+            <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#4f8ef7;">{otp}</span>
+          </div>
+        </div>"""
+        t = threading.Thread(target=send_async, args=(app.app_context(), msg), daemon=True)
+        t.start()
+        return redirect(f"/verify_otp?email={email}&msg=New+OTP+sent+to+your+email!&type=success")
+    else:
+        # Demo mode: show OTP on screen
+        return redirect(f"/verify_otp?demo_otp={otp}&email={email}&msg=New+OTP+generated!&type=success")
+
 # ── Feature 3: Real-time Pending Count API (for admin badge) ─────────────────
 @app.route("/api/pending_count")
 def pending_count():

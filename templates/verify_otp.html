@@ -26,8 +26,13 @@
 
       {% if demo_otp %}
       <div class="demo-otp-box">
-        ⚠️ Email not configured — Demo Mode OTP:
+        📧 Email not configured — Your OTP is:
         <strong>{{ demo_otp }}</strong>
+      </div>
+      {% else %}
+      <div class="demo-otp-box" style="background:rgba(34,197,94,.08);border-color:var(--success);">
+        📩 OTP sent to your email! Check your inbox &amp; spam folder.<br/>
+        <small style="color:var(--text-secondary);">Email may take up to 30 seconds to arrive.</small>
       </div>
       {% endif %}
 
@@ -53,7 +58,7 @@
 
       <div class="separator" style="margin:1.5rem 0"></div>
       <p style="text-align:center;font-size:.9rem;color:var(--text-secondary)">
-        Didn't receive it? <a href="/forgot_password" style="color:var(--accent);font-weight:600">Resend OTP</a>
+        Didn't receive it? <a href="/resend_otp" style="color:var(--accent);font-weight:600">Resend OTP</a>
       </p>
     </div>
   </div>
