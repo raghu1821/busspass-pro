@@ -63,6 +63,24 @@ def server_error(e):
 def home():
     return render_template("index.html")
 
+# ── Public Pass Verification (QR scan destination) ───────────────────────────
+@app.route("/verify/<int:pass_id>")
+def verify_pass(pass_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    # Auto-expire passes
+    cursor.execute("UPDATE Pass SET status='Expired' WHERE valid_until < CURDATE()")
+    db.commit()
+    # Fetch pass with passenger photo
+    cursor.execute("""
+        SELECT Pass.*, Passenger.photo, Passenger.category
+        FROM Pass
+        JOIN Passenger ON Pass.passenger_name = Passenger.full_name
+        WHERE Pass.pass_id = %s
+    """, (pass_id,))
+    pass_data = cursor.fetchone()
+    return render_template("verify_pass.html", pass_data=pass_data)
+
 # Serve PWA service worker from root path (required by browser spec)
 @app.route("/sw.js")
 def service_worker():
@@ -235,15 +253,13 @@ def generate_qr(pass_id):
     if not pass_data:
         return "Pass Not Found"
 
-    # Create QR
-    qr_data = f"""
-    PASS ID: {pass_data['pass_id']}
-    NAME: {pass_data['passenger_name']}
-    TYPE: {pass_data['pass_type']}
-    STATUS: {pass_data['status']}
-    """
-
-    img = qrcode.make(qr_data)
+    # Generate QR as a verification URL
+    base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
+    qr_data = f"{base_url}/verify/{pass_id}"
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#0d1117", back_color="white")
 
     # Absolute folder path
     folder_path = os.path.join(
@@ -497,16 +513,15 @@ WHERE application_id=%s
 
     pass_id = new_pass["pass_id"]
 
-    # Generate QR data
-    qr_data = f"""
-    PASS ID: {pass_id}
-    NAME: {new_pass['passenger_name']}
-    TYPE: {new_pass['pass_type']}
-    STATUS: {new_pass['status']}
-    """
+    # Generate QR as a verification URL — opens a beautiful page when scanned
+    base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
+    qr_data = f"{base_url}/verify/{pass_id}"
 
     # Create QR image
-    img = qrcode.make(qr_data)
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#0d1117", back_color="white")
 
     # Create folder if not exists
     folder_path = os.path.join(

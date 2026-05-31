@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pass Verification — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+    .verify-card {
+      width: 100%; max-width: 420px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+      animation: fadeUp .5s ease;
+    }
+    .verify-header {
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+    .verify-header.valid   { background: linear-gradient(135deg, #065f46, #059669); }
+    .verify-header.expired { background: linear-gradient(135deg, #7f1d1d, #dc2626); }
+    .verify-header.invalid { background: linear-gradient(135deg, #374151, #6b7280); }
+    .status-icon { font-size: 3.5rem; margin-bottom: .5rem; display: block; }
+    .status-text { font-size: 1.5rem; font-weight: 900; color: #fff; letter-spacing: .02em; }
+    .status-sub  { font-size: .85rem; color: rgba(255,255,255,.75); margin-top: .25rem; }
+    .verify-photo {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(255,255,255,.3);
+      margin: 1.25rem auto .5rem;
+      display: block;
+    }
+    .verify-body { padding: 1.5rem; }
+    .verify-name { font-size: 1.35rem; font-weight: 800; text-align: center; margin-bottom: 1.25rem; }
+    .verify-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .65rem 0; border-bottom: 1px solid var(--border);
+      font-size: .9rem;
+    }
+    .verify-row:last-child { border-bottom: none; }
+    .verify-label { color: var(--text-secondary); font-weight: 500; }
+    .verify-value { font-weight: 700; color: var(--text-primary); }
+    .verify-footer {
+      text-align: center; padding: 1rem 1.5rem 1.5rem;
+      color: var(--text-secondary); font-size: .78rem;
+    }
+    .brand-mark { display: flex; align-items: center; justify-content: center; gap: .4rem; font-weight: 700; color: var(--accent); font-size: .9rem; margin-bottom: .4rem; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+    .pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+  </style>
+</head>
+<body>
+  {% if pass_data %}
+    {% set is_valid = pass_data.status == 'Active' %}
+    {% set is_expired = pass_data.status == 'Expired' %}
+
+    <div class="verify-card">
+      <div class="verify-header {{ 'valid' if is_valid else 'expired' if is_expired else 'invalid' }}">
+        <img class="verify-photo"
+             src="/static/uploads/{{ pass_data.photo }}"
+             alt="Passenger Photo"
+             onerror="this.src='https://ui-avatars.com/api/?name={{ pass_data.passenger_name }}&background=4f8ef7&color=fff&size=88'"/>
+        <span class="status-icon">
+          {{ '✅' if is_valid else '❌' if is_expired else '⚠️' }}
+        </span>
+        <div class="status-text">
+          {{ 'PASS VALID' if is_valid else 'PASS EXPIRED' if is_expired else 'INVALID PASS' }}
+        </div>
+        <div class="status-sub {{ 'pulse' if is_valid }}">
+          {{ 'This pass is currently active and valid for travel' if is_valid else 'This pass has expired. Renewal required.' if is_expired else 'This pass is not valid for travel.' }}
+        </div>
+      </div>
+
+      <div class="verify-body">
+        <div class="verify-name">{{ pass_data.passenger_name }}</div>
+
+        <div class="verify-row">
+          <span class="verify-label">🎫 Pass ID</span>
+          <span class="verify-value">#{{ pass_data.pass_id }}</span>
+        </div>
+        <div class="verify-row">
+          <span class="verify-label">🏷️ Pass Type</span>
+          <span class="verify-value">{{ pass_data.pass_type }}</span>
+        </div>
+        <div class="verify-row">
+          <span class="verify-label">👤 Category</span>
+          <span class="verify-value">{{ pass_data.category }}</span>
+        </div>
+        <div class="verify-row">
+          <span class="verify-label">📅 Valid Until</span>
+          <span class="verify-value" style="{{ 'color:var(--success)' if is_valid else 'color:var(--danger)' }}">
+            {{ pass_data.valid_until.strftime('%d %b %Y') if pass_data.valid_until else 'N/A' }}
+          </span>
+        </div>
+        <div class="verify-row">
+          <span class="verify-label">🔄 Status</span>
+          <span class="badge badge-{{ pass_data.status | lower }}">{{ pass_data.status }}</span>
+        </div>
+      </div>
+
+      <div class="verify-footer">
+        <div class="brand-mark">🚌 BusPass Pro</div>
+        Verified at {{ '' }}
+        <script>document.write(new Date().toLocaleTimeString());</script>
+        — Scan result is real-time
+      </div>
+    </div>
+
+  {% else %}
+    <div class="verify-card">
+      <div class="verify-header invalid">
+        <span class="status-icon">❓</span>
+        <div class="status-text">PASS NOT FOUND</div>
+        <div class="status-sub">This QR code does not match any pass in our system.</div>
+      </div>
+      <div class="verify-body" style="text-align:center;padding:2rem;">
+        <p style="color:var(--text-secondary);">The pass may have been deleted or this is an invalid QR code.</p>
+        <a href="/" class="btn btn-primary" style="margin-top:1rem;">🏠 Go to BusPass Pro</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <script src="/static/theme.js"></script>
+</body>
+</html>
