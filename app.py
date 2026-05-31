@@ -340,43 +340,26 @@ def generate_qr(pass_id):
 def apply_pass():
     if "user" not in session:
         return redirect("/login")
+    
     cursor = get_db().cursor(dictionary=True)
+    passenger_name = session["user"]
+
+    # Block users from applying if they already have an active pass or a pending/approved application
+    cursor.execute(
+        "SELECT * FROM Pass_Application WHERE passenger_name=%s AND status IN ('Pending', 'Approved')",
+        (passenger_name,)
+    )
+    if cursor.fetchone():
+        return redirect("/dashboard?msg=You+already+have+a+pending+or+approved+application.+Check+your+dashboard.&type=warning")
+
+    cursor.execute(
+        "SELECT * FROM Pass WHERE passenger_name=%s AND status='Active'",
+        (passenger_name,)
+    )
+    if cursor.fetchone():
+        return redirect("/dashboard?msg=You+already+have+an+active+pass.&type=warning")
 
     if request.method == "POST":
-
-        passenger_name = session["user"]
-
-        check_query = """
-        SELECT * FROM Pass_Application
-        WHERE passenger_name=%s
-        AND status IN ('Pending', 'Approved')
-        """
-
-        cursor.execute(
-            check_query,
-            (passenger_name,)
-        )
-
-        existing = cursor.fetchone()
-
-        if existing:
-            return redirect("/apply_pass?msg=You+already+have+a+pending+or+approved+application.+Check+your+dashboard.&type=warning")
-
-        active_query = """
-        SELECT * FROM Pass
-        WHERE passenger_name=%s
-        AND status='Active'
-        """
-
-        cursor.execute(
-            active_query,
-            (passenger_name,)
-        )
-
-        active_pass = cursor.fetchone()
-
-        if active_pass:
-            return redirect("/apply_pass?msg=You+already+have+an+active+pass.&type=warning")
 
         route_id = request.form["route_id"]
 
