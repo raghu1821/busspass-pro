@@ -217,6 +217,25 @@
 <!-- Load Lucide icons if not already loaded -->
 <script src="https://unpkg.com/lucide@latest"></script>
 
+<!-- Load Driver.js for interactive tours -->
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+
+<style>
+  /* Custom Driver.js Theme to match our dark UI */
+  .driver-popover {
+    background: #1e293b !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+  }
+  .driver-popover-title { font-size: 1.1rem !important; font-weight: 700 !important; margin-bottom: 8px !important; }
+  .driver-popover-description { font-size: 0.9rem !important; color: #cbd5e1 !important; line-height: 1.5 !important; }
+  .driver-popover-close-btn { color: #cbd5e1 !important; }
+  .driver-popover-arrow { border-color: #1e293b !important; }
+</style>
+
 <button class="chatbot-toggler" id="chat-toggler">
   <i data-lucide="message-circle" class="lucide-message-circle"></i>
   <i data-lucide="x" class="lucide-x"></i>
@@ -296,7 +315,14 @@
       // Simulate typing delay
       setTimeout(() => {
         const response = generateBotResponse(msg);
-        appendMessage(response, 'msg-bot');
+        appendMessage(response.text, 'msg-bot');
+        
+        if (response.tour) {
+          setTimeout(() => {
+            document.body.classList.remove('show-chatbot'); // Hide chat during tour
+            triggerTour(response.tour);
+          }, 1000);
+        }
       }, 600 + Math.random() * 600);
     }
 
@@ -311,29 +337,77 @@
     function generateBotResponse(input) {
       const text = input.toLowerCase();
       
-      if (text.includes('pay') || text.includes('payment') || text.includes('money') || text.includes('fail') || text.includes('error')) {
-        return "💳 <b>Payments:</b> If your payment failed, don't worry! Our simulated gateway lets you retry instantly. If it keeps failing, please contact your bank.";
-      }
-      else if (text.includes('print') || text.includes('pdf') || text.includes('download')) {
-        return "🖨️ <b>Printing:</b> To print your pass or save it as a PDF, go to 'My Pass' and click the 'Print Pass' button at the bottom. It will automatically flatten the 3D card for perfect printing!";
-      }
-      else if (text.includes('photo') || text.includes('picture') || text.includes('image') || text.includes('qr')) {
-        return "🖼️ <b>Photos & QR:</b> Your photo and QR code are securely stored directly in our database. If they ever stop loading, simply refresh the page or try re-uploading your photo in Edit Profile.";
+      if (text.includes('tour') || text.includes('help') || text.includes('guide')) {
+        return { 
+          text: "Let me give you a quick guided tour of the dashboard!", 
+          tour: "full_tour" 
+        };
       }
       else if (text.includes('apply') || text.includes('new pass') || text.includes('route')) {
-        return "📝 <b>Applying:</b> You can apply for a new pass by clicking 'Apply' in the navigation menu. Note that you can only apply if you don't already have an active pass!";
+        return { 
+          text: "📝 <b>Applying:</b> Let me show you where to start a new application!", 
+          tour: "apply" 
+        };
+      }
+      else if (text.includes('print') || text.includes('pdf') || text.includes('download')) {
+        return { 
+          text: "🖨️ <b>Printing:</b> Let me point you to where you can print your pass!", 
+          tour: "print" 
+        };
+      }
+      else if (text.includes('pay') || text.includes('payment') || text.includes('money') || text.includes('fail') || text.includes('error')) {
+        return { text: "💳 <b>Payments:</b> If your payment failed, don't worry! Our simulated gateway lets you retry instantly. If it keeps failing, please contact your bank." };
+      }
+      else if (text.includes('photo') || text.includes('picture') || text.includes('image') || text.includes('qr')) {
+        return { text: "🖼️ <b>Photos & QR:</b> Your photo and QR code are securely stored directly in our database. If they ever stop loading, simply refresh the page or try re-uploading your photo in Edit Profile." };
       }
       else if (text.includes('approve') || text.includes('pending') || text.includes('reject') || text.includes('status')) {
-        return "⏳ <b>Approvals:</b> After you apply, an Admin must review your details. You will receive an email notification once your pass is approved or rejected.";
+        return { text: "⏳ <b>Approvals:</b> After you apply, an Admin must review your details. You will receive an email notification once your pass is approved or rejected." };
       }
       else if (text.includes('hi') || text.includes('hello') || text.includes('hey')) {
-        return "Hello again! How can I assist you with BusPass Pro today?";
+        return { text: "Hello again! How can I assist you with BusPass Pro today?" };
       }
       else if (text.includes('thank') || text.includes('thx')) {
-        return "You're very welcome! Let me know if you need anything else. 😊";
+        return { text: "You're very welcome! Let me know if you need anything else. 😊" };
       }
       else {
-        return "I'm a simple bot and didn't quite catch that. You can always use the <b>Feedback</b> page to send a direct message to our human admins!";
+        return { text: "I'm a simple bot and didn't quite catch that. You can always use the <b>Feedback</b> page to send a direct message to our human admins!" };
+      }
+    }
+
+    function triggerTour(type) {
+      if (!window.driver) return;
+      const driverObj = window.driver.js.driver({ showProgress: false });
+
+      // Only attempt tour if user is logged in (checks if Apply button exists in DOM)
+      const applyBtn = document.querySelector('a[href="/apply_pass"]');
+      if (!applyBtn) {
+        document.body.classList.add('show-chatbot');
+        appendMessage("You need to log in first to see those options!", "msg-bot");
+        return;
+      }
+
+      if (type === "apply") {
+        driverObj.highlight({
+          element: 'a[href="/apply_pass"]',
+          popover: { title: 'Start Application', description: 'Click here to apply for a brand new Bus Pass.', side: "bottom", align: 'start' }
+        });
+      } 
+      else if (type === "print") {
+        driverObj.highlight({
+          element: 'a[href="/view_pass"]',
+          popover: { title: 'Print Pass', description: 'Go to My Pass to view your digital card and print it as a PDF.', side: "bottom", align: 'start' }
+        });
+      }
+      else if (type === "full_tour") {
+        driverObj.setSteps([
+          { element: 'a[href="/dashboard"]', popover: { title: 'Dashboard', description: 'This is your main hub to see all your applications.', side: "bottom", align: 'start' } },
+          { element: 'a[href="/apply_pass"]', popover: { title: 'Apply', description: 'Click here whenever you want to start a new application.', side: "bottom", align: 'start' } },
+          { element: 'a[href="/view_pass"]', popover: { title: 'My Pass', description: 'View your 3D Digital Card, generate QR codes, and print PDFs.', side: "bottom", align: 'start' } },
+          { element: 'a[href="/profile"]', popover: { title: 'Profile', description: 'Update your photo and contact info here.', side: "bottom", align: 'start' } },
+          { element: '#chat-toggler', popover: { title: 'Assistant', description: 'And you can always click here if you need me again!', side: "left", align: 'start' } }
+        ]);
+        driverObj.drive();
       }
     }
   });
