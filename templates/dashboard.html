@@ -266,14 +266,28 @@
     }
 
     function processPayment() {
+      if (!_currentAppId) return;
       document.getElementById('pay-form-body').style.display  = 'none';
       document.getElementById('pay-processing').style.display = 'block';
+      
+      // Simulate network delay for UI polish, then call the real backend
       setTimeout(() => {
-        document.getElementById('pay-processing').style.display = 'none';
-        document.getElementById('pay-success').style.display    = 'block';
-        // Redirect to view pass after success
-        setTimeout(() => { window.location.href = '/view_pass'; }, 1500);
-      }, 2500);
+        fetch('/activate_pass/' + _currentAppId, { method: 'POST' })
+          .then(res => {
+            if (res.ok) {
+              document.getElementById('pay-processing').style.display = 'none';
+              document.getElementById('pay-success').style.display    = 'block';
+              setTimeout(() => { window.location.href = '/view_pass'; }, 1500);
+            } else {
+              alert('Error activating pass. Please contact support.');
+              closePayModal();
+            }
+          })
+          .catch(err => {
+            alert('Network error. Please try again.');
+            closePayModal();
+          });
+      }, 1500);
     }
 
     document.getElementById('pay-overlay').addEventListener('click', function(e){

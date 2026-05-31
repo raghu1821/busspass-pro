@@ -254,13 +254,16 @@ def view_pass():
 @app.route("/generate_qr/<int:pass_id>")
 def generate_qr(pass_id):
 
-    # Check if pass exists
+    # Check if pass exists and belongs to user (IDOR Protection)
     cursor = get_db().cursor(dictionary=True)
-
+    
     query = """
-    SELECT * FROM Pass
-    WHERE pass_id=%s
+    SELECT Pass.*, Passenger.full_name
+    FROM Pass
+    JOIN Passenger ON Pass.passenger_name = Passenger.full_name
+    WHERE Pass.pass_id=%s AND Passenger.full_name=%s
     """
+    cursor.execute(query, (pass_id, session["user"]))
 
     cursor.execute(query, (pass_id,))
 
@@ -313,7 +316,7 @@ def apply_pass():
         check_query = """
         SELECT * FROM Pass_Application
         WHERE passenger_name=%s
-        AND status='Pending'
+        AND status IN ('Pending', 'Approved')
         """
 
         cursor.execute(
@@ -324,7 +327,7 @@ def apply_pass():
         existing = cursor.fetchone()
 
         if existing:
-            return redirect("/apply_pass?msg=You+already+have+a+pending+application.&type=warning")
+            return redirect("/apply_pass?msg=You+already+have+a+pending+or+approved+application.+Check+your+dashboard.&type=warning")
 
         active_query = """
         SELECT * FROM Pass
@@ -482,7 +485,7 @@ WHERE application_id=%s
     if existing["status"] != "Pending":
         return redirect("/admin?msg=Application+already+processed.&type=warning")
 
-    # Update application status
+    # Update application status ONLY (DO NOT create pass yet until payment)
     query = """
     UPDATE Pass_Application
     SET status='Approved'
@@ -492,85 +495,54 @@ WHERE application_id=%s
     cursor.execute(query, (id,))
     get_db().commit()
 
-    # Get approved application details
-    query2 = """
-    SELECT * FROM Pass_Application
-    WHERE application_id=%s
-    """
+    return "OK"
 
-    cursor.execute(query2, (id,))
-
+@app.route("/activate_pass/<int:app_id>", methods=["POST"])
+def activate_pass(app_id):
+    if "user" not in session: return "Unauthorized", 401
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    
+    # Verify application is approved and belongs to user
+    cursor.execute("SELECT * FROM Pass_Application WHERE application_id=%s AND passenger_name=%s AND status='Approved'", (app_id, session["user"]))
     app_data = cursor.fetchone()
-
-    # Insert into Pass table using actual duration requested
-    query3 = """
-    INSERT INTO Pass
-    (passenger_name, pass_type, valid_until, status)
-    VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), %s)
-    """
-
-    values = (
-        app_data["passenger_name"],
-        app_data["pass_type"],
-        app_data["duration_months"],
-        "Active"
-    )
-
-    cursor.execute(query3, values)
-    get_db().commit()
-
-    # Get latest pass
+    
+    if not app_data:
+        return "Invalid application", 400
+        
+    # Mark application as completed
+    cursor.execute("UPDATE Pass_Application SET status='Completed' WHERE application_id=%s", (app_id,))
+    
+    # Insert into Pass table
     cursor.execute("""
-    SELECT * FROM Pass
-    ORDER BY pass_id DESC
-    LIMIT 1
-    """)
-
+        INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+        VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
+    """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
+    db.commit()
+    
+    # Generate QR Code immediately for new pass
+    cursor.execute("SELECT pass_id FROM Pass ORDER BY pass_id DESC LIMIT 1")
     new_pass = cursor.fetchone()
-
     pass_id = new_pass["pass_id"]
-
-    # Generate QR as a verification URL — opens a beautiful page when scanned
+    
     base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
     qr_data = f"{base_url}/verify/{pass_id}"
-
-    # Create QR image
-    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+    
+    import qrcode
+    import os
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="#0d1117", back_color="white")
-
-    # Create folder if not exists
-    folder_path = os.path.join(
-        os.getcwd(),
-        "static",
-        "qrcodes"
-    )
-
+    
+    folder_path = os.path.join(os.getcwd(), "static", "qrcodes")
     os.makedirs(folder_path, exist_ok=True)
-
-    # File path
-    file_path = os.path.join(
-        folder_path,
-        f"pass_{pass_id}.png"
-    )
-
-    # Save image
-    img.save(file_path)
     qr_file = f"pass_{pass_id}.png"
-
-    update_query = """
-UPDATE Pass
-SET qr_code=%s
-WHERE pass_id=%s
-"""
-
-    cursor.execute(
-    update_query,
-    (qr_file, pass_id)
-)
-
-    get_db().commit()
+    img.save(os.path.join(folder_path, qr_file))
+    
+    cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_file, pass_id))
+    db.commit()
 
     return "OK"
 
@@ -685,8 +657,8 @@ def download_pass(pass_id):
         SELECT Pass.*, Passenger.photo, Passenger.category, Passenger.phone, Passenger.email
         FROM Pass
         JOIN Passenger ON Pass.passenger_name = Passenger.full_name
-        WHERE Pass.pass_id = %s
-    """, (pass_id,))
+        WHERE Pass.pass_id = %s AND Pass.passenger_name = %s
+    """, (pass_id, session["user"]))
     pass_data = cursor.fetchone()
 
     if not pass_data:
