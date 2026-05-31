@@ -1,31 +1,62 @@
 import mysql.connector
-from flask import Flask, render_template, request, session, redirect, send_file
+from flask import Flask, render_template, request, session, redirect, send_file, jsonify
+from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 import qrcode
 from reportlab.pdfgen import canvas
 import os
+import random
+import string
+from datetime import datetime, timedelta
+
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
-app.secret_key = "buspasssecret"
+app.secret_key = os.getenv("SECRET_KEY", "buspasssecret2024xK9")
 
-# MySQL Connection
-db_config = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "user": os.getenv("DB_USER", "root"),
+# ── Flask-Mail (OTP emails) ─────────────────────────────────────────────────
+app.config["MAIL_SERVER"]   = "smtp.gmail.com"
+app.config["MAIL_PORT"]     = 587
+app.config["MAIL_USE_TLS"]  = True
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USER", "")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASS", "")
+app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USER", "")
+mail = Mail(app)
+
+# ── Database Config ─────────────────────────────────────────────────────────
+_db_config = {
+    "host":     os.getenv("DB_HOST", "localhost"),
+    "user":     os.getenv("DB_USER", "root"),
     "password": os.getenv("DB_PASSWORD", "admin123"),
     "database": os.getenv("DB_NAME", "buspassdb"),
-    "port": int(os.getenv("DB_PORT", 3306))
+    "port":     int(os.getenv("DB_PORT", 3306))
 }
+if _db_config["host"] != "localhost":
+    _db_config["ssl_disabled"]        = False
+    _db_config["ssl_verify_cert"]     = False
+    _db_config["ssl_verify_identity"] = False
 
-# TiDB requires specific SSL settings to connect successfully from Render
-if db_config["host"] != "localhost":
-    db_config["ssl_disabled"] = False
-    db_config["ssl_verify_cert"] = False
-    db_config["ssl_verify_identity"] = False
+_db_conn = None
 
-db = mysql.connector.connect(**db_config)
+def get_db():
+    """Return a live DB connection, reconnecting automatically if dropped."""
+    global _db_conn
+    try:
+        if _db_conn is None or not _db_conn.is_connected():
+            _db_conn = mysql.connector.connect(**_db_config)
+    except Exception:
+        _db_conn = mysql.connector.connect(**_db_config)
+    return _db_conn
 
-print("Database Connected Successfully")
+print("Database helper ready")
+
+# ── Error Handlers ───────────────────────────────────────────────────────────
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html"), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template("500.html"), 500
 
 @app.route("/")
 def home():
@@ -64,7 +95,7 @@ def register():
             )
         )
 
-        cursor = db.cursor()
+        cursor = get_db().cursor()
 
         query = """
 INSERT INTO Passenger
@@ -83,7 +114,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
 )
 
         cursor.execute(query, values)
-        db.commit()
+        get_db().commit()
 
         return redirect("/login?msg=Account+created+successfully!+Please+sign+in.&type=success")
 
@@ -97,7 +128,7 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        cursor = db.cursor(dictionary=True)
+        cursor = get_db().cursor(dictionary=True)
 
         query = """
         SELECT * FROM Passenger
@@ -124,7 +155,7 @@ def dashboard():
 
     user = session["user"]
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     query = """
 SELECT
@@ -154,7 +185,7 @@ def view_pass():
 
     user = session["user"]
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     update_query = """
     UPDATE Pass
@@ -164,7 +195,7 @@ def view_pass():
 
     cursor.execute(update_query)
 
-    db.commit()
+    get_db().commit()
 
     query = """
     SELECT Pass.*, Passenger.photo
@@ -189,7 +220,7 @@ def view_pass():
 def generate_qr(pass_id):
 
     # Check if pass exists
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     query = """
     SELECT * FROM Pass
@@ -240,7 +271,7 @@ def generate_qr(pass_id):
 def apply_pass():
     if "user" not in session:
         return redirect("/login")
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     if request.method == "POST":
 
@@ -300,7 +331,7 @@ def apply_pass():
 
         cursor.execute(query, values)
 
-        db.commit()
+        get_db().commit()
 
         return redirect("/dashboard?msg=Application+submitted+successfully!+Awaiting+admin+approval.&type=success")
 
@@ -321,7 +352,7 @@ def admin():
     if "admin" not in session:
         return redirect("/admin_login")
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     search = request.args.get("search")
 
@@ -402,7 +433,7 @@ def admin():
 @app.route("/approve/<int:id>")
 def approve(id):
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
     check_query = """
 SELECT * FROM Pass_Application
 WHERE application_id=%s
@@ -426,7 +457,7 @@ WHERE application_id=%s
     """
 
     cursor.execute(query, (id,))
-    db.commit()
+    get_db().commit()
 
     # Get approved application details
     query2 = """
@@ -452,7 +483,7 @@ WHERE application_id=%s
     )
 
     cursor.execute(query3, values)
-    db.commit()
+    get_db().commit()
 
     # Get latest pass
     cursor.execute("""
@@ -506,14 +537,14 @@ WHERE pass_id=%s
     (qr_file, pass_id)
 )
 
-    db.commit()
+    get_db().commit()
 
     return "OK"
 
 @app.route("/reject/<int:id>")
 def reject(id):
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
     check_query = """
 SELECT * FROM Pass_Application
 WHERE application_id=%s
@@ -537,14 +568,14 @@ WHERE application_id=%s
 
     cursor.execute(query, (id,))
 
-    db.commit()
+    get_db().commit()
 
     return "OK"
 
 @app.route("/download_pass/<int:pass_id>")
 def download_pass(pass_id):
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     query = """
     SELECT * FROM Pass
@@ -623,7 +654,7 @@ def logout():
 
 @app.route("/stats")
 def stats():
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
     # Total Users
     cursor.execute(
         "SELECT COUNT(*) AS total_users FROM Passenger"
@@ -674,7 +705,7 @@ def profile():
     if "user" not in session:
         return redirect("/login")
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     query = """
     SELECT *
@@ -701,7 +732,7 @@ def edit_profile():
     if "user" not in session:
         return redirect("/login")
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     if request.method == "POST":
 
@@ -752,7 +783,7 @@ def edit_profile():
             )
 
         cursor.execute(query, values)
-        db.commit()
+        get_db().commit()
 
         return redirect("/profile")
 
@@ -783,7 +814,7 @@ def change_password():
 
     user = session["user"]
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     if request.method == "POST":
 
@@ -816,7 +847,7 @@ def change_password():
                 (new_password, user)
             )
 
-            db.commit()
+            get_db().commit()
 
             return redirect("/profile?msg=Password+updated+successfully!&type=success")
 
@@ -838,7 +869,7 @@ def feedback():
 
         message = request.form["message"]
 
-        cursor = db.cursor()
+        cursor = get_db().cursor()
 
         query = """
         INSERT INTO Feedback
@@ -853,7 +884,7 @@ def feedback():
 
         cursor.execute(query, values)
 
-        db.commit()
+        get_db().commit()
 
         return redirect("/feedback?msg=Feedback+submitted!+Thank+you+for+your+response.&type=success")
 
@@ -868,7 +899,7 @@ def admin_login():
 
         password = request.form["password"]
 
-        cursor = db.cursor(dictionary=True)
+        cursor = get_db().cursor(dictionary=True)
 
         query = """
         SELECT * FROM Admin
@@ -903,7 +934,7 @@ def view_feedback():
     if "admin" not in session:
         return redirect("/admin_login")
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     cursor.execute(
         "SELECT * FROM Feedback"
@@ -922,7 +953,7 @@ def manage_users():
     if "admin" not in session:
         return redirect("/admin_login")
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     cursor.execute(
         "SELECT * FROM Passenger"
@@ -941,7 +972,7 @@ def delete_user(id):
     if "admin" not in session:
         return redirect("/admin_login")
 
-    cursor = db.cursor()
+    cursor = get_db().cursor()
 
     query = """
     DELETE FROM Passenger
@@ -950,7 +981,7 @@ def delete_user(id):
 
     cursor.execute(query, (id,))
 
-    db.commit()
+    get_db().commit()
 
     return redirect("/manage_users")
 
@@ -960,7 +991,7 @@ def manage_routes():
     if "admin" not in session:
         return redirect("/admin_login")
 
-    cursor = db.cursor(dictionary=True)
+    cursor = get_db().cursor(dictionary=True)
 
     if request.method == "POST":
 
@@ -981,7 +1012,7 @@ def manage_routes():
             (source, destination, fare)
         )
 
-        db.commit()
+        get_db().commit()
 
     cursor.execute("SELECT * FROM Route")
 
@@ -991,6 +1022,145 @@ def manage_routes():
         "manage_routes.html",
         routes=routes
     )
+
+
+# ── Feature 1: Forgot Password / OTP ────────────────────────────────────────
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form["email"]
+        db = get_db()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM Passenger WHERE email=%s", (email,))
+        user = cursor.fetchone()
+        if not user:
+            return redirect("/forgot_password?msg=No+account+found+with+that+email.&type=error")
+
+        # Generate 6-digit OTP
+        otp = ''.join(random.choices(string.digits, k=6))
+        expires = datetime.now() + timedelta(minutes=10)
+
+        # Store OTP in session temporarily
+        session["otp_code"]    = otp
+        session["otp_email"]   = email
+        session["otp_expires"] = expires.isoformat()
+
+        # Send real email
+        try:
+            msg = Message(
+                subject="🔐 BusPass Pro — Your Password Reset OTP",
+                recipients=[email]
+            )
+            msg.html = f"""
+            <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
+              <h2 style="color:#4f8ef7;">🚌 BusPass Pro</h2>
+              <h3>Password Reset Request</h3>
+              <p>Use the OTP below to reset your password. It expires in <strong>10 minutes</strong>.</p>
+              <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:24px;margin:24px 0;">
+                <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#4f8ef7;">{otp}</span>
+              </div>
+              <p style="color:#8b949e;font-size:13px;">If you didn't request this, ignore this email. Your password won't change.</p>
+            </div>"""
+            mail.send(msg)
+        except Exception as e:
+            # If email fails (no credentials set), show OTP in toast for dev/demo
+            return redirect(f"/verify_otp?demo_otp={otp}&email={email}")
+
+        return redirect(f"/verify_otp?email={email}")
+    return render_template("forgot_password.html")
+
+@app.route("/verify_otp", methods=["GET", "POST"])
+def verify_otp():
+    if request.method == "POST":
+        entered_otp   = request.form["otp"]
+        new_password  = request.form["new_password"]
+        stored_otp    = session.get("otp_code")
+        stored_email  = session.get("otp_email")
+        expires_str   = session.get("otp_expires")
+
+        if not stored_otp or not expires_str:
+            return redirect("/forgot_password?msg=Session+expired.+Please+try+again.&type=error")
+
+        if datetime.now() > datetime.fromisoformat(expires_str):
+            return redirect("/forgot_password?msg=OTP+has+expired.+Please+request+a+new+one.&type=error")
+
+        if entered_otp != stored_otp:
+            return redirect(f"/verify_otp?email={stored_email}&msg=Invalid+OTP.+Please+try+again.&type=error")
+
+        # Update password
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("UPDATE Passenger SET password=%s WHERE email=%s", (new_password, stored_email))
+        db.commit()
+
+        # Clear OTP session data
+        session.pop("otp_code", None)
+        session.pop("otp_email", None)
+        session.pop("otp_expires", None)
+
+        return redirect("/login?msg=Password+reset+successfully!+Please+sign+in.&type=success")
+
+    return render_template("verify_otp.html",
+                           email=request.args.get("email", ""),
+                           demo_otp=request.args.get("demo_otp", ""))
+
+# ── Feature 3: Real-time Pending Count API (for admin badge) ─────────────────
+@app.route("/api/pending_count")
+def pending_count():
+    if "admin" not in session:
+        return jsonify({"count": 0})
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT COUNT(*) AS cnt FROM Pass_Application WHERE status='Pending'")
+    result = cursor.fetchone()
+    return jsonify({"count": result["cnt"]})
+
+# ── Feature 2: Renew Pass ────────────────────────────────────────────────────
+@app.route("/renew_pass/<int:pass_id>")
+def renew_pass(pass_id):
+    if "user" not in session:
+        return redirect("/login")
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    # Get old pass details
+    cursor.execute("SELECT * FROM Pass WHERE pass_id=%s", (pass_id,))
+    old_pass = cursor.fetchone()
+    if not old_pass:
+        return redirect("/view_pass?msg=Pass+not+found.&type=error")
+
+    # Check no pending application exists
+    cursor.execute("SELECT * FROM Pass_Application WHERE passenger_name=%s AND status='Pending'", (session["user"],))
+    if cursor.fetchone():
+        return redirect("/view_pass?msg=You+already+have+a+pending+renewal+application.&type=warning")
+
+    # Get default route (first route)
+    cursor.execute("SELECT * FROM Route LIMIT 1")
+    default_route = cursor.fetchone()
+
+    # Submit renewal application
+    cursor.execute(
+        "INSERT INTO Pass_Application (passenger_name, route_id, pass_type, duration_months, status) VALUES (%s, %s, %s, %s, 'Pending')",
+        (session["user"], default_route["route_id"], old_pass["pass_type"], 1)
+    )
+    get_db().commit()
+    return redirect("/dashboard?msg=Renewal+application+submitted!+Awaiting+admin+approval.&type=success")
+
+# ── Feature 4: Activity Log ───────────────────────────────────────────────────
+@app.route("/activity")
+def activity():
+    if "user" not in session:
+        return redirect("/login")
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT 'application' AS type, status, applied_on AS event_date, route_id
+        FROM Pass_Application
+        WHERE passenger_name=%s
+        ORDER BY applied_on DESC
+    """, (session["user"],))
+    events = cursor.fetchall()
+    return render_template("activity.html", events=events, user=session["user"])
 
 
 if __name__ == "__main__":

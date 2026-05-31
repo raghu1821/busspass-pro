@@ -6,7 +6,7 @@
   </a>
 
   <ul class="nav-links">
-    <li><a href="/admin">📋 Applications</a></li>
+    <li><a href="/admin" id="appsLink">📋 Applications <span id="pendingBadge" style="display:none;background:var(--danger);color:#fff;border-radius:999px;font-size:.7rem;padding:1px 7px;margin-left:4px;font-weight:700;"></span></a></li>
     <li><a href="/stats">📈 Statistics</a></li>
     <li><a href="/manage_users">👥 Users</a></li>
     <li><a href="/manage_routes">🗺️ Routes</a></li>
@@ -36,3 +36,19 @@
 
 <script src="/static/toast.js"></script>
 <script src="/static/theme.js"></script>
+<script>
+  // Real-time pending badge
+  function fetchPending() {
+    fetch('/api/pending_count')
+      .then(r => r.json())
+      .then(data => {
+        const badge = document.getElementById('pendingBadge');
+        if (badge) {
+          if (data.count > 0) { badge.textContent = data.count; badge.style.display = 'inline'; }
+          else { badge.style.display = 'none'; }
+        }
+      }).catch(() => {});
+  }
+  fetchPending();
+  setInterval(fetchPending, 30000);
+</script>

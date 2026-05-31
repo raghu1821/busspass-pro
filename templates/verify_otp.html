@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify OTP — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    .otp-inputs { display:flex; gap:.75rem; justify-content:center; margin:1.5rem 0; }
+    .otp-inputs input { width:52px; height:62px; text-align:center; font-size:1.6rem; font-weight:800; border:2px solid var(--border); border-radius:12px; background:var(--bg-card); color:var(--text-primary); transition:border-color .2s; }
+    .otp-inputs input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.15); }
+    .timer { font-size:.88rem; color:var(--text-secondary); text-align:center; margin-bottom:1rem; }
+    .timer span { color:var(--accent); font-weight:700; }
+    .demo-otp-box { background:rgba(79,142,247,.1); border:1px solid var(--accent); border-radius:10px; padding:.85rem 1rem; margin-bottom:1.25rem; font-size:.88rem; color:var(--text-secondary); text-align:center; }
+    .demo-otp-box strong { color:var(--accent); font-size:1.4rem; letter-spacing:6px; display:block; margin-top:.25rem; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card animate-fade-up" style="max-width:460px">
+      <div class="auth-logo">📬</div>
+      <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:.35rem">Enter OTP</h1>
+      <p style="color:var(--text-secondary);margin-bottom:1.25rem;font-size:.92rem">
+        We sent a 6-digit code to <strong style="color:var(--text-primary)">{{ email }}</strong>. It expires in 10 minutes.
+      </p>
+
+      {% if demo_otp %}
+      <div class="demo-otp-box">
+        ⚠️ Email not configured — Demo Mode OTP:
+        <strong>{{ demo_otp }}</strong>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/verify_otp" id="otpForm">
+        <!-- Single hidden field that gets assembled by JS -->
+        <input type="hidden" name="otp" id="otpHidden"/>
+
+        <div class="otp-inputs">
+          {% for i in range(6) %}
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" autocomplete="off"/>
+          {% endfor %}
+        </div>
+
+        <div class="timer">Code expires in <span id="countdown">10:00</span></div>
+
+        <div class="form-group">
+          <label class="form-label">🔒 New Password</label>
+          <input type="password" name="new_password" class="form-control" placeholder="Enter new password" required minlength="6"/>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Reset Password ✓</button>
+      </form>
+
+      <div class="separator" style="margin:1.5rem 0"></div>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-secondary)">
+        Didn't receive it? <a href="/forgot_password" style="color:var(--accent);font-weight:600">Resend OTP</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/static/toast.js"></script>
+  <script src="/static/theme.js"></script>
+  <script>
+    // Auto-advance OTP digits
+    const digits = document.querySelectorAll('.otp-digit');
+    const hidden = document.getElementById('otpHidden');
+    digits.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g,'');
+        if (inp.value && i < digits.length - 1) digits[i+1].focus();
+        hidden.value = [...digits].map(d => d.value).join('');
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) digits[i-1].focus();
+      });
+    });
+
+    // Countdown timer
+    let secs = 600;
+    const el = document.getElementById('countdown');
+    const timer = setInterval(() => {
+      secs--;
+      const m = String(Math.floor(secs/60)).padStart(2,'0');
+      const s = String(secs%60).padStart(2,'0');
+      el.textContent = `${m}:${s}`;
+      if (secs <= 0) { clearInterval(timer); el.textContent = 'Expired'; el.style.color = 'var(--danger)'; }
+    }, 1000);
+  </script>
+</body>
+</html>

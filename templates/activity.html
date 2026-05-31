@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Activity Log — BusPass Pro</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    .timeline { position:relative; padding-left:2rem; margin-top:1.5rem; }
+    .timeline::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, var(--accent), var(--accent-2)); border-radius:2px; }
+    .timeline-item { position:relative; margin-bottom:1.5rem; animation:fadeUp .4s ease both; }
+    .timeline-item::before { content:''; position:absolute; left:-2.45rem; top:.35rem; width:14px; height:14px; border-radius:50%; border:2px solid var(--accent); background:var(--bg-card); }
+    .timeline-item.approved::before { background:var(--success); border-color:var(--success); }
+    .timeline-item.rejected::before { background:var(--danger); border-color:var(--danger); }
+    .timeline-item.pending::before { background:var(--warning); border-color:var(--warning); }
+    .tl-card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1rem 1.25rem; }
+    .tl-title { font-weight:700; margin-bottom:.25rem; display:flex; align-items:center; gap:.5rem; }
+    .tl-date { font-size:.8rem; color:var(--text-secondary); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+  </style>
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="page-wrapper">
+    <div class="page-header animate-fade-up">
+      <h1 class="page-title">📋 Activity Log</h1>
+      <p class="page-subtitle">Your complete application history, {{ user }}</p>
+    </div>
+
+    {% if events %}
+    <div class="timeline animate-fade-up animate-delay-1">
+      {% for ev in events %}
+      <div class="timeline-item {{ ev.status | lower }}">
+        <div class="tl-card">
+          <div class="tl-title">
+            {% if ev.status == 'Approved' %}✅{% elif ev.status == 'Rejected' %}❌{% else %}⏳{% endif %}
+            Pass Application —
+            <span class="badge badge-{{ ev.status | lower }}">{{ ev.status }}</span>
+          </div>
+          <div class="tl-date">📅 {{ ev.event_date.strftime('%d %B %Y, %I:%M %p') if ev.event_date else 'Date unavailable' }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state animate-fade-up animate-delay-1">
+      <div style="font-size:3.5rem;margin-bottom:1rem">📭</div>
+      <h3>No Activity Yet</h3>
+      <p>Your application history will appear here once you apply for a pass.</p>
+      <a href="/apply_pass" class="btn btn-primary" style="margin-top:1rem">Apply for a Pass</a>
+    </div>
+    {% endif %}
+  </div>
+  <script src="/static/toast.js"></script>
+  <script src="/static/theme.js"></script>
+</body>
+</html>
