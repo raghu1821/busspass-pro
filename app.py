@@ -626,6 +626,50 @@ def revoke(id):
     get_db().commit()
     return "OK"
 
+@app.route("/export_applications")
+def export_applications():
+    if "admin" not in session:
+        return redirect("/admin_login")
+        
+    import csv
+    import io
+    from flask import Response
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT a.application_id, a.passenger_name, r.source, r.destination, 
+               a.pass_type, a.duration_months, a.status, a.created_at
+        FROM Pass_Application a
+        JOIN Route r ON a.route_id = r.route_id
+        ORDER BY a.application_id DESC
+    """)
+    rows = cursor.fetchall()
+    
+    # Generate CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['Application ID', 'Passenger Name', 'Route Source', 'Route Destination', 
+                     'Pass Type', 'Duration (Months)', 'Status', 'Applied At'])
+                     
+    for row in rows:
+        writer.writerow([
+            row['application_id'], 
+            row['passenger_name'], 
+            row['source'], 
+            row['destination'], 
+            row['pass_type'], 
+            row['duration_months'], 
+            row['status'],
+            row['created_at'].strftime("%Y-%m-%d %H:%M:%S") if row.get('created_at') else 'N/A'
+        ])
+        
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=applications_export.csv"
+    return response
+
 @app.route("/download_pass/<int:pass_id>")
 def download_pass(pass_id):
     from reportlab.lib.pagesizes import A4
