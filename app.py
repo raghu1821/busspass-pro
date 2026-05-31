@@ -603,6 +603,27 @@ WHERE application_id=%s
 
     return "OK"
 
+@app.route("/revoke/<int:id>")
+def revoke(id):
+    if "admin" not in session: return redirect("/admin_login")
+    
+    cursor = get_db().cursor(dictionary=True)
+    # Get the passenger name from the application
+    cursor.execute("SELECT passenger_name FROM Pass_Application WHERE application_id=%s", (id,))
+    app_data = cursor.fetchone()
+    
+    if not app_data:
+        return "Not found", 404
+
+    passenger = app_data["passenger_name"]
+    
+    # Update both Pass and Pass_Application status
+    cursor.execute("UPDATE Pass SET status='Revoked' WHERE passenger_name=%s AND status='Active'", (passenger,))
+    cursor.execute("UPDATE Pass_Application SET status='Revoked' WHERE application_id=%s", (id,))
+    
+    get_db().commit()
+    return "OK"
+
 @app.route("/download_pass/<int:pass_id>")
 def download_pass(pass_id):
     from reportlab.lib.pagesizes import A4
@@ -756,47 +777,64 @@ def logout():
 
 @app.route("/stats")
 def stats():
+    if "admin" not in session: return redirect("/admin_login")
     cursor = get_db().cursor(dictionary=True)
-    # Total Users
-    cursor.execute(
-        "SELECT COUNT(*) AS total_users FROM Passenger"
-    )
 
+    # Total Users
+    cursor.execute("SELECT COUNT(*) AS total_users FROM Passenger")
     total_users = cursor.fetchone()["total_users"]
 
     # Approved Passes
-    cursor.execute("""
-    SELECT COUNT(*) AS approved
-    FROM Pass_Application
-    WHERE status='Approved'
-    """)
-
+    cursor.execute("SELECT COUNT(*) AS approved FROM Pass_Application WHERE status='Approved'")
     approved = cursor.fetchone()["approved"]
 
     # Rejected Passes
-    cursor.execute("""
-    SELECT COUNT(*) AS rejected
-    FROM Pass_Application
-    WHERE status='Rejected'
-    """)
-
+    cursor.execute("SELECT COUNT(*) AS rejected FROM Pass_Application WHERE status='Rejected'")
     rejected = cursor.fetchone()["rejected"]
 
     # Pending Applications
-    cursor.execute("""
-    SELECT COUNT(*) AS pending
-    FROM Pass_Application
-    WHERE status='Pending'
-    """)
-
+    cursor.execute("SELECT COUNT(*) AS pending FROM Pass_Application WHERE status='Pending'")
     pending = cursor.fetchone()["pending"]
+
+    # Monthly Applications (last 6 months) — for bar chart
+    cursor.execute("""
+        SELECT DATE_FORMAT(created_at, '%b %Y') AS month,
+               YEAR(created_at) AS yr,
+               MONTH(created_at) AS mo,
+               COUNT(*) AS total
+        FROM Pass_Application
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY yr, mo, month
+        ORDER BY yr ASC, mo ASC
+    """)
+    monthly_raw = cursor.fetchall()
+    monthly_labels = [r["month"] for r in monthly_raw]
+    monthly_data   = [r["total"] for r in monthly_raw]
+
+    # Route-wise popularity — for pie chart
+    cursor.execute("""
+        SELECT CONCAT(Route.source, ' → ', Route.destination) AS route_name,
+               COUNT(*) AS total
+        FROM Pass_Application
+        JOIN Route ON Pass_Application.route_id = Route.route_id
+        GROUP BY Pass_Application.route_id
+        ORDER BY total DESC
+        LIMIT 6
+    """)
+    route_raw    = cursor.fetchall()
+    route_labels = [r["route_name"] for r in route_raw]
+    route_data   = [r["total"]      for r in route_raw]
 
     return render_template(
         "stats.html",
         total_users=total_users,
         approved=approved,
         rejected=rejected,
-        pending=pending
+        pending=pending,
+        monthly_labels=monthly_labels,
+        monthly_data=monthly_data,
+        route_labels=route_labels,
+        route_data=route_data
     )
 
 

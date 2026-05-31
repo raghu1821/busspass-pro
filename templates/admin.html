@@ -146,6 +146,18 @@
                     })">
                     ❌ Reject
                   </button>
+                {% elif app.status == 'Approved' %}
+                  <button class="btn btn-warning btn-sm"
+                    onclick="ajaxAction('/revoke/{{ app.application_id }}', {
+                      btn: this,
+                      loadingText: 'Revoking…',
+                      successTitle: '🚫 Revoked',
+                      successMsg: '{{ app.passenger_name }}\'s pass has been revoked.',
+                      reload: true,
+                      reloadDelay: 1500
+                    })">
+                    🚫 Revoke Pass
+                  </button>
                 {% else %}
                   <span class="text-muted-sm">Processed</span>
                 {% endif %}

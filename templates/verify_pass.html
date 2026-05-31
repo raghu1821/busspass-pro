@@ -59,21 +59,22 @@
   {% if pass_data %}
     {% set is_valid = pass_data.status == 'Active' %}
     {% set is_expired = pass_data.status == 'Expired' %}
+    {% set is_revoked = pass_data.status == 'Revoked' %}
 
     <div class="verify-card">
-      <div class="verify-header {{ 'valid' if is_valid else 'expired' if is_expired else 'invalid' }}">
+      <div class="verify-header {{ 'valid' if is_valid else 'expired' if is_expired or is_revoked else 'invalid' }}">
         <img class="verify-photo"
              src="/static/uploads/{{ pass_data.photo }}"
              alt="Passenger Photo"
              onerror="this.src='https://ui-avatars.com/api/?name={{ pass_data.passenger_name }}&background=4f8ef7&color=fff&size=88'"/>
         <span class="status-icon">
-          {{ '✅' if is_valid else '❌' if is_expired else '⚠️' }}
+          {{ '✅' if is_valid else '❌' if is_expired else '🚫' if is_revoked else '⚠️' }}
         </span>
         <div class="status-text">
-          {{ 'PASS VALID' if is_valid else 'PASS EXPIRED' if is_expired else 'INVALID PASS' }}
+          {{ 'PASS VALID' if is_valid else 'PASS EXPIRED' if is_expired else 'PASS REVOKED' if is_revoked else 'INVALID PASS' }}
         </div>
         <div class="status-sub {{ 'pulse' if is_valid }}">
-          {{ 'This pass is currently active and valid for travel' if is_valid else 'This pass has expired. Renewal required.' if is_expired else 'This pass is not valid for travel.' }}
+          {{ 'This pass is currently active and valid for travel' if is_valid else 'This pass has expired. Renewal required.' if is_expired else 'This pass has been revoked by administration.' if is_revoked else 'This pass is not valid for travel.' }}
         </div>
       </div>
 

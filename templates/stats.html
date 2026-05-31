@@ -3,296 +3,293 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Statistics — BusPass Pro Admin</title>
+  <title>System Statistics — BusPass Pro Admin</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* Top stat cards row */
-    .stats-top {
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
       margin-bottom: 2rem;
     }
-    @media(max-width:760px){ .stats-top { grid-template-columns: 1fr; } }
-
-    .stat-card .stat-icon-emoji {
-      font-size: 2.2rem;
-      display: block;
-      margin-bottom: 0.75rem;
-    }
-    .stat-card .stat-big-value {
-      font-size: 2.8rem;
-      font-weight: 900;
-      line-height: 1;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-    .stat-card .stat-big-label {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.55);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 600;
-    }
-
-    /* Bar chart */
-    .chart-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      margin-bottom: 1.25rem;
-    }
-    .bar-row {
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
       display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .bar-label {
-      width: 120px;
-      font-size: 0.82rem;
-      color: var(--text-secondary);
-      text-align: right;
-      flex-shrink: 0;
-      font-weight: 600;
-    }
-    .bar-track {
-      flex: 1;
-      height: 36px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
+      flex-direction: column;
+      gap: .4rem;
+      position: relative;
       overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
     }
-    .bar-fill {
-      height: 100%;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      padding-left: 12px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #fff;
-      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
-      min-width: 44px;
+    .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+    .stat-box::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
     }
-    .bar-fill.green-bar  {
-      background: linear-gradient(90deg, #059669, #34d399);
-      box-shadow: 0 0 16px rgba(16,185,129,0.3);
-    }
-    .bar-fill.red-bar    {
-      background: linear-gradient(90deg, #dc2626, #f87171);
-      box-shadow: 0 0 16px rgba(239,68,68,0.3);
-    }
-    .bar-fill.yellow-bar {
-      background: linear-gradient(90deg, #d97706, #fbbf24);
-      box-shadow: 0 0 16px rgba(245,158,11,0.3);
-    }
-    .bar-count {
-      width: 52px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      flex-shrink: 0;
-    }
+    .stat-box.blue::before   { background: linear-gradient(90deg,#2563eb,#60a5fa); }
+    .stat-box.green::before  { background: linear-gradient(90deg,#059669,#34d399); }
+    .stat-box.red::before    { background: linear-gradient(90deg,#dc2626,#f87171); }
+    .stat-box.orange::before { background: linear-gradient(90deg,#d97706,#fbbf24); }
+    .stat-box.purple::before { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
+    .stat-icon { font-size: 1.8rem; }
+    .stat-val  { font-size: 2.2rem; font-weight: 900; color: var(--text-primary); line-height:1; }
+    .stat-lbl  { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
 
-    /* Summary grid */
-    .summary-grid {
+    /* Charts grid */
+    .charts-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-top: 1.5rem;
+      grid-template-columns: 2fr 1.2fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
-    @media(max-width:480px){ .summary-grid { grid-template-columns: 1fr; } }
-    .summary-item {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: var(--radius-md);
-      padding: 1rem 1.25rem;
-    }
-    .summary-lbl {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
-    }
-    .summary-val {
-      font-size: 1.4rem;
-      font-weight: 900;
-      color: #fff;
-    }
+    @media(max-width:860px){ .charts-grid { grid-template-columns:1fr; } }
 
-    /* Approval circle */
-    .rate-layout {
-      display: flex;
-      align-items: center;
-      gap: 2.5rem;
-      flex-wrap: wrap;
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem;
     }
-    .rate-circle {
-      width: 160px; height: 160px;
-      border-radius: 50%;
+    .chart-title {
+      font-size: .95rem; font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .chart-wrap { position:relative; width:100%; }
+
+    /* Approval rate ring */
+    .rate-section {
+      display: flex; align-items: center; justify-content: space-around;
+      flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem;
+    }
+    .rate-ring-wrap { text-align:center; }
+    .rate-ring {
+      width: 110px; height: 110px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 0 40px rgba(16,185,129,0.2);
+      font-size: 1.4rem; font-weight: 900; color: #fff;
+      margin: 0 auto .6rem;
+      background: conic-gradient(#059669 0%, #059669 var(--pct), #1e293b var(--pct));
+      box-shadow: 0 0 0 6px rgba(5,150,105,.15);
     }
-    .rate-circle-inner {
-      width: 112px; height: 112px;
-      border-radius: 50%;
-      background: var(--bg-secondary);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 2px;
+    .rate-ring-inner {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: var(--bg-card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; font-weight: 900; color: var(--text-primary);
     }
-    .rate-pct  { font-size: 1.9rem; font-weight: 900; color: #4ade80; line-height: 1; }
-    .rate-text { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
-
-    .rate-breakdown { display: flex; flex-direction: column; gap: 0.6rem; }
-    .rate-item {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 0.88rem; color: var(--text-secondary);
-    }
-    .rate-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    }
+    .rate-label { font-size:.78rem; color:var(--text-secondary); font-weight:600; }
+    .rate-stat { text-align:center; }
+    .rate-stat .big { font-size:1.6rem; font-weight:900; }
+    .rate-stat .lbl { font-size:.78rem; color:var(--text-secondary); }
   </style>
 </head>
 <body>
   {% include 'admin_navbar.html' %}
 
   <div class="page-wrapper">
-
-    <!-- Header -->
     <div class="page-header animate-fade-up">
       <div class="page-title">📈 System Statistics</div>
-      <div class="page-subtitle">Overview of all bus pass applications and system activity</div>
+      <div class="page-subtitle">Real-time overview of BusPass Pro activity</div>
     </div>
 
-    <!-- Top 3 Stat Cards -->
-    {% set total_processed = approved + rejected %}
-    {% set approved_pct = ((approved / total_processed) * 100) | round(1) if total_processed > 0 else 0 %}
-    {% set rejected_pct = ((rejected / total_processed) * 100) | round(1) if total_processed > 0 else 0 %}
-    {% set all_total = total_processed + pending %}
-    {% set pending_pct = ((pending / all_total) * 100) | round(1) if all_total > 0 else 0 %}
-    {% set approval_deg = ((approved / total_processed) * 360) | round(1) if total_processed > 0 else 0 %}
-
-    <div class="stats-top">
-      <div class="stat-card blue animate-fade-up animate-delay-1">
-        <span class="stat-icon-emoji">👥</span>
-        <div class="stat-big-value">{{ total_users }}</div>
-        <div class="stat-big-label">Total Registered Users</div>
+    <!-- Stat Boxes -->
+    <div class="stats-grid animate-fade-up animate-delay-1">
+      <div class="stat-box blue">
+        <div class="stat-icon">👥</div>
+        <div class="stat-val">{{ total_users }}</div>
+        <div class="stat-lbl">Total Users</div>
       </div>
-      <div class="stat-card green animate-fade-up animate-delay-2">
-        <span class="stat-icon-emoji">✅</span>
-        <div class="stat-big-value">{{ approved }}</div>
-        <div class="stat-big-label">Approved Passes</div>
+      <div class="stat-box green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-val">{{ approved }}</div>
+        <div class="stat-lbl">Approved Passes</div>
       </div>
-      <div class="stat-card red animate-fade-up animate-delay-3">
-        <span class="stat-icon-emoji">❌</span>
-        <div class="stat-big-value">{{ rejected }}</div>
-        <div class="stat-big-label">Rejected Passes</div>
+      <div class="stat-box orange">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-val">{{ pending }}</div>
+        <div class="stat-lbl">Pending Applications</div>
       </div>
-    </div>
-
-    <!-- Bar Chart -->
-    <div class="glass-card animate-fade-up animate-delay-2" style="margin-bottom:1.5rem;">
-      <div class="chart-title">📊 Application Breakdown</div>
-
-      <div class="bar-row">
-        <div class="bar-label">✅ Approved</div>
-        <div class="bar-track">
-          <div class="bar-fill green-bar" style="width:{{ approved_pct }}%;">
-            {{ approved_pct }}%
-          </div>
-        </div>
-        <div class="bar-count">{{ approved }}</div>
+      <div class="stat-box red">
+        <div class="stat-icon">❌</div>
+        <div class="stat-val">{{ rejected }}</div>
+        <div class="stat-lbl">Rejected Passes</div>
       </div>
-
-      <div class="bar-row">
-        <div class="bar-label">❌ Rejected</div>
-        <div class="bar-track">
-          <div class="bar-fill red-bar" style="width:{{ rejected_pct }}%;">
-            {{ rejected_pct }}%
-          </div>
-        </div>
-        <div class="bar-count">{{ rejected }}</div>
-      </div>
-
-      <div class="bar-row">
-        <div class="bar-label">⏳ Pending</div>
-        <div class="bar-track">
-          <div class="bar-fill yellow-bar" style="width:{{ pending_pct }}%;">
-            {{ pending_pct }}%
-          </div>
-        </div>
-        <div class="bar-count">{{ pending }}</div>
-      </div>
-
-      <!-- Summary Grid -->
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-lbl">Total Processed</div>
-          <div class="summary-val">{{ total_processed }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-lbl">Pending Review</div>
-          <div class="summary-val" style="color:#fbbf24;">{{ pending }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-lbl">Approval Rate</div>
-          <div class="summary-val" style="color:#4ade80;">{{ approved_pct }}%</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-lbl">Rejection Rate</div>
-          <div class="summary-val" style="color:#f87171;">{{ rejected_pct }}%</div>
-        </div>
+      <div class="stat-box purple">
+        <div class="stat-icon">📊</div>
+        {% set total_processed = approved + rejected %}
+        {% if total_processed > 0 %}
+        <div class="stat-val">{{ ((approved / total_processed) * 100) | int }}%</div>
+        {% else %}
+        <div class="stat-val">—</div>
+        {% endif %}
+        <div class="stat-lbl">Approval Rate</div>
       </div>
     </div>
 
-    <!-- Approval Rate Circle -->
-    <div class="glass-card animate-fade-up animate-delay-3">
-      <div class="chart-title">🎯 Approval Rate Overview</div>
-      <div class="rate-layout">
+    <!-- Charts -->
+    <div class="charts-grid animate-fade-up animate-delay-2">
 
-        <div class="rate-circle"
-          style="background: conic-gradient(
-            #22c55e 0deg {{ approval_deg }}deg,
-            rgba(255,255,255,0.07) {{ approval_deg }}deg 360deg
-          );">
-          <div class="rate-circle-inner">
-            <div class="rate-pct">{{ approved_pct }}%</div>
-            <div class="rate-text">Approval</div>
+      <!-- Bar Chart: Monthly Applications -->
+      <div class="chart-card">
+        <div class="chart-title">📅 Monthly Applications (Last 6 Months)</div>
+        <div class="chart-wrap" style="height:280px;">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Pie Chart: Route Popularity -->
+      <div class="chart-card">
+        <div class="chart-title">🗺️ Route Popularity</div>
+        <div class="chart-wrap" style="height:280px;">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Approval Rate Ring -->
+    <div class="chart-card animate-fade-up animate-delay-3">
+      <div class="chart-title">🏆 Approval Breakdown</div>
+      <div class="rate-section">
+
+        {% set total_processed = approved + rejected %}
+        {% set rate = ((approved / total_processed) * 100) | int if total_processed > 0 else 0 %}
+
+        <div class="rate-ring-wrap">
+          <div class="rate-ring" style="--pct: {{ rate }}%;">
+            <div class="rate-ring-inner">{{ rate }}%</div>
           </div>
+          <div class="rate-label">Approval Rate</div>
         </div>
 
-        <div>
-          <h3 style="font-size:1.1rem; margin-bottom:1rem; font-weight:700;">Pass Application Summary</h3>
-          <div class="rate-breakdown">
-            <div class="rate-item">
-              <span class="rate-dot" style="background:#22c55e;"></span>
-              Approved: <strong style="color:#4ade80; margin-left:4px;">{{ approved }}</strong>
-              &nbsp;({{ approved_pct }}%)
-            </div>
-            <div class="rate-item">
-              <span class="rate-dot" style="background:#ef4444;"></span>
-              Rejected: <strong style="color:#f87171; margin-left:4px;">{{ rejected }}</strong>
-              &nbsp;({{ rejected_pct }}%)
-            </div>
-            <div class="rate-item">
-              <span class="rate-dot" style="background:#f59e0b;"></span>
-              Pending: <strong style="color:#fbbf24; margin-left:4px;">{{ pending }}</strong>
-              &nbsp;awaiting review
-            </div>
-            <div class="rate-item" style="margin-top:0.6rem; padding-top:0.6rem; border-top:1px solid var(--glass-border);">
-              <span class="rate-dot" style="background:rgba(255,255,255,0.25);"></span>
-              Total Processed: <strong style="color:#fff; margin-left:4px;">{{ total_processed }}</strong>
-              &nbsp;| Registered Users: <strong style="color:var(--accent); margin-left:4px;">{{ total_users }}</strong>
-            </div>
-          </div>
+        <div class="rate-stat">
+          <div class="big" style="color:#34d399;">{{ approved }}</div>
+          <div class="lbl">✅ Approved</div>
+        </div>
+        <div class="rate-stat">
+          <div class="big" style="color:#f87171;">{{ rejected }}</div>
+          <div class="lbl">❌ Rejected</div>
+        </div>
+        <div class="rate-stat">
+          <div class="big" style="color:#fbbf24;">{{ pending }}</div>
+          <div class="lbl">⏳ Pending</div>
+        </div>
+        <div class="rate-stat">
+          <div class="big" style="color:#60a5fa;">{{ total_users }}</div>
+          <div class="lbl">👥 Total Users</div>
         </div>
 
       </div>
     </div>
 
   </div>
+
+  <script>
+    // ── Shared chart defaults ────────────────────────────────────────────
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const gridColor = 'rgba(255,255,255,0.06)';
+
+    // ── Bar Chart: Monthly Applications ─────────────────────────────────
+    const monthlyLabels = {{ monthly_labels | tojson }};
+    const monthlyData   = {{ monthly_data   | tojson }};
+
+    new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: {
+        labels: monthlyLabels.length ? monthlyLabels : ['No Data'],
+        datasets: [{
+          label: 'Applications',
+          data: monthlyData.length ? monthlyData : [0],
+          backgroundColor: 'rgba(37,99,235,0.7)',
+          borderColor: '#2563eb',
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false,
+          hoverBackgroundColor: 'rgba(96,165,250,0.9)',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+              label: ctx => '  ' + ctx.parsed.y + ' application(s)'
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: { color: '#94a3b8' }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: { color: '#94a3b8', stepSize: 1 },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // ── Pie Chart: Route Popularity ──────────────────────────────────────
+    const routeLabels = {{ route_labels | tojson }};
+    const routeData   = {{ route_data   | tojson }};
+
+    const palette = [
+      '#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'
+    ];
+
+    new Chart(document.getElementById('pieChart'), {
+      type: 'doughnut',
+      data: {
+        labels: routeLabels.length ? routeLabels : ['No Data'],
+        datasets: [{
+          data: routeData.length ? routeData : [1],
+          backgroundColor: palette,
+          borderColor: '#0f1117',
+          borderWidth: 3,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#94a3b8',
+              padding: 12,
+              font: { size: 11 },
+              boxWidth: 12,
+              boxHeight: 12
+            }
+          },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+              label: ctx => '  ' + ctx.parsed + ' application(s)'
+            }
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>

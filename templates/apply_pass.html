@@ -40,6 +40,119 @@
     .step-text strong { display:block; font-size:0.9rem; margin-bottom:2px; color:var(--text-primary); }
     .step-text span { font-size:0.8rem; color:var(--text-secondary); }
     .route-option { color: var(--text-primary); }
+
+    /* ── Fare Preview ──────────────────────────────────────────────── */
+    #fare-preview {
+      display: none;
+      background: rgba(79,142,247,0.08);
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin-top: 1rem;
+    }
+    .fare-row { display:flex; justify-content:space-between; font-size:0.88rem; padding:4px 0; }
+    .fare-total { font-size:1.1rem; font-weight:800; color:var(--accent); border-top:1px solid rgba(79,142,247,0.2); padding-top:8px; margin-top:4px; }
+
+    /* ── Payment Modal Overlay ─────────────────────────────────────── */
+    #pay-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    #pay-overlay.show { opacity:1; pointer-events:all; }
+    #pay-modal {
+      background: #0f1117;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      width: 92%; max-width: 420px;
+      padding: 0;
+      overflow: hidden;
+      transform: translateY(30px) scale(0.96);
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    }
+    #pay-overlay.show #pay-modal { transform: translateY(0) scale(1); }
+
+    .pay-header {
+      background: linear-gradient(135deg, #1e3a5f, #2563eb);
+      padding: 1.4rem 1.6rem;
+      display: flex; align-items: center; gap: .8rem;
+    }
+    .pay-header-icon { font-size: 1.5rem; }
+    .pay-header-title { font-size: 1rem; font-weight: 800; color:#fff; }
+    .pay-header-sub { font-size: 0.75rem; color: rgba(255,255,255,.65); }
+    .pay-lock { margin-left:auto; font-size:.85rem; color:rgba(255,255,255,.5); display:flex; align-items:center; gap:4px; }
+
+    .pay-body { padding: 1.6rem; }
+
+    .pay-amount-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 1.2rem;
+      text-align: center;
+      margin-bottom: 1.4rem;
+    }
+    .pay-amount-label { font-size: 0.78rem; color: #94a3b8; margin-bottom: 4px; }
+    .pay-amount-value { font-size: 2.2rem; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .pay-amount-desc { font-size: 0.78rem; color: #64748b; margin-top:4px; }
+
+    /* Card input area */
+    .pay-field-label { font-size: 0.75rem; color:#94a3b8; font-weight:600; letter-spacing:.05em; margin-bottom:6px; display:block; }
+    .pay-input {
+      width:100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 11px 14px; color:#fff; font-size:0.95rem; font-family:monospace;
+      transition: border-color .2s;
+      box-sizing: border-box;
+    }
+    .pay-input:focus { outline: none; border-color: #2563eb; }
+    .pay-input::placeholder { color: #475569; }
+    .pay-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .pay-field { margin-bottom: 1rem; }
+
+    .pay-cards { display:flex; gap:8px; margin-bottom:1rem; }
+    .pay-card-logo {
+      background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px; padding:5px 10px; font-size:0.7rem; font-weight:700; color:#94a3b8; cursor:pointer;
+      transition: all .2s;
+    }
+    .pay-card-logo.active { border-color:#2563eb; color:#60a5fa; background:rgba(37,99,235,0.15); }
+
+    .btn-pay {
+      width:100%; padding:14px; background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      color:#fff; font-size:1rem; font-weight:800; border:none; border-radius:12px;
+      cursor:pointer; transition: all .2s; letter-spacing:.02em;
+    }
+    .btn-pay:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.4); }
+    .btn-pay:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .pay-secure { text-align:center; font-size:0.72rem; color:#475569; margin-top:.8rem; }
+
+    /* ── Processing & Success States ──────────────────────────────── */
+    #pay-processing, #pay-success { display:none; padding: 2.5rem 1.6rem; text-align:center; }
+
+    .spinner {
+      width:52px; height:52px; border:4px solid rgba(255,255,255,0.1);
+      border-top-color:#2563eb; border-radius:50%;
+      animation: spin 0.9s linear infinite; margin:0 auto 1.2rem;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .success-circle {
+      width:72px; height:72px; border-radius:50%;
+      background: linear-gradient(135deg, #065f46, #059669);
+      display:flex; align-items:center; justify-content:center;
+      font-size:2rem; margin:0 auto 1.2rem;
+      animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+
+    .pay-state-title { font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:.4rem; }
+    .pay-state-sub { font-size:.85rem; color:#64748b; }
   </style>
 </head>
 <body>
@@ -57,14 +170,17 @@
       <div class="apply-form-card animate-fade-up animate-delay-1">
         <h3 style="margin-bottom:1.5rem; font-size:1.1rem;">Application Details</h3>
 
-        <form method="POST">
+        <form id="apply-form" method="POST">
 
           <div class="form-group">
             <label class="form-label">🗺️ Select Route</label>
-            <select name="route_id" class="form-control" required>
+            <select name="route_id" id="route-select" class="form-control" required>
               <option value="" disabled selected>Choose your route...</option>
               {% for route in routes %}
-              <option value="{{ route.route_id }}" class="route-option">
+              <option value="{{ route.route_id }}" class="route-option"
+                data-fare="{{ route.fare }}"
+                data-src="{{ route.source }}"
+                data-dst="{{ route.destination }}">
                 {{ route.source }} → {{ route.destination }} (₹{{ route.fare }})
               </option>
               {% endfor %}
@@ -73,7 +189,7 @@
 
           <div class="form-group">
             <label class="form-label">🎫 Pass Type</label>
-            <select name="pass_type" class="form-control" required>
+            <select name="pass_type" id="pass-type" class="form-control" required>
               <option value="" disabled selected>Choose pass type...</option>
               <option value="Daily">🌅 Daily Pass</option>
               <option value="Monthly">📅 Monthly Pass</option>
@@ -84,16 +200,24 @@
           <div class="form-group">
             <label class="form-label">⏱️ Duration (Months)</label>
             <input
-              type="number" name="duration_months" class="form-control"
+              type="number" name="duration_months" id="duration-months" class="form-control"
               placeholder="e.g. 3" min="1" max="12" required
             />
             <span style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; display:block;">
-              Enter number of months (1-12)
+              Enter number of months (1–12)
             </span>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">
-            🚀 Submit Application
+          <!-- Fare Preview -->
+          <div id="fare-preview">
+            <div class="fare-row"><span style="color:#94a3b8">Route</span><span id="fp-route">—</span></div>
+            <div class="fare-row"><span style="color:#94a3b8">Base Fare</span><span id="fp-fare">₹0</span></div>
+            <div class="fare-row"><span style="color:#94a3b8">Duration</span><span id="fp-duration">—</span></div>
+            <div class="fare-row fare-total"><span>Total Amount</span><span id="fp-total">₹0</span></div>
+          </div>
+
+          <button type="button" id="pay-btn" class="btn btn-primary btn-block btn-lg" style="margin-top:1.2rem;">
+            💳 Proceed to Payment
           </button>
         </form>
       </div>
@@ -113,12 +237,19 @@
             <li>
               <div class="step-num">2</div>
               <div class="step-text">
-                <strong>Admin Review</strong>
-                <span>Our admin will review and approve within 24h</span>
+                <strong>Complete Payment</strong>
+                <span>Pay securely via our payment gateway</span>
               </div>
             </li>
             <li>
               <div class="step-num">3</div>
+              <div class="step-text">
+                <strong>Admin Review</strong>
+                <span>Our admin will verify and approve within 24h</span>
+              </div>
+            </li>
+            <li>
+              <div class="step-num">4</div>
               <div class="step-text">
                 <strong>Get Your Pass</strong>
                 <span>Download PDF or use QR code at the gate</span>
@@ -138,5 +269,171 @@
 
     </div>
   </div>
+
+  <!-- ── Payment Modal ──────────────────────────────────────────────────── -->
+  <div id="pay-overlay">
+    <div id="pay-modal">
+
+      <!-- Header -->
+      <div class="pay-header">
+        <div class="pay-header-icon">🚌</div>
+        <div>
+          <div class="pay-header-title">BusPass Pro Checkout</div>
+          <div class="pay-header-sub">Secure payment gateway</div>
+        </div>
+        <div class="pay-lock">🔒 SSL</div>
+      </div>
+
+      <!-- Step 1: Card Input -->
+      <div id="pay-card-form" class="pay-body">
+        <div class="pay-amount-box">
+          <div class="pay-amount-label">TOTAL DUE</div>
+          <div class="pay-amount-value" id="modal-amount">₹0</div>
+          <div class="pay-amount-desc" id="modal-desc">Bus Pass Application</div>
+        </div>
+
+        <div class="pay-cards">
+          <div class="pay-card-logo active" onclick="selectCard(this)">💳 VISA</div>
+          <div class="pay-card-logo" onclick="selectCard(this)">💳 Mastercard</div>
+          <div class="pay-card-logo" onclick="selectCard(this)">💳 RuPay</div>
+          <div class="pay-card-logo" onclick="selectCard(this)">📱 UPI</div>
+        </div>
+
+        <div class="pay-field">
+          <label class="pay-field-label">CARD NUMBER</label>
+          <input class="pay-input" id="card-num" maxlength="19" placeholder="1234  5678  9012  3456" />
+        </div>
+        <div class="pay-field">
+          <label class="pay-field-label">CARD HOLDER NAME</label>
+          <input class="pay-input" placeholder="As on card" />
+        </div>
+        <div class="pay-row">
+          <div class="pay-field">
+            <label class="pay-field-label">EXPIRY</label>
+            <input class="pay-input" maxlength="5" placeholder="MM/YY" />
+          </div>
+          <div class="pay-field">
+            <label class="pay-field-label">CVV</label>
+            <input class="pay-input" maxlength="3" placeholder="•••" type="password" />
+          </div>
+        </div>
+
+        <button class="btn-pay" id="confirm-pay-btn" onclick="processPayment()">
+          Pay <span id="btn-amount">₹0</span> →
+        </button>
+        <div class="pay-secure">🔒 Your payment info is encrypted and never stored</div>
+
+        <div style="text-align:center; margin-top:1rem;">
+          <button onclick="closeModal()" style="background:none;border:none;color:#475569;font-size:0.8rem;cursor:pointer;">✕ Cancel</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Processing -->
+      <div id="pay-processing">
+        <div class="spinner"></div>
+        <div class="pay-state-title">Processing Payment…</div>
+        <div class="pay-state-sub">Please wait. Do not close this window.</div>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div id="pay-success">
+        <div class="success-circle">✅</div>
+        <div class="pay-state-title">Payment Successful!</div>
+        <div class="pay-state-sub" id="success-msg">Submitting your application…</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const routeSelect   = document.getElementById('route-select');
+    const passTypeEl    = document.getElementById('pass-type');
+    const durationEl    = document.getElementById('duration-months');
+    const farePreview   = document.getElementById('fare-preview');
+
+    // Fare rates per pass type multiplier
+    const typeMultiplier = { Daily: 1, Monthly: 26, Yearly: 280 };
+
+    function updateFare() {
+      const opt = routeSelect.options[routeSelect.selectedIndex];
+      const baseFare  = parseFloat(opt.dataset.fare || 0);
+      const passType  = passTypeEl.value;
+      const duration  = parseInt(durationEl.value || 0);
+      const src = opt.dataset.src || ''; const dst = opt.dataset.dst || '';
+
+      if (!baseFare || !passType || !duration) { farePreview.style.display='none'; return; }
+
+      const mult  = typeMultiplier[passType] || 1;
+      const total = baseFare * mult * duration;
+
+      document.getElementById('fp-route').textContent    = src + ' → ' + dst;
+      document.getElementById('fp-fare').textContent     = '₹' + baseFare;
+      document.getElementById('fp-duration').textContent = duration + ' month(s) × ' + passType;
+      document.getElementById('fp-total').textContent    = '₹' + total.toFixed(2);
+      farePreview.style.display = 'block';
+
+      // Sync to modal
+      document.getElementById('modal-amount').textContent = '₹' + total.toFixed(2);
+      document.getElementById('btn-amount').textContent   = '₹' + total.toFixed(2);
+      document.getElementById('modal-desc').textContent   = passType + ' Pass — ' + src + ' → ' + dst;
+    }
+
+    routeSelect.addEventListener('change', updateFare);
+    passTypeEl.addEventListener('change', updateFare);
+    durationEl.addEventListener('input', updateFare);
+
+    // Card number auto-format
+    document.getElementById('card-num').addEventListener('input', function() {
+      let v = this.value.replace(/\D/g,'').substring(0,16);
+      this.value = v.replace(/(.{4})/g,'$1  ').trim();
+    });
+
+    document.getElementById('pay-btn').addEventListener('click', function() {
+      const opt = routeSelect.options[routeSelect.selectedIndex];
+      if (!opt.value || !passTypeEl.value || !durationEl.value) {
+        alert('Please fill in all fields before proceeding.');
+        return;
+      }
+      openModal();
+    });
+
+    function openModal() {
+      document.getElementById('pay-overlay').classList.add('show');
+      document.getElementById('pay-card-form').style.display = 'block';
+      document.getElementById('pay-processing').style.display = 'none';
+      document.getElementById('pay-success').style.display = 'none';
+    }
+
+    function closeModal() {
+      document.getElementById('pay-overlay').classList.remove('show');
+    }
+
+    function selectCard(el) {
+      document.querySelectorAll('.pay-card-logo').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function processPayment() {
+      // Show processing
+      document.getElementById('pay-card-form').style.display = 'none';
+      document.getElementById('pay-processing').style.display = 'block';
+
+      // Simulate 2.5s payment processing
+      setTimeout(() => {
+        document.getElementById('pay-processing').style.display = 'none';
+        document.getElementById('pay-success').style.display = 'block';
+
+        // Submit the real form after 1.5s
+        setTimeout(() => {
+          document.getElementById('apply-form').submit();
+        }, 1500);
+      }, 2500);
+    }
+
+    // Close on backdrop click
+    document.getElementById('pay-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
 </body>
 </html>
