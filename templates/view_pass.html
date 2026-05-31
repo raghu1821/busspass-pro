@@ -14,6 +14,16 @@
       box-shadow: 0 0 60px rgba(79,142,247,0.35), var(--shadow-lg);
       position: relative; overflow: hidden;
       transform-style: preserve-3d;
+      animation: autoWobble 8s infinite alternate ease-in-out;
+    }
+    
+    .pass-card:hover {
+      animation: none; /* Disable auto wobble when hovering with mouse */
+    }
+    
+    @keyframes autoWobble {
+      0% { transform: perspective(1000px) rotateX(8deg) rotateY(-10deg) scale3d(1, 1, 1); }
+      100% { transform: perspective(1000px) rotateX(-8deg) rotateY(10deg) scale3d(1.02, 1.02, 1.02); }
     }
     
     /* Holographic Shimmer Overlay */
@@ -108,6 +118,19 @@
       <div class="page-title">🎫 My Digital Pass</div>
       <div class="page-subtitle">Your current active bus pass</div>
     </div>
+
+    {% if unpaid_app %}
+    <div class="glass-card animate-fade-up animate-delay-1" style="padding:3rem; text-align:center; max-width:540px; margin:0 auto 2rem; border: 2px solid var(--accent); background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(37,99,235,0.1));">
+      <div style="font-size:4rem; margin-bottom:1rem; filter: drop-shadow(0 0 20px rgba(37,99,235,0.5));">💳</div>
+      <h2 style="margin-bottom:8px; font-weight:800; color:#fff;">Payment Required</h2>
+      <p style="margin-bottom:2rem; color:var(--text-secondary); font-size:1.05rem;">
+        Your application for a <strong>{{ unpaid_app.pass_type }}</strong> pass has been approved! 
+        <br><br>
+        Please pay the activation fee to instantly generate your digital 3D holographic pass.
+      </p>
+      <a href="/dashboard" class="btn btn-primary btn-lg" style="box-shadow: var(--glow-blue);">Go to Dashboard to Pay →</a>
+    </div>
+    {% endif %}
 
     {% if pass_data %}
 

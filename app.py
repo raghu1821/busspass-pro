@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 app.secret_key = os.getenv("SECRET_KEY", "buspasssecret2024xK9")
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 def allowed_file(filename):
@@ -250,9 +251,18 @@ def view_pass():
             os.makedirs(os.path.dirname(qr_path), exist_ok=True)
             img.save(qr_path)
 
+    # Check if they have an approved but unpaid application
+    cursor.execute("""
+        SELECT * FROM Pass_Application 
+        WHERE passenger_name=%s AND status='Approved'
+        ORDER BY application_id DESC LIMIT 1
+    """, (user,))
+    unpaid_app = cursor.fetchone()
+
     return render_template(
         "view_pass.html",
-        pass_data=pass_data
+        pass_data=pass_data,
+        unpaid_app=unpaid_app
     )
 
 @app.route("/generate_qr/<int:pass_id>")
