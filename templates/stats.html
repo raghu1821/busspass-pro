@@ -190,20 +190,20 @@
 
   <script>
     // ── Shared chart defaults ────────────────────────────────────────────
-    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.color = '#64748b';
     Chart.defaults.font.family = "'Inter', sans-serif";
-
-    const gridColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.size = 13;
 
     // ── Bar Chart: Monthly Applications ─────────────────────────────────
     const monthlyLabels = {{ monthly_labels | tojson }};
     const monthlyData   = {{ monthly_data   | tojson }};
     
-    // Create a beautiful glowing gradient for the bar chart
     const ctxBar = document.getElementById('barChart').getContext('2d');
-    const barGradient = ctxBar.createLinearGradient(0, 0, 0, 400);
-    barGradient.addColorStop(0, 'rgba(124, 58, 237, 0.9)'); // Purple top
-    barGradient.addColorStop(1, 'rgba(37, 99, 235, 0.2)');  // Blue transparent bottom
+    
+    // Clean, modern gradient for bars
+    const barGradient = ctxBar.createLinearGradient(0, 0, 0, 300);
+    barGradient.addColorStop(0, '#2563eb'); // Blue
+    barGradient.addColorStop(1, '#60a5fa'); // Light blue
 
     new Chart(ctxBar, {
       type: 'bar',
@@ -213,11 +213,11 @@
           label: 'Applications',
           data: monthlyData.length ? monthlyData : [0],
           backgroundColor: barGradient,
-          borderColor: 'rgba(124, 58, 237, 1)',
-          borderWidth: 1,
-          borderRadius: 6,
-          borderSkipped: false,
-          hoverBackgroundColor: 'rgba(139, 92, 246, 1)',
+          borderColor: 'transparent',
+          borderWidth: 0,
+          borderRadius: 4,
+          barPercentage: 0.5,
+          hoverBackgroundColor: '#1d4ed8',
         }]
       },
       options: {
@@ -226,26 +226,32 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-            titleColor: '#f1f5f9',
-            bodyColor: '#38bdf8',
-            borderColor: 'rgba(255,255,255,0.1)',
+            backgroundColor: '#ffffff',
+            titleColor: '#0f172a',
+            bodyColor: '#475569',
+            borderColor: '#e2e8f0',
             borderWidth: 1,
             padding: 12,
+            boxPadding: 4,
             displayColors: false,
+            titleFont: { size: 14, weight: 'bold' },
+            bodyFont: { size: 13 },
             callbacks: {
-              label: ctx => '  ' + ctx.parsed.y + ' application(s)'
-            }
+              label: ctx => ctx.parsed.y + ' applications'
+            },
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
           }
         },
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: '#94a3b8', font: { size: 11 } }
+            ticks: { color: '#64748b' },
+            border: { display: false }
           },
           y: {
-            grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-            ticks: { color: '#94a3b8', stepSize: 1, font: { size: 11 } },
+            grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+            ticks: { color: '#64748b', stepSize: 1, padding: 10 },
+            border: { display: false },
             beginAtZero: true
           }
         }
