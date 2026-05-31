@@ -1,6 +1,3 @@
-# Gunicorn configuration for Render deployment
-workers = 1
-worker_class = "sync"
-timeout = 120          # 2 minutes — prevents WORKER TIMEOUT on slow DB/SMTP ops
-keepalive = 5
-bind = "0.0.0.0:10000"
+import os
+port = os.getenv("PORT", "10000")
+bind = f"0.0.0.0:{port}"
