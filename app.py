@@ -42,8 +42,11 @@ def get_db():
     """Return a live DB connection, reconnecting automatically if dropped."""
     global _db_conn
     try:
-        if _db_conn is None or not _db_conn.is_connected():
+        if _db_conn is None:
             _db_conn = mysql.connector.connect(**_db_config)
+        else:
+            # ping actually tests the connection; reconnect=True fixes it if dead
+            _db_conn.ping(reconnect=True, attempts=3, delay=1)
     except Exception:
         _db_conn = mysql.connector.connect(**_db_config)
     return _db_conn
@@ -173,27 +176,9 @@ def dashboard():
         return redirect("/login")
 
     user = session["user"]
-    db = get_db()
-
-    # Auto-create created_at on Render DB using a separate cursor
-    try:
-        schema_cur = db.cursor()
-        schema_cur.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
-        row = schema_cur.fetchone()
-        schema_cur.close()
-        if not row:
-            alter_cur = db.cursor()
-            alter_cur.execute(
-                "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-            )
-            alter_cur.close()
-            db.commit()
-    except Exception:
-        pass
-
-    # Fetch applications with a fresh cursor
     applications = []
     try:
+        db = get_db()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
             SELECT Pass_Application.*, Route.source, Route.destination
@@ -204,8 +189,8 @@ def dashboard():
         """, (user,))
         applications = cursor.fetchall()
         cursor.close()
-    except Exception:
-        pass
+    except Exception as e:
+        app.logger.error(f"Dashboard query error: {e}")
 
     return render_template(
         "dashboard.html",
@@ -795,92 +780,79 @@ def logout():
 @app.route("/stats")
 def stats():
     if "admin" not in session: return redirect("/admin_login")
-    db = get_db()
 
-    # Auto-create created_at on Render DB using a separate cursor
+    total_users = approved = rejected = pending = 0
+    monthly_labels = []; monthly_data = []
+    route_labels   = []; route_data   = []
+
     try:
-        schema_cur = db.cursor()
-        schema_cur.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
-        row = schema_cur.fetchone()
-        schema_cur.close()
-        if not row:
-            alter_cur = db.cursor()
-            alter_cur.execute(
-                "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-            )
-            alter_cur.close()
-            db.commit()
-    except Exception:
-        pass
+        db = get_db()
 
-    # ── Core counts ──────────────────────────────────────────────────────
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT COUNT(*) AS total_users FROM Passenger")
-    total_users = cursor.fetchone()["total_users"]
+        # Auto-create created_at if missing (Render DB migration)
+        try:
+            sc = db.cursor()
+            sc.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+            has_col = sc.fetchone()
+            sc.close()
+            if not has_col:
+                ac = db.cursor()
+                ac.execute("ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                ac.close()
+                db.commit()
+        except Exception:
+            pass
 
-    cursor.execute("SELECT COUNT(*) AS approved FROM Pass_Application WHERE status='Approved'")
-    approved = cursor.fetchone()["approved"]
+        # Core counts
+        cur = db.cursor(dictionary=True)
+        cur.execute("SELECT COUNT(*) AS v FROM Passenger"); total_users = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Approved'"); approved = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Rejected'"); rejected = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Pending'");  pending  = cur.fetchone()["v"]
+        cur.close()
 
-    cursor.execute("SELECT COUNT(*) AS rejected FROM Pass_Application WHERE status='Rejected'")
-    rejected = cursor.fetchone()["rejected"]
+        # Monthly bar chart
+        try:
+            c2 = db.cursor(dictionary=True)
+            c2.execute("""
+                SELECT DATE_FORMAT(created_at, '%%b %%Y') AS month,
+                       YEAR(created_at) AS yr, MONTH(created_at) AS mo,
+                       COUNT(*) AS total
+                FROM Pass_Application
+                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+                GROUP BY yr, mo, month ORDER BY yr, mo
+            """)
+            rows = c2.fetchall(); c2.close()
+            monthly_labels = [r["month"] for r in rows]
+            monthly_data   = [r["total"] for r in rows]
+        except Exception as e:
+            app.logger.error(f"Monthly chart error: {e}")
 
-    cursor.execute("SELECT COUNT(*) AS pending FROM Pass_Application WHERE status='Pending'")
-    pending = cursor.fetchone()["pending"]
-    cursor.close()
+        # Route pie chart
+        try:
+            c3 = db.cursor(dictionary=True)
+            c3.execute("""
+                SELECT CONCAT(Route.source, ' to ', Route.destination) AS route_name,
+                       COUNT(*) AS total
+                FROM Pass_Application
+                JOIN Route ON Pass_Application.route_id = Route.route_id
+                GROUP BY Pass_Application.route_id
+                ORDER BY total DESC LIMIT 6
+            """)
+            rows = c3.fetchall(); c3.close()
+            route_labels = [r["route_name"] for r in rows]
+            route_data   = [r["total"]      for r in rows]
+        except Exception as e:
+            app.logger.error(f"Route chart error: {e}")
 
-    # ── Monthly Applications (last 6 months) — bar chart ─────────────────
-    monthly_labels = []
-    monthly_data   = []
-    try:
-        cur2 = db.cursor(dictionary=True)
-        cur2.execute("""
-            SELECT DATE_FORMAT(created_at, '%%b %%Y') AS month,
-                   YEAR(created_at) AS yr,
-                   MONTH(created_at) AS mo,
-                   COUNT(*) AS total
-            FROM Pass_Application
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-            GROUP BY yr, mo, month
-            ORDER BY yr ASC, mo ASC
-        """)
-        monthly_raw    = cur2.fetchall()
-        cur2.close()
-        monthly_labels = [r["month"] for r in monthly_raw]
-        monthly_data   = [r["total"] for r in monthly_raw]
-    except Exception:
-        pass
-
-    # ── Route-wise popularity — pie chart ─────────────────────────────────
-    route_labels = []
-    route_data   = []
-    try:
-        cur3 = db.cursor(dictionary=True)
-        cur3.execute("""
-            SELECT CONCAT(Route.source, ' to ', Route.destination) AS route_name,
-                   COUNT(*) AS total
-            FROM Pass_Application
-            JOIN Route ON Pass_Application.route_id = Route.route_id
-            GROUP BY Pass_Application.route_id
-            ORDER BY total DESC
-            LIMIT 6
-        """)
-        route_raw    = cur3.fetchall()
-        cur3.close()
-        route_labels = [r["route_name"] for r in route_raw]
-        route_data   = [r["total"]      for r in route_raw]
-    except Exception:
-        pass
+    except Exception as e:
+        app.logger.error(f"Stats page DB error: {e}")
 
     return render_template(
         "stats.html",
-        total_users=total_users,
-        approved=approved,
-        rejected=rejected,
-        pending=pending,
-        monthly_labels=monthly_labels,
-        monthly_data=monthly_data,
-        route_labels=route_labels,
-        route_data=route_data
+        total_users=total_users, approved=approved,
+        rejected=rejected, pending=pending,
+        monthly_labels=monthly_labels, monthly_data=monthly_data,
+        route_labels=route_labels, route_data=route_data
     )
 
 
