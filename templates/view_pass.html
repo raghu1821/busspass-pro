@@ -224,10 +224,11 @@
   <script>
     // Initialize 3D tilt on the pass card, but disable it during printing via CSS
     VanillaTilt.init(document.querySelectorAll(".pass-card"), {
-      max: 8,
+      max: 25,
       speed: 400,
       glare: true,
-      "max-glare": 0.3,
+      "max-glare": 0.8,
+      scale: 1.05,
       gyroscope: true
     });
   </script>
