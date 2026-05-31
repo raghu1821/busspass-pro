@@ -533,8 +533,6 @@ def activate_pass(app_id):
     base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
     qr_data = f"{base_url}/verify/{pass_id}"
     
-    import qrcode
-    import os
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
