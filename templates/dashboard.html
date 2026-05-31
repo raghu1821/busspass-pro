@@ -119,7 +119,7 @@
             <td>
               {% if app.status == 'Approved' %}
                 <button class="btn btn-primary btn-sm"
-                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} → {{ app.destination }}', '{{ app.pass_type }}', {{ app.duration_months }})">
+                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} → {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration_months or 1 }}')">
                   💳 Pay & Activate
                 </button>
               {% elif app.status == 'Pending' %}
