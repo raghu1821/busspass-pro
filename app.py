@@ -79,6 +79,10 @@ def server_error(e):
 
 @app.route("/")
 def home():
+    if "admin" in session:
+        return redirect("/admin")
+    if "user" in session:
+        return redirect("/dashboard")
     return render_template("index.html")
 
 # ── Public Pass Verification (QR scan destination) ───────────────────────────
