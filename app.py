@@ -151,10 +151,12 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
     photo_base64
 )
 
-        cursor.execute(query, values)
-        get_db().commit()
-
-        return redirect("/login?msg=Account+created+successfully!+Please+sign+in.&type=success")
+        try:
+            cursor.execute(query, values)
+            get_db().commit()
+            return redirect("/login?msg=Account+created+successfully!+Please+sign+in.&type=success")
+        except mysql.connector.Error as err:
+            return redirect(f"/register?msg=Error:+Account+with+this+name+or+email+already+exists!&type=error")
 
     return render_template("register.html")
 
