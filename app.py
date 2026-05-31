@@ -174,22 +174,27 @@ def dashboard():
 
     user = session["user"]
     db = get_db()
-    cursor = db.cursor(dictionary=True)
 
-    # Auto-create created_at column if it doesn't exist yet (Render DB migration)
+    # Auto-create created_at on Render DB using a separate cursor
     try:
-        cursor.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
-        if not cursor.fetchone():
-            cursor.execute(
+        schema_cur = db.cursor()
+        schema_cur.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+        row = schema_cur.fetchone()
+        schema_cur.close()
+        if not row:
+            alter_cur = db.cursor()
+            alter_cur.execute(
                 "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
             )
+            alter_cur.close()
             db.commit()
     except Exception:
         pass
 
-    # Fetch user's applications
+    # Fetch applications with a fresh cursor
     applications = []
     try:
+        cursor = db.cursor(dictionary=True)
         cursor.execute("""
             SELECT Pass_Application.*, Route.source, Route.destination
             FROM Pass_Application
@@ -198,6 +203,7 @@ def dashboard():
             ORDER BY application_id DESC
         """, (user,))
         applications = cursor.fetchall()
+        cursor.close()
     except Exception:
         pass
 
@@ -790,17 +796,25 @@ def logout():
 def stats():
     if "admin" not in session: return redirect("/admin_login")
     db = get_db()
-    cursor = db.cursor(dictionary=True)
 
-    # ── Auto-create created_at column on Render DB if it doesn't exist ──
-    cursor.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
-    if not cursor.fetchone():
-        cursor.execute(
-            "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-        )
-        db.commit()
+    # Auto-create created_at on Render DB using a separate cursor
+    try:
+        schema_cur = db.cursor()
+        schema_cur.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+        row = schema_cur.fetchone()
+        schema_cur.close()
+        if not row:
+            alter_cur = db.cursor()
+            alter_cur.execute(
+                "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
+            alter_cur.close()
+            db.commit()
+    except Exception:
+        pass
 
     # ── Core counts ──────────────────────────────────────────────────────
+    cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT COUNT(*) AS total_users FROM Passenger")
     total_users = cursor.fetchone()["total_users"]
 
@@ -812,12 +826,14 @@ def stats():
 
     cursor.execute("SELECT COUNT(*) AS pending FROM Pass_Application WHERE status='Pending'")
     pending = cursor.fetchone()["pending"]
+    cursor.close()
 
     # ── Monthly Applications (last 6 months) — bar chart ─────────────────
     monthly_labels = []
     monthly_data   = []
     try:
-        cursor.execute("""
+        cur2 = db.cursor(dictionary=True)
+        cur2.execute("""
             SELECT DATE_FORMAT(created_at, '%%b %%Y') AS month,
                    YEAR(created_at) AS yr,
                    MONTH(created_at) AS mo,
@@ -827,7 +843,8 @@ def stats():
             GROUP BY yr, mo, month
             ORDER BY yr ASC, mo ASC
         """)
-        monthly_raw    = cursor.fetchall()
+        monthly_raw    = cur2.fetchall()
+        cur2.close()
         monthly_labels = [r["month"] for r in monthly_raw]
         monthly_data   = [r["total"] for r in monthly_raw]
     except Exception:
@@ -837,7 +854,8 @@ def stats():
     route_labels = []
     route_data   = []
     try:
-        cursor.execute("""
+        cur3 = db.cursor(dictionary=True)
+        cur3.execute("""
             SELECT CONCAT(Route.source, ' to ', Route.destination) AS route_name,
                    COUNT(*) AS total
             FROM Pass_Application
@@ -846,7 +864,8 @@ def stats():
             ORDER BY total DESC
             LIMIT 6
         """)
-        route_raw    = cursor.fetchall()
+        route_raw    = cur3.fetchall()
+        cur3.close()
         route_labels = [r["route_name"] for r in route_raw]
         route_data   = [r["total"]      for r in route_raw]
     except Exception:
