@@ -173,22 +173,33 @@ def dashboard():
         return redirect("/login")
 
     user = session["user"]
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
 
-    cursor = get_db().cursor(dictionary=True)
+    # Auto-create created_at column if it doesn't exist yet (Render DB migration)
+    try:
+        cursor.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+        if not cursor.fetchone():
+            cursor.execute(
+                "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
+            db.commit()
+    except Exception:
+        pass
 
-    query = """
-SELECT
-Pass_Application.*,
-Route.source,
-Route.destination
-FROM Pass_Application
-JOIN Route
-ON Pass_Application.route_id = Route.route_id
-WHERE passenger_name=%s
-"""
-    cursor.execute(query, (user,))
-
-    applications = cursor.fetchall()
+    # Fetch user's applications
+    applications = []
+    try:
+        cursor.execute("""
+            SELECT Pass_Application.*, Route.source, Route.destination
+            FROM Pass_Application
+            JOIN Route ON Pass_Application.route_id = Route.route_id
+            WHERE passenger_name=%s
+            ORDER BY application_id DESC
+        """, (user,))
+        applications = cursor.fetchall()
+    except Exception:
+        pass
 
     return render_template(
         "dashboard.html",
