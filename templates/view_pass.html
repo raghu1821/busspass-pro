@@ -26,6 +26,22 @@
       100% { transform: perspective(1000px) rotateX(-8deg) rotateY(10deg) scale3d(1.02, 1.02, 1.02); }
     }
     
+    @media print {
+      .pass-card {
+        transform: none !important;
+        animation: none !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+      }
+      .pass-card::before, .pass-card::after {
+        display: none !important;
+      }
+      .pass-status-badge { border: 1px solid #000; color: #000 !important; }
+      .pass-brand-name { color: #000 !important; }
+      body { background: #fff !important; }
+    }
+    
     /* Holographic Shimmer Overlay */
     .pass-card::before {
       content: ''; position: absolute; inset: -50%;
