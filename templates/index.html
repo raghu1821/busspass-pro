@@ -238,8 +238,10 @@
     </div>
   </footer>
 
-</body>
+  <script src="/static/toast.js"></script>
   <script>
+    lucide.createIcons();
+    
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
@@ -248,6 +250,25 @@
           .catch(err => console.warn('[PWA] SW registration failed:', err));
       });
     }
+
+    // Check URL for msg parameter and show toast
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const msg = urlParams.get('msg');
+      const type = urlParams.get('type') || 'info';
+      
+      if (msg) {
+        if (window.showToast) {
+           let title = 'Info';
+           if (type === 'success') title = '✅ Success';
+           if (type === 'error') title = '❌ Error';
+           if (type === 'warning') title = '⚠️ Warning';
+           showToast(title, msg, type);
+        } else {
+           alert(msg);
+        }
+      }
+    });
 
     // PWA Install Button Logic
     let deferredPrompt;
@@ -288,4 +309,7 @@
       });
     }
   </script>
+
+  {% include 'chatbot.html' %}
+</body>
 </html>
