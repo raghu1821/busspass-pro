@@ -127,14 +127,11 @@ def register():
         if not photo or not allowed_file(photo.filename):
             return redirect("/register?msg=Invalid+photo.+Only+PNG,+JPG,+or+WEBP+allowed.&type=error")
 
-        filename = secure_filename(photo.filename)
-
-        photo.save(
-            os.path.join(
-                "static/uploads",
-                filename
-            )
-        )
+        import base64
+        photo_bytes = photo.read()
+        mime = photo.mimetype or "image/jpeg"
+        b64 = base64.b64encode(photo_bytes).decode('utf-8')
+        photo_base64 = f"data:{mime};base64,{b64}"
 
         cursor = get_db().cursor()
 
@@ -151,7 +148,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
     address,
     category,
     password,
-    filename
+    photo_base64
 )
 
         cursor.execute(query, values)
