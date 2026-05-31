@@ -778,52 +778,68 @@ def logout():
 @app.route("/stats")
 def stats():
     if "admin" not in session: return redirect("/admin_login")
-    cursor = get_db().cursor(dictionary=True)
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
 
-    # Total Users
+    # ── Auto-create created_at column on Render DB if it doesn't exist ──
+    cursor.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+    if not cursor.fetchone():
+        cursor.execute(
+            "ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        )
+        db.commit()
+
+    # ── Core counts ──────────────────────────────────────────────────────
     cursor.execute("SELECT COUNT(*) AS total_users FROM Passenger")
     total_users = cursor.fetchone()["total_users"]
 
-    # Approved Passes
     cursor.execute("SELECT COUNT(*) AS approved FROM Pass_Application WHERE status='Approved'")
     approved = cursor.fetchone()["approved"]
 
-    # Rejected Passes
     cursor.execute("SELECT COUNT(*) AS rejected FROM Pass_Application WHERE status='Rejected'")
     rejected = cursor.fetchone()["rejected"]
 
-    # Pending Applications
     cursor.execute("SELECT COUNT(*) AS pending FROM Pass_Application WHERE status='Pending'")
     pending = cursor.fetchone()["pending"]
 
-    # Monthly Applications (last 6 months) — for bar chart
-    cursor.execute("""
-        SELECT DATE_FORMAT(created_at, '%b %Y') AS month,
-               YEAR(created_at) AS yr,
-               MONTH(created_at) AS mo,
-               COUNT(*) AS total
-        FROM Pass_Application
-        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-        GROUP BY yr, mo, month
-        ORDER BY yr ASC, mo ASC
-    """)
-    monthly_raw = cursor.fetchall()
-    monthly_labels = [r["month"] for r in monthly_raw]
-    monthly_data   = [r["total"] for r in monthly_raw]
+    # ── Monthly Applications (last 6 months) — bar chart ─────────────────
+    monthly_labels = []
+    monthly_data   = []
+    try:
+        cursor.execute("""
+            SELECT DATE_FORMAT(created_at, '%%b %%Y') AS month,
+                   YEAR(created_at) AS yr,
+                   MONTH(created_at) AS mo,
+                   COUNT(*) AS total
+            FROM Pass_Application
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+            GROUP BY yr, mo, month
+            ORDER BY yr ASC, mo ASC
+        """)
+        monthly_raw    = cursor.fetchall()
+        monthly_labels = [r["month"] for r in monthly_raw]
+        monthly_data   = [r["total"] for r in monthly_raw]
+    except Exception:
+        pass
 
-    # Route-wise popularity — for pie chart
-    cursor.execute("""
-        SELECT CONCAT(Route.source, ' → ', Route.destination) AS route_name,
-               COUNT(*) AS total
-        FROM Pass_Application
-        JOIN Route ON Pass_Application.route_id = Route.route_id
-        GROUP BY Pass_Application.route_id
-        ORDER BY total DESC
-        LIMIT 6
-    """)
-    route_raw    = cursor.fetchall()
-    route_labels = [r["route_name"] for r in route_raw]
-    route_data   = [r["total"]      for r in route_raw]
+    # ── Route-wise popularity — pie chart ─────────────────────────────────
+    route_labels = []
+    route_data   = []
+    try:
+        cursor.execute("""
+            SELECT CONCAT(Route.source, ' to ', Route.destination) AS route_name,
+                   COUNT(*) AS total
+            FROM Pass_Application
+            JOIN Route ON Pass_Application.route_id = Route.route_id
+            GROUP BY Pass_Application.route_id
+            ORDER BY total DESC
+            LIMIT 6
+        """)
+        route_raw    = cursor.fetchall()
+        route_labels = [r["route_name"] for r in route_raw]
+        route_data   = [r["total"]      for r in route_raw]
+    except Exception:
+        pass
 
     return render_template(
         "stats.html",
