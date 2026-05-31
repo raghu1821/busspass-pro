@@ -431,11 +431,17 @@ def admin():
         SELECT
         Pass_Application.*,
         Route.source,
-        Route.destination
+        Route.destination,
+        Passenger.photo,
+        Passenger.email,
+        Passenger.phone,
+        Passenger.category,
+        Passenger.address
         FROM Pass_Application
-        JOIN Route
-        ON Pass_Application.route_id = Route.route_id
+        JOIN Route ON Pass_Application.route_id = Route.route_id
+        JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
         WHERE passenger_name LIKE %s
+        ORDER BY Pass_Application.application_id DESC
         """
 
         cursor.execute(
@@ -449,10 +455,16 @@ def admin():
         SELECT
         Pass_Application.*,
         Route.source,
-        Route.destination
+        Route.destination,
+        Passenger.photo,
+        Passenger.email,
+        Passenger.phone,
+        Passenger.category,
+        Passenger.address
         FROM Pass_Application
-        JOIN Route
-        ON Pass_Application.route_id = Route.route_id
+        JOIN Route ON Pass_Application.route_id = Route.route_id
+        JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+        ORDER BY Pass_Application.application_id DESC
         """
 
         cursor.execute(query)
