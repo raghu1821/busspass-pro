@@ -133,9 +133,16 @@
     <!-- Charts -->
     <div class="charts-grid animate-fade-up animate-delay-2">
 
-      <!-- Bar Chart: Monthly Applications -->
+      <!-- Bar Chart: Applications Over Time -->
       <div class="chart-card">
-        <div class="chart-title">📅 Monthly Applications (Last 6 Months)</div>
+        <div class="chart-title" style="justify-content: space-between;">
+          <span>📅 Applications Over Time</span>
+          <select id="timeViewSelect" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" onchange="updateBarChart()">
+            <option value="6months">Last 6 Months</option>
+            <option value="this_month">This Month (Daily)</option>
+            <option value="this_year">This Year (Monthly)</option>
+          </select>
+        </div>
         <div class="chart-wrap" style="height:280px;">
           <canvas id="barChart"></canvas>
         </div>
@@ -194,10 +201,23 @@
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.font.size = 13;
 
-    // ── Bar Chart: Monthly Applications ─────────────────────────────────
-    const monthlyLabels = {{ monthly_labels | tojson }};
-    const monthlyData   = {{ monthly_data   | tojson }};
-    
+    // ── Bar Chart: Applications Over Time ────────────────────────────────
+    const datasets = {
+        '6months': {
+            labels: {{ monthly_labels | tojson }},
+            data: {{ monthly_data | tojson }}
+        },
+        'this_month': {
+            labels: {{ weekly_labels | tojson }},
+            data: {{ weekly_data | tojson }}
+        },
+        'this_year': {
+            labels: {{ yearly_labels | tojson }},
+            data: {{ yearly_data | tojson }}
+        }
+    };
+
+    let currentView = '6months';
     const ctxBar = document.getElementById('barChart').getContext('2d');
     
     // Clean, modern gradient for bars
@@ -205,13 +225,13 @@
     barGradient.addColorStop(0, '#2563eb'); // Blue
     barGradient.addColorStop(1, '#60a5fa'); // Light blue
 
-    new Chart(ctxBar, {
+    let barChart = new Chart(ctxBar, {
       type: 'bar',
       data: {
-        labels: monthlyLabels.length ? monthlyLabels : ['No Data'],
+        labels: datasets[currentView].labels.length ? datasets[currentView].labels : ['No Data'],
         datasets: [{
           label: 'Applications',
-          data: monthlyData.length ? monthlyData : [0],
+          data: datasets[currentView].data.length ? datasets[currentView].data : [0],
           backgroundColor: barGradient,
           borderColor: 'transparent',
           borderWidth: 0,
@@ -257,6 +277,13 @@
         }
       }
     });
+
+    window.updateBarChart = function() {
+        const view = document.getElementById('timeViewSelect').value;
+        barChart.data.labels = datasets[view].labels.length ? datasets[view].labels : ['No Data'];
+        barChart.data.datasets[0].data = datasets[view].data.length ? datasets[view].data : [0];
+        barChart.update();
+    };
 
     // ── Pie Chart: Route Popularity ──────────────────────────────────────
     const routeLabels = {{ route_labels | tojson }};

@@ -879,15 +879,56 @@ def stats():
         except Exception as e:
             app.logger.error(f"Route chart error: {e}")
 
+        # Weekly drill-down: daily counts for current month
+        try:
+            c4 = db.cursor(dictionary=True)
+            c4.execute("""
+                SELECT DAY(created_at) AS day_num,
+                       DATE_FORMAT(created_at, '%%b %%d') AS day_label,
+                       COUNT(*) AS total
+                FROM Pass_Application
+                WHERE YEAR(created_at)  = YEAR(NOW())
+                  AND MONTH(created_at) = MONTH(NOW())
+                GROUP BY day_num, day_label ORDER BY day_num
+            """)
+            weekly_rows = c4.fetchall(); c4.close()
+            weekly_labels = [r["day_label"] for r in weekly_rows]
+            weekly_data   = [r["total"]     for r in weekly_rows]
+        except Exception as e:
+            weekly_labels = []; weekly_data = []
+            app.logger.error(f"Weekly chart error: {e}")
+
+        # Yearly drill-down: monthly counts for current year
+        try:
+            c5 = db.cursor(dictionary=True)
+            c5.execute("""
+                SELECT DATE_FORMAT(created_at, '%%b') AS month_label,
+                       MONTH(created_at) AS mo,
+                       COUNT(*) AS total
+                FROM Pass_Application
+                WHERE YEAR(created_at) = YEAR(NOW())
+                GROUP BY mo, month_label ORDER BY mo
+            """)
+            yearly_rows = c5.fetchall(); c5.close()
+            yearly_labels = [r["month_label"] for r in yearly_rows]
+            yearly_data   = [r["total"]       for r in yearly_rows]
+        except Exception as e:
+            yearly_labels = []; yearly_data = []
+            app.logger.error(f"Yearly chart error: {e}")
+
     except Exception as e:
         app.logger.error(f"Stats page DB error: {e}")
+        weekly_labels = []; weekly_data = []
+        yearly_labels = []; yearly_data = []
 
     return render_template(
         "stats.html",
         total_users=total_users, approved=approved,
         rejected=rejected, pending=pending,
         monthly_labels=monthly_labels, monthly_data=monthly_data,
-        route_labels=route_labels, route_data=route_data
+        route_labels=route_labels, route_data=route_data,
+        weekly_labels=weekly_labels, weekly_data=weekly_data,
+        yearly_labels=yearly_labels, yearly_data=yearly_data
     )
 
 
