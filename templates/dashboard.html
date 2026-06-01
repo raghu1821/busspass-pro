@@ -86,6 +86,7 @@
       <table>
         <thead>
           <tr>
+            <th>App ID</th>
             <th>Route</th>
             <th>Pass Type</th>
             <th>Duration</th>
@@ -96,6 +97,7 @@
         <tbody>
           {% for app in applications %}
           <tr>
+            <td style="color:var(--text-muted); font-size:0.82rem;" title="Application ID">App #{{ app.application_id }}</td>
             <td>
               <span style="color:var(--text-secondary);">{{ app.source }}</span>
               <span style="margin:0 6px;color:var(--accent);">→</span>

@@ -92,7 +92,7 @@
       <table>
         <thead>
           <tr>
-            <th>#ID</th>
+            <th>App ID</th>
             <th>Passenger</th>
             <th>Route</th>
             <th>Pass Type</th>
@@ -104,7 +104,7 @@
         <tbody>
           {% for app in applications %}
           <tr>
-            <td style="color:var(--text-muted); font-size:0.82rem;">#{{ app.application_id }}</td>
+            <td style="color:var(--text-muted); font-size:0.82rem;" title="Application ID">App #{{ app.application_id }}</td>
             <td>
               <span style="font-weight:600;">{{ app.passenger_name }}</span>
             </td>
