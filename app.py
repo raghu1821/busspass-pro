@@ -1074,21 +1074,35 @@ def feedback():
     user = session["user"]
     cursor = get_db().cursor()
 
-    # Always fetch today's usage for display
-    cursor.execute(
-        "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
-        (user,)
-    )
-    used_today = cursor.fetchone()[0]
+    try:
+        # Always fetch today's usage for display
+        cursor.execute(
+            "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
+            (user,)
+        )
+        used_today = cursor.fetchone()[0]
+    except Exception as e:
+        app.logger.error(f"Feedback route error (used_today): {e}")
+        used_today = 0
+
     remaining  = max(0, 5 - used_today)
 
-    # Fetch last submission time for cooldown display
-    cursor.execute(
-        "SELECT created_at FROM Feedback WHERE passenger_name=%s ORDER BY created_at DESC LIMIT 1",
-        (user,)
-    )
-    last_row = cursor.fetchone()
-    last_submission = last_row[0] if last_row else None
+    try:
+        # Fetch last submission time for cooldown display
+        cursor.execute(
+            "SELECT created_at FROM Feedback WHERE passenger_name=%s ORDER BY created_at DESC LIMIT 1",
+            (user,)
+        )
+        last_row = cursor.fetchone()
+        last_submission = last_row[0] if last_row else None
+        
+        # TiDB sometimes returns strings instead of datetime objects
+        if isinstance(last_submission, str):
+            import datetime as dt
+            last_submission = dt.datetime.strptime(last_submission, "%Y-%m-%d %H:%M:%S")
+    except Exception as e:
+        app.logger.error(f"Feedback route error (last_submission): {e}")
+        last_submission = None
 
     if request.method == "POST":
         message = request.form.get("message", "").strip()
@@ -1177,11 +1191,23 @@ def view_feedback():
 
     cursor = get_db().cursor(dictionary=True)
 
-    cursor.execute(
-        "SELECT * FROM Feedback ORDER BY created_at DESC"
-    )
-
-    feedbacks = cursor.fetchall()
+    try:
+        cursor.execute(
+            "SELECT * FROM Feedback ORDER BY created_at DESC"
+        )
+        feedbacks = cursor.fetchall()
+        
+        # Ensure created_at is a datetime object for Jinja
+        import datetime as dt
+        for fb in feedbacks:
+            if isinstance(fb.get("created_at"), str):
+                try:
+                    fb["created_at"] = dt.datetime.strptime(fb["created_at"], "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    pass
+    except Exception as e:
+        app.logger.error(f"View Feedback route error: {e}")
+        feedbacks = []
 
     return render_template(
         "view_feedback.html",
