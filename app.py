@@ -58,16 +58,7 @@ def get_db():
 
 print("Database helper ready")
 
-# ── Auto-Migrations (Ensure columns are LONGTEXT for Base64) ───────────────
-try:
-    _db = get_db()
-    _c = _db.cursor()
-    _c.execute("ALTER TABLE Passenger MODIFY COLUMN photo LONGTEXT")
-    _c.execute("ALTER TABLE Pass MODIFY COLUMN qr_code LONGTEXT")
-    _db.commit()
-    print("Database migrations applied successfully")
-except Exception as e:
-    print("Migration error (ignored if already applied):", e)
+# ── Auto-Migrations Removed to speed up boot times ───────────────
 # ── Error Handlers ───────────────────────────────────────────────────────────
 @app.errorhandler(404)
 def not_found(e):
