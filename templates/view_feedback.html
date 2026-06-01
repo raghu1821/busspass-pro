@@ -97,7 +97,12 @@
             <div class="fb-name">👤 {{ fb.passenger_name }}</div>
             <div class="fb-date">
               {% if fb.created_at %}
-                🕐 {{ fb.created_at.strftime('%b %d, %Y — %I:%M %p') }}
+                <span
+                  class="timeago"
+                  data-ts="{{ fb.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}"
+                  title="{{ fb.created_at.strftime('%b %d, %Y — %I:%M %p') }}"
+                  style="cursor:help;"
+                >🕐 {{ fb.created_at.strftime('%b %d, %Y — %I:%M %p') }}</span>
               {% else %}
                 🕐 Recently submitted
               {% endif %}
@@ -132,5 +137,44 @@
     {% endif %}
 
   </div>
+
+  <script>
+    function timeAgo(dateStr) {
+      // TiDB stores UTC — parse as UTC
+      const past = new Date(dateStr + 'Z');
+      const now  = new Date();
+      const secs = Math.floor((now - past) / 1000);
+
+      if (secs < 30)           return 'Just now';
+      if (secs < 60)           return `${secs} seconds ago`;
+      const mins = Math.floor(secs / 60);
+      if (mins < 60)           return `${mins} minute${mins > 1 ? 's' : ''} ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24)            return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+      const days = Math.floor(hrs / 24);
+      if (days === 1)          return 'Yesterday';
+      if (days < 7)            return `${days} days ago`;
+      const weeks = Math.floor(days / 7);
+      if (weeks < 5)           return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+      const months = Math.floor(days / 30);
+      if (months < 12)         return `${months} month${months > 1 ? 's' : ''} ago`;
+      const years = Math.floor(days / 365);
+      return `${years} year${years > 1 ? 's' : ''} ago`;
+    }
+
+    // Update all timeago spans
+    function updateAll() {
+      document.querySelectorAll('.timeago').forEach(el => {
+        const ts = el.getAttribute('data-ts');
+        if (ts) {
+          el.innerHTML = '🕐 <b>' + timeAgo(ts) + '</b>&ensp;<span style="opacity:0.45;font-weight:400;">' + el.title + '</span>';
+        }
+      });
+    }
+
+    updateAll();
+    // Refresh every 30 seconds so "Just now" becomes "1 minute ago" live
+    setInterval(updateAll, 30000);
+  </script>
 </body>
 </html>
