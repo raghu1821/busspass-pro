@@ -186,7 +186,7 @@ def dashboard():
         db = get_db()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
-            SELECT Pass_Application.*, Route.source, Route.destination
+            SELECT Pass_Application.*, Route.source, Route.destination, Route.base_fare
             FROM Pass_Application
             JOIN Route ON Pass_Application.route_id = Route.route_id
             WHERE passenger_name=%s

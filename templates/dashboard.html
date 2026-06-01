@@ -119,7 +119,7 @@
             <td>
               {% if app.status == 'Approved' %}
                 <button class="btn btn-primary btn-sm"
-                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} → {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration_months or 1 }}')">
+                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} → {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration_months or 1 }}', {{ app.base_fare or 20 }})">
                   💳 Pay & Activate
                 </button>
               {% elif app.status == 'Pending' %}
@@ -229,11 +229,11 @@
     let _currentAppId = null;
     const typeMultiplier = { Daily:1, Monthly:26, Yearly:280 };
 
-    function showPayModal(appId, route, passType, months) {
+    function showPayModal(appId, route, passType, months, baseFare) {
       _currentAppId = appId;
-      // Fare calc (base fare from fare preview hidden in page; fallback to 50)
+      // Fare calc: Base Fare × 2 (Round trip) × Active Days
       const mult  = typeMultiplier[passType] || 1;
-      const total = (50 * mult * months).toFixed(2); // base ₹50 placeholder
+      const total = (baseFare * 2 * mult * months).toFixed(2);
       document.getElementById('modal-amount').textContent  = '₹' + total;
       document.getElementById('btn-pay-amount').textContent = '₹' + total;
       document.getElementById('modal-desc').textContent    = passType + ' Pass — ' + route;
