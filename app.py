@@ -1038,6 +1038,13 @@ def feedback():
 
         cursor = get_db().cursor()
 
+        # Enforce rate limit: max 5 feedbacks per day per user
+        cursor.execute("SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()", (session["user"],))
+        count = cursor.fetchone()[0]
+        if count >= 5:
+            return redirect("/dashboard?msg=You+have+reached+the+limit+of+5+feedback+messages+per+day.+Please+try+again+tomorrow.&type=warning")
+
+
         query = """
         INSERT INTO Feedback
         (passenger_name, message)

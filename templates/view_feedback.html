@@ -96,8 +96,8 @@
           <div>
             <div class="fb-name">👤 {{ fb.passenger_name }}</div>
             <div class="fb-date">
-              {% if fb.submitted_at %}
-                🕐 {{ fb.submitted_at }}
+              {% if fb.created_at %}
+                🕐 {{ fb.created_at.strftime('%b %d, %Y - %I:%M %p') }}
               {% else %}
                 🕐 Recently submitted
               {% endif %}
