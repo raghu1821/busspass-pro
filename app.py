@@ -1030,33 +1030,65 @@ def feedback():
     if "user" not in session:
         return redirect("/login")
 
+    user = session["user"]
+    cursor = get_db().cursor()
+
+    # Always fetch today's usage for display
+    cursor.execute(
+        "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
+        (user,)
+    )
+    used_today = cursor.fetchone()[0]
+    remaining  = max(0, 5 - used_today)
+
+    # Fetch last submission time for cooldown display
+    cursor.execute(
+        "SELECT created_at FROM Feedback WHERE passenger_name=%s ORDER BY created_at DESC LIMIT 1",
+        (user,)
+    )
+    last_row = cursor.fetchone()
+    last_submission = last_row[0] if last_row else None
+
     if request.method == "POST":
         message = request.form.get("message", "").strip()
         topic   = request.form.get("topic", "General")
 
-        if not message:
-            return redirect("/feedback?msg=Message+cannot+be+empty.&type=error")
+        # ── Layer 1: Empty / too short ────────────────────────────
+        if len(message) < 20:
+            return redirect("/feedback?msg=Message+too+short.+Please+write+at+least+20+characters.&type=error")
 
-        cursor = get_db().cursor()
+        # ── Layer 2: Daily limit (5 per day) ──────────────────────
+        if used_today >= 5:
+            return redirect("/feedback?msg=Daily+limit+reached+(5/5).+Come+back+tomorrow!&type=warning")
 
-        # Enforce rate limit: max 5 feedbacks per day per user
+        # ── Layer 3: 10-minute cooldown ───────────────────────────
+        if last_submission:
+            from datetime import timezone
+            import datetime as dt
+            now_utc = dt.datetime.now(timezone.utc).replace(tzinfo=None)
+            diff_seconds = (now_utc - last_submission).total_seconds()
+            if diff_seconds < 600:   # 600 seconds = 10 minutes
+                wait_min = int((600 - diff_seconds) // 60) + 1
+                return redirect(f"/feedback?msg=Please+wait+{wait_min}+more+minute(s)+before+sending+another+message.&type=warning")
+
+        # ── Layer 4: Duplicate message detection ──────────────────
         cursor.execute(
-            "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
-            (session["user"],)
+            "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND message=%s",
+            (user, message)
         )
-        count = cursor.fetchone()[0]
-        if count >= 5:
-            return redirect("/feedback?msg=You+have+reached+the+daily+limit+of+5+feedback+messages.+Please+try+again+tomorrow.&type=warning")
+        if cursor.fetchone()[0] > 0:
+            return redirect("/feedback?msg=You+already+sent+this+exact+message+before.+Please+write+something+different.&type=error")
 
+        # ── All checks passed — insert ────────────────────────────
         cursor.execute(
             "INSERT INTO Feedback (passenger_name, message, topic) VALUES (%s, %s, %s)",
-            (session["user"], message, topic)
+            (user, message, topic)
         )
         get_db().commit()
 
         return redirect("/feedback?msg=Feedback+submitted!+Thank+you+for+your+response.&type=success")
 
-    return render_template("feedback.html")
+    return render_template("feedback.html", remaining=remaining, used_today=used_today, last_submission=last_submission)
 
 @app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():

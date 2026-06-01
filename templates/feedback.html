@@ -77,6 +77,43 @@
         <p>We value your thoughts — every message is read by our team</p>
       </div>
 
+      <!-- Live Usage Counter -->
+      <div style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+        padding: 12px 16px;
+        margin-bottom: 1.5rem;
+      ">
+        <div style="font-size:0.85rem; color: var(--text-secondary);">
+          📊 Today's usage
+        </div>
+        <div style="display:flex; align-items:center; gap: 8px;">
+          {% for i in range(5) %}
+            <div style="
+              width: 10px; height: 10px; border-radius: 50%;
+              background: {% if i < used_today %}#ef4444{% else %}rgba(255,255,255,0.15){% endif %};
+              transition: background 0.3s;
+            "></div>
+          {% endfor %}
+          <span style="font-size:0.8rem; font-weight:700; color:{% if remaining == 0 %}#ef4444{% elif remaining <= 2 %}#f59e0b{% else %}#34d399{% endif %}; margin-left:6px;">
+            {{ used_today }}/5 used — {{ remaining }} left
+          </span>
+        </div>
+      </div>
+
+      {% if remaining == 0 %}
+      <!-- Limit reached state -->
+      <div style="text-align:center; padding:2rem 0;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🚫</div>
+        <h3 style="color:#f87171; margin-bottom:0.5rem;">Daily Limit Reached</h3>
+        <p style="color:var(--text-secondary); font-size:0.88rem;">You have used all 5 feedback slots for today. Your quota resets at midnight.</p>
+      </div>
+      {% else %}
+
       <form method="POST" id="feedbackForm">
         <input type="hidden" name="topic" id="topicInput" value="General" />
 
@@ -99,18 +136,28 @@
             id="msgArea"
             class="form-control"
             rows="5"
+            minlength="20"
             maxlength="500"
-            placeholder="Describe your experience, report an issue, or share a suggestion..."
+            placeholder="Describe your experience, report an issue, or share a suggestion... (min 20 characters)"
             required
             oninput="updateCounter(this)"
           ></textarea>
-          <div class="char-counter" id="charCounter">0 / 500</div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;">
+            <span id="minHint" style="font-size:0.75rem; color:var(--text-muted);">Minimum 20 characters</span>
+            <span class="char-counter" id="charCounter">0 / 500</span>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block btn-lg">
+        <!-- Rules reminder -->
+        <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:1.25rem; line-height:1.6;">
+          ⚡ <b>Rules:</b> Max 5 messages/day &nbsp;•&nbsp; 10-min cooldown between messages &nbsp;•&nbsp; Duplicate messages not allowed
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg" disabled>
           🚀 Submit Feedback
         </button>
       </form>
+      {% endif %}
     </div>
 
     <!-- Customer Support Card -->
@@ -140,10 +187,32 @@
     }
 
     function updateCounter(textarea) {
-      const len = textarea.value.length;
+      const len     = textarea.value.length;
       const counter = document.getElementById('charCounter');
+      const hint    = document.getElementById('minHint');
+      const btn     = document.getElementById('submitBtn');
+
+      // Character counter
       counter.textContent = `${len} / 500`;
       counter.classList.toggle('warn', len > 400);
+
+      // Min-length hint feedback
+      if (hint) {
+        if (len >= 20) {
+          hint.textContent = '✅ Good to go!';
+          hint.style.color = '#34d399';
+        } else {
+          hint.textContent = `Minimum 20 characters (${20 - len} more needed)`;
+          hint.style.color = 'var(--text-muted)';
+        }
+      }
+
+      // Enable/disable submit button
+      if (btn) {
+        btn.disabled = len < 20;
+        btn.style.opacity = len < 20 ? '0.45' : '1';
+        btn.style.cursor  = len < 20 ? 'not-allowed' : 'pointer';
+      }
     }
   </script>
 </body>
