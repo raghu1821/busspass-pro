@@ -1027,37 +1027,31 @@ def change_password():
     )
 @app.route("/feedback", methods=["GET", "POST"])
 def feedback():
-    if "user" not in session: return redirect("/login")
-
     if "user" not in session:
         return redirect("/login")
 
     if request.method == "POST":
+        message = request.form.get("message", "").strip()
+        topic   = request.form.get("topic", "General")
 
-        message = request.form["message"]
+        if not message:
+            return redirect("/feedback?msg=Message+cannot+be+empty.&type=error")
 
         cursor = get_db().cursor()
 
         # Enforce rate limit: max 5 feedbacks per day per user
-        cursor.execute("SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()", (session["user"],))
+        cursor.execute(
+            "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
+            (session["user"],)
+        )
         count = cursor.fetchone()[0]
         if count >= 5:
-            return redirect("/dashboard?msg=You+have+reached+the+limit+of+5+feedback+messages+per+day.+Please+try+again+tomorrow.&type=warning")
+            return redirect("/feedback?msg=You+have+reached+the+daily+limit+of+5+feedback+messages.+Please+try+again+tomorrow.&type=warning")
 
-
-        query = """
-        INSERT INTO Feedback
-        (passenger_name, message)
-        VALUES (%s, %s)
-        """
-
-        values = (
-            session["user"],
-            message
+        cursor.execute(
+            "INSERT INTO Feedback (passenger_name, message, topic) VALUES (%s, %s, %s)",
+            (session["user"], message, topic)
         )
-
-        cursor.execute(query, values)
-
         get_db().commit()
 
         return redirect("/feedback?msg=Feedback+submitted!+Thank+you+for+your+response.&type=success")
@@ -1111,7 +1105,7 @@ def view_feedback():
     cursor = get_db().cursor(dictionary=True)
 
     cursor.execute(
-        "SELECT * FROM Feedback"
+        "SELECT * FROM Feedback ORDER BY created_at DESC"
     )
 
     feedbacks = cursor.fetchall()

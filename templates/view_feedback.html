@@ -93,16 +93,28 @@
       <div class="feedback-card animate-fade-up" style="animation-delay: {{ loop.index0 * 0.05 }}s;">
         <div class="feedback-top">
           <div class="fb-avatar">{{ fb.passenger_name[0] | upper }}</div>
-          <div>
+          <div style="flex:1;">
             <div class="fb-name">👤 {{ fb.passenger_name }}</div>
             <div class="fb-date">
               {% if fb.created_at %}
-                🕐 {{ fb.created_at.strftime('%b %d, %Y - %I:%M %p') }}
+                🕐 {{ fb.created_at.strftime('%b %d, %Y — %I:%M %p') }}
               {% else %}
                 🕐 Recently submitted
               {% endif %}
             </div>
           </div>
+          {% if fb.topic %}
+          <span style="
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: {% if fb.topic == 'Complaint' %}rgba(239,68,68,0.15){% elif fb.topic == 'Suggestion' %}rgba(79,142,247,0.15){% elif fb.topic == 'Technical' %}rgba(245,158,11,0.15){% else %}rgba(16,185,129,0.15){% endif %};
+            color: {% if fb.topic == 'Complaint' %}#f87171{% elif fb.topic == 'Suggestion' %}#7cb3ff{% elif fb.topic == 'Technical' %}#fbbf24{% else %}#34d399{% endif %};
+            border: 1px solid {% if fb.topic == 'Complaint' %}rgba(239,68,68,0.3){% elif fb.topic == 'Suggestion' %}rgba(79,142,247,0.3){% elif fb.topic == 'Technical' %}rgba(245,158,11,0.3){% else %}rgba(16,185,129,0.3){% endif %};
+            white-space: nowrap;
+          ">{{ fb.topic }}</span>
+          {% endif %}
         </div>
         <div class="fb-message">
           {{ fb.message }}
