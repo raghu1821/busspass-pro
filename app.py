@@ -58,7 +58,52 @@ def get_db():
 
 print("Database helper ready")
 
-# ── Auto-Migrations Removed to speed up boot times ───────────────
+# ── Auto-Migrations: Ensure Feedback table & columns exist ────────
+def _run_migrations():
+    """Ensure Feedback table and all required columns exist on startup."""
+    try:
+        db = get_db()
+        c = db.cursor()
+
+        # 1. Create Feedback table if it doesn't exist
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS Feedback (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                passenger_name VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                topic VARCHAR(50) DEFAULT 'General',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        db.commit()
+
+        # 2. Add 'topic' column if missing
+        c.execute("SHOW COLUMNS FROM Feedback LIKE 'topic'")
+        if not c.fetchone():
+            c.execute("ALTER TABLE Feedback ADD COLUMN topic VARCHAR(50) DEFAULT 'General'")
+            db.commit()
+            print("Migration: Added topic column to Feedback")
+
+        # 3. Add 'created_at' column if missing
+        c.execute("SHOW COLUMNS FROM Feedback LIKE 'created_at'")
+        if not c.fetchone():
+            c.execute("ALTER TABLE Feedback ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            db.commit()
+            print("Migration: Added created_at column to Feedback")
+
+        # 4. Add created_at to Pass_Application if missing
+        c.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+        if not c.fetchone():
+            c.execute("ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            db.commit()
+            print("Migration: Added created_at column to Pass_Application")
+
+        c.close()
+        print("Migrations: All checks passed.")
+    except Exception as e:
+        print(f"Migration warning (non-fatal): {e}")
+
+_run_migrations()
 # ── Error Handlers ───────────────────────────────────────────────────────────
 @app.errorhandler(404)
 def not_found(e):
@@ -1014,6 +1059,7 @@ def edit_profile():
     )
 
 @app.route("/change_password", methods=["GET", "POST"])
+
 def change_password():
     if "user" not in session: return redirect("/login")
 
@@ -1066,6 +1112,7 @@ def change_password():
     return render_template(
         "change_password.html"
     )
+
 @app.route("/feedback", methods=["GET", "POST"])
 def feedback():
     if "user" not in session:
@@ -1135,15 +1182,26 @@ def feedback():
             return redirect("/feedback?msg=You+already+sent+this+exact+message+before.+Please+write+something+different.&type=error")
 
         # ── All checks passed — insert ────────────────────────────
-        cursor.execute(
-            "INSERT INTO Feedback (passenger_name, message, topic) VALUES (%s, %s, %s)",
-            (user, message, topic)
-        )
+        try:
+            cursor.execute(
+                "INSERT INTO Feedback (passenger_name, message, topic) VALUES (%s, %s, %s)",
+                (user, message, topic)
+            )
+        except Exception as insert_err:
+            app.logger.warning(f"Feedback insert with topic failed ({insert_err}), retrying without topic column")
+            # Fallback: insert without topic in case column doesn't exist yet
+            cursor.execute(
+                "INSERT INTO Feedback (passenger_name, message) VALUES (%s, %s)",
+                (user, message)
+            )
         get_db().commit()
 
         return redirect("/feedback?msg=Feedback+submitted!+Thank+you+for+your+response.&type=success")
 
-    return render_template("feedback.html", remaining=remaining, used_today=used_today, last_submission=last_submission)
+    msg      = request.args.get("msg", "")
+    msg_type = request.args.get("type", "info")
+    return render_template("feedback.html", remaining=remaining, used_today=used_today,
+                           last_submission=last_submission, msg=msg, msg_type=msg_type)
 
 @app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
@@ -1312,6 +1370,7 @@ def update_route_fare(id):
 
 # ── Feature 1: Forgot Password / OTP ────────────────────────────────────────
 @app.route("/forgot_password", methods=["GET", "POST"])
+
 def forgot_password():
     if request.method == "POST":
         email = request.form["email"]
