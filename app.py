@@ -1515,34 +1515,57 @@ def forgot_password():
         session["otp_email"]   = email
         session["otp_expires"] = expires.isoformat()
 
-        # Always show OTP on screen (reliable fallback)
-        # Also try to send email in background if configured
+        # Try sending email via SMTP directly (more reliable than Flask-Mail)
         mail_user = os.getenv("MAIL_USER", "")
-        if mail_user:
-            def send_async(app_ctx, message):
-                with app_ctx:
-                    try:
-                        mail.send(message)
-                    except Exception:
-                        pass
+        mail_pass = os.getenv("MAIL_PASS", "")
 
-            msg = Message(
-                subject="BusPass Pro - Your Password Reset OTP",
-                recipients=[email]
+        if mail_user and mail_pass:
+            def send_otp_email(to_email, otp_code, sender, password):
+                import smtplib
+                from email.mime.multipart import MIMEMultipart
+                from email.mime.text import MIMEText
+                try:
+                    html_body = f"""
+                    <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
+                      <h2 style="color:#4f8ef7;">🚌 BusPass Pro</h2>
+                      <h3>Password Reset OTP</h3>
+                      <p>Your one-time password expires in <strong>10 minutes</strong>.</p>
+                      <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:28px;margin:24px 0;">
+                        <span style="font-size:44px;font-weight:900;letter-spacing:14px;color:#4f8ef7;">{otp_code}</span>
+                      </div>
+                      <p style="color:#888;font-size:13px;">If you didn't request this, ignore this email.</p>
+                    </div>"""
+
+                    msg = MIMEMultipart("alternative")
+                    msg["Subject"] = "BusPass Pro — Your Password Reset OTP"
+                    msg["From"]    = f"BusPass Pro <{sender}>"
+                    msg["To"]      = to_email
+                    msg.attach(MIMEText(html_body, "html"))
+
+                    with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+                        server.ehlo()
+                        server.starttls()
+                        server.ehlo()
+                        server.login(sender, password)
+                        server.sendmail(sender, to_email, msg.as_string())
+                    print(f"OTP email sent successfully to {to_email}")
+                except smtplib.SMTPAuthenticationError as e:
+                    print(f"Gmail AUTH ERROR — wrong email/app-password in env vars: {e}")
+                except smtplib.SMTPException as e:
+                    print(f"SMTP error sending OTP: {e}")
+                except Exception as e:
+                    print(f"Unexpected email error: {e}")
+
+            t = threading.Thread(
+                target=send_otp_email,
+                args=(email, otp, mail_user, mail_pass),
+                daemon=True
             )
-            msg.html = f"""
-            <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
-              <h2 style="color:#4f8ef7;">BusPass Pro</h2>
-              <h3>Password Reset Request</h3>
-              <p>Your OTP is below. It expires in <strong>10 minutes</strong>.</p>
-              <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:24px;margin:24px 0;">
-                <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#4f8ef7;">{otp}</span>
-              </div>
-            </div>"""
-            t = threading.Thread(target=send_async, args=(app.app_context(), msg), daemon=True)
             t.start()
+        else:
+            print("OTP email skipped — MAIL_USER or MAIL_PASS not set in environment variables")
 
-        # Always redirect with OTP visible on screen
+        # Always redirect with OTP visible on screen (reliable fallback)
         return redirect(f"/verify_otp?demo_otp={otp}&email={email}")
 
     return render_template("forgot_password.html")
