@@ -85,7 +85,7 @@
         <div class="field-grid">
           <div class="form-group">
             <label class="form-label">🏷️ Category</label>
-            <select name="category" class="form-control">
+            <select name="category" id="categorySelect" class="form-control" onchange="updateDocHint()">
               <option>Student</option>
               <option>Employee</option>
               <option>Senior Citizen</option>
@@ -96,6 +96,24 @@
             <label class="form-label">🔐 Password</label>
             <input type="password" name="password" class="form-control" placeholder="Create a password" required />
           </div>
+        </div>
+
+        <!-- Document Upload (optional at registration) -->
+        <div class="form-group">
+          <label class="form-label">
+            📄 Proof Document
+            <span style="font-size:0.74rem; color:var(--text-muted); font-weight:400; margin-left:6px;">(Optional — can upload later from Profile)</span>
+          </label>
+          <div id="docHint" style="font-size:0.78rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:8px; border:1px solid var(--glass-border);">
+            💡 <strong>Student</strong> — Upload your College/School ID card or admission letter.
+          </div>
+          <label class="photo-upload-label" for="doc_file" id="docUploadLabel">
+            <span class="upload-icon">📎</span>
+            <span id="docFileName">Click to upload PDF, PNG, or JPG (max 5MB)</span>
+          </label>
+          <input type="file" name="doc_file" id="doc_file" accept=".pdf,.png,.jpg,.jpeg,.webp"
+            style="display:none;"
+            onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || 'Click to upload'; document.getElementById('docUploadLabel').style.borderColor='var(--accent)';" />
         </div>
 
         <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">
@@ -162,6 +180,19 @@
       errorMsg.style.display = "none";
       phoneInput.style.borderColor = "rgba(255, 255, 255, 0.15)";
     });
+
+    // Dynamic document hint based on selected category
+    const hints = {
+      'Student':        '💡 <strong>Student</strong> — Upload your College/School ID card or admission letter.',
+      'Employee':       '💡 <strong>Employee</strong> — Upload your Company ID card or appointment letter.',
+      'Senior Citizen': '💡 <strong>Senior Citizen</strong> — Upload your Aadhaar card or Senior Citizen card.',
+      'General':        '💡 <strong>General</strong> — Upload any valid government-issued ID (Aadhaar, PAN, Voter ID).',
+    };
+    function updateDocHint() {
+      const cat = document.getElementById('categorySelect').value;
+      document.getElementById('docHint').innerHTML = hints[cat] || hints['General'];
+    }
   </script>
 </body>
 </html>
+

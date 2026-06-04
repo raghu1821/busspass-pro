@@ -98,6 +98,20 @@ def _run_migrations():
             db.commit()
             print("Migration: Added created_at column to Pass_Application")
 
+        # 5. Add doc_proof (base64 document) to Passenger if missing
+        c.execute("SHOW COLUMNS FROM Passenger LIKE 'doc_proof'")
+        if not c.fetchone():
+            c.execute("ALTER TABLE Passenger ADD COLUMN doc_proof LONGTEXT DEFAULT NULL")
+            db.commit()
+            print("Migration: Added doc_proof column to Passenger")
+
+        # 6. Add doc_status to Passenger if missing
+        c.execute("SHOW COLUMNS FROM Passenger LIKE 'doc_status'")
+        if not c.fetchone():
+            c.execute("ALTER TABLE Passenger ADD COLUMN doc_status VARCHAR(20) DEFAULT 'Not Uploaded'")
+            db.commit()
+            print("Migration: Added doc_status column to Passenger")
+
         c.close()
         print("Migrations: All checks passed.")
     except Exception as e:
@@ -186,6 +200,25 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
         try:
             cursor.execute(query, values)
             get_db().commit()
+
+            # Handle optional document upload during registration
+            doc_file = request.files.get("doc_file")
+            if doc_file and doc_file.filename:
+                ext = doc_file.filename.rsplit('.', 1)[-1].lower() if '.' in doc_file.filename else ''
+                if ext in {'pdf', 'png', 'jpg', 'jpeg', 'webp'}:
+                    import base64
+                    doc_bytes = doc_file.read()
+                    if len(doc_bytes) <= 5 * 1024 * 1024:
+                        mime = doc_file.mimetype or ('application/pdf' if ext == 'pdf' else f'image/{ext}')
+                        b64 = base64.b64encode(doc_bytes).decode('utf-8')
+                        doc_uri = f"data:{mime};base64,{b64}"
+                        doc_cursor = get_db().cursor()
+                        doc_cursor.execute(
+                            "UPDATE Passenger SET doc_proof=%s, doc_status='Pending' WHERE full_name=%s",
+                            (doc_uri, full_name)
+                        )
+                        get_db().commit()
+
             return redirect("/login?msg=Account+created+successfully!+Please+sign+in.&type=success")
         except mysql.connector.Error as err:
             return redirect(f"/register?msg=Error:+Account+with+this+name+or+email+already+exists!&type=error")
@@ -227,6 +260,7 @@ def dashboard():
 
     user = session["user"]
     applications = []
+    doc_status = 'Not Uploaded'
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
@@ -238,6 +272,13 @@ def dashboard():
             ORDER BY application_id DESC
         """, (user,))
         applications = cursor.fetchall()
+
+        # Fetch document verification status
+        cursor.execute("SELECT doc_status FROM Passenger WHERE full_name=%s", (user,))
+        p = cursor.fetchone()
+        if p and p.get('doc_status'):
+            doc_status = p['doc_status']
+
         cursor.close()
     except Exception as e:
         app.logger.error(f"Dashboard query error: {e}")
@@ -245,7 +286,8 @@ def dashboard():
     return render_template(
         "dashboard.html",
         user=user,
-        applications=applications
+        applications=applications,
+        doc_status=doc_status
     )
 @app.route("/view_pass")
 def view_pass():
@@ -450,7 +492,9 @@ def admin():
         Passenger.email,
         Passenger.phone,
         Passenger.category,
-        Passenger.address
+        Passenger.address,
+        COALESCE(Passenger.doc_status,'Not Uploaded') AS doc_status,
+        CASE WHEN Passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
         FROM Pass_Application
         JOIN Route ON Pass_Application.route_id = Route.route_id
         JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
@@ -474,7 +518,9 @@ def admin():
         Passenger.email,
         Passenger.phone,
         Passenger.category,
-        Passenger.address
+        Passenger.address,
+        COALESCE(Passenger.doc_status,'Not Uploaded') AS doc_status,
+        CASE WHEN Passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
         FROM Pass_Application
         JOIN Route ON Pass_Application.route_id = Route.route_id
         JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
@@ -1004,8 +1050,87 @@ def profile():
     data=data
 )
 
+# ── Document Upload (User) ────────────────────────────────────────────────────
+@app.route("/upload_doc", methods=["POST"])
+def upload_doc():
+    if "user" not in session:
+        return redirect("/login")
+
+    doc_file = request.files.get("doc_file")
+    if not doc_file or doc_file.filename == "":
+        return redirect("/profile?msg=No+file+selected.&type=error")
+
+    allowed_doc_types = {"pdf", "png", "jpg", "jpeg", "webp"}
+    ext = doc_file.filename.rsplit(".", 1)[-1].lower() if "." in doc_file.filename else ""
+    if ext not in allowed_doc_types:
+        return redirect("/profile?msg=Invalid+file+type.+Upload+PDF,+PNG,+or+JPG.&type=error")
+
+    # Read and encode as base64 data URI
+    import base64
+    doc_bytes = doc_file.read()
+    if len(doc_bytes) > 5 * 1024 * 1024:  # 5MB limit
+        return redirect("/profile?msg=File+too+large.+Maximum+size+is+5MB.&type=error")
+
+    mime = doc_file.mimetype or f"image/{ext}" if ext != "pdf" else "application/pdf"
+    b64 = base64.b64encode(doc_bytes).decode("utf-8")
+    doc_uri = f"data:{mime};base64,{b64}"
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE Passenger SET doc_proof=%s, doc_status='Pending' WHERE full_name=%s",
+        (doc_uri, session["user"])
+    )
+    db.commit()
+    return redirect("/profile?msg=Document+uploaded+successfully!+Awaiting+admin+verification.&type=success")
+
+# ── Admin: Verify / Reject Document ──────────────────────────────────────────
+@app.route("/admin/verify_doc/<passenger_name>")
+def verify_doc(passenger_name):
+    if "admin" not in session:
+        return redirect("/admin_login")
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE Passenger SET doc_status='Verified' WHERE full_name=%s",
+        (passenger_name,)
+    )
+    db.commit()
+    return redirect("/admin?msg=Document+verified+successfully.&type=success")
+
+@app.route("/admin/reject_doc/<passenger_name>")
+def reject_doc(passenger_name):
+    if "admin" not in session:
+        return redirect("/admin_login")
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE Passenger SET doc_status='Rejected', doc_proof=NULL WHERE full_name=%s",
+        (passenger_name,)
+    )
+    db.commit()
+    return redirect("/admin?msg=Document+rejected.+User+must+re-upload.&type=warning")
+
+# ── Admin: View Document (inline) ─────────────────────────────────────────────
+@app.route("/admin/view_doc/<passenger_name>")
+def view_doc(passenger_name):
+    if "admin" not in session:
+        return redirect("/admin_login")
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT doc_proof, doc_status, full_name, category FROM Passenger WHERE full_name=%s",
+        (passenger_name,)
+    )
+    row = cursor.fetchone()
+    if not row or not row.get("doc_proof"):
+        return "<h3 style='font-family:sans-serif;padding:2rem;'>No document uploaded by this user.</h3>", 404
+    return render_template("view_doc.html", doc=row)
+
+
 @app.route("/edit_profile", methods=["GET", "POST"])
 def edit_profile():
+
     if "user" not in session: return redirect("/login")
 
     if "user" not in session:

@@ -97,6 +97,7 @@
             <th>Route</th>
             <th>Pass Type</th>
             <th>Duration</th>
+            <th>Doc Status</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -116,6 +117,18 @@
             <td>{{ app.pass_type }}</td>
             <td>{{ app.duration_months }} mo.</td>
             <td>
+              {% set ds = app.doc_status if app.doc_status else 'Not Uploaded' %}
+              {% if ds == 'Verified' %}
+                <span class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);">✅ Verified</span>
+              {% elif ds == 'Pending' %}
+                <span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);">⏳ Pending</span>
+              {% elif ds == 'Rejected' %}
+                <span class="badge" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);">❌ Rejected</span>
+              {% else %}
+                <span class="badge" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);">— None</span>
+              {% endif %}
+            </td>
+            <td>
               {% if app.status == 'Pending' %}
                 <span class="badge badge-pending">⏳ Pending</span>
               {% elif app.status == 'Approved' %}
@@ -129,9 +142,15 @@
             <td>
               <div class="actions-cell">
                 <button class="btn btn-primary btn-sm"
-                  onclick="showUserModal(`{{ app.passenger_name }}`, `{{ app.photo }}`, `{{ app.email }}`, `{{ app.phone }}`, `{{ app.category }}`, `{{ app.address }}`)">
+                  onclick="showUserModal(`{{ app.passenger_name }}`, `{{ app.photo }}`, `{{ app.email }}`, `{{ app.phone }}`, `{{ app.category }}`, `{{ app.address }}`, `{{ app.doc_status }}`, {{ app.has_doc }})">
                   🔍 View
                 </button>
+                {% if app.has_doc %}
+                <a href="/admin/view_doc/{{ app.passenger_name }}" class="btn btn-ghost btn-sm" target="_blank"
+                   style="background:rgba(79,142,247,0.1);border-color:rgba(79,142,247,0.3);color:#7cb3ff;">
+                  📄 Doc
+                </a>
+                {% endif %}
                 {% if app.status == 'Pending' %}
                   <button class="btn btn-success btn-sm"
                     onclick="ajaxAction('/approve/{{ app.application_id }}', {
@@ -197,7 +216,7 @@
 
   <!-- Passenger Details Modal -->
   <div id="user-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999; opacity:0; pointer-events:none; transition:opacity 0.3s; display:flex; align-items:center; justify-content:center;">
-    <div id="user-modal" class="glass-card" style="width:90%; max-width:480px; transform:translateY(30px) scale(0.96); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); padding:2rem; position:relative;">
+    <div id="user-modal" class="glass-card" style="width:90%; max-width:500px; transform:translateY(30px) scale(0.96); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); padding:2rem; position:relative;">
       <button onclick="closeUserModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
       
       <div style="text-align:center; margin-bottom:1.5rem;">
@@ -206,7 +225,7 @@
         <span id="modal-cat" class="badge badge-info">Category</span>
       </div>
 
-      <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1.2rem; border:1px solid var(--glass-border);">
+      <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1.2rem; border:1px solid var(--glass-border); margin-bottom:1rem;">
         <div style="margin-bottom:10px; display:flex; gap:10px;">
           <span style="color:var(--text-secondary); width:80px;">📧 Email:</span>
           <span id="modal-email" style="font-weight:600;"></span>
@@ -220,18 +239,48 @@
           <span id="modal-address" style="font-weight:600;"></span>
         </div>
       </div>
+
+      <!-- Document Verification Section -->
+      <div id="modal-doc-section" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1rem 1.2rem; border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">📄 Verification Document</div>
+          <span id="modal-doc-badge" style="font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:20px;">—</span>
+        </div>
+        <a id="modal-doc-link" href="#" target="_blank" class="btn btn-ghost btn-sm" style="display:none;">View Doc →</a>
+      </div>
     </div>
   </div>
 
   <script src="/static/toast.js"></script>
   <script>
-    function showUserModal(name, photo, email, phone, cat, address) {
-      document.getElementById('modal-name').textContent = name;
-      document.getElementById('modal-photo').src = photo;
-      document.getElementById('modal-email').textContent = email;
-      document.getElementById('modal-phone').textContent = phone || 'N/A';
-      document.getElementById('modal-cat').textContent = cat;
+    function showUserModal(name, photo, email, phone, cat, address, docStatus, hasDoc) {
+      document.getElementById('modal-name').textContent    = name;
+      document.getElementById('modal-photo').src           = photo;
+      document.getElementById('modal-email').textContent   = email;
+      document.getElementById('modal-phone').textContent   = phone   || 'N/A';
+      document.getElementById('modal-cat').textContent     = cat;
       document.getElementById('modal-address').textContent = address || 'N/A';
+
+      // Document status badge
+      const badge = document.getElementById('modal-doc-badge');
+      const link  = document.getElementById('modal-doc-link');
+      const ds    = docStatus || 'Not Uploaded';
+      const styles = {
+        'Verified':     { bg:'rgba(16,185,129,0.15)', color:'#34d399', border:'rgba(16,185,129,0.3)', icon:'✅' },
+        'Pending':      { bg:'rgba(245,158,11,0.15)',  color:'#fbbf24', border:'rgba(245,158,11,0.3)',  icon:'⏳' },
+        'Rejected':     { bg:'rgba(239,68,68,0.15)',   color:'#f87171', border:'rgba(239,68,68,0.3)',   icon:'❌' },
+        'Not Uploaded': { bg:'rgba(100,116,139,0.12)', color:'#94a3b8', border:'rgba(100,116,139,0.2)', icon:'—' },
+      };
+      const s = styles[ds] || styles['Not Uploaded'];
+      badge.textContent = s.icon + ' ' + ds;
+      badge.style.cssText = `background:${s.bg}; color:${s.color}; border:1px solid ${s.border}; font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:20px;`;
+
+      if (hasDoc) {
+        link.href = '/admin/view_doc/' + encodeURIComponent(name);
+        link.style.display = 'inline-flex';
+      } else {
+        link.style.display = 'none';
+      }
 
       const overlay = document.getElementById('user-overlay');
       const modal   = document.getElementById('user-modal');
@@ -251,4 +300,4 @@
     });
   </script>
 </body>
-</html>
+</html>

@@ -174,6 +174,90 @@
           <a href="/apply_pass" class="btn btn-ghost btn-sm">📝 Apply Pass</a>
           <a href="/feedback"   class="btn btn-ghost btn-sm">💬 Feedback</a>
         </div>
+
+        <!-- Document Verification Card -->
+        <div style="
+          margin-top: 1.5rem;
+          background: var(--bg-card);
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-xl);
+          overflow: hidden;
+        ">
+          <div style="
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between;
+          ">
+            <div>
+              <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">📄 Verification Document</div>
+            </div>
+            {% set ds = data.doc_status if data.doc_status else 'Not Uploaded' %}
+            <span style="
+              padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+              {% if ds == 'Verified' %}background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);
+              {% elif ds == 'Pending' %}background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);
+              {% elif ds == 'Rejected' %}background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);
+              {% else %}background:rgba(100,116,139,0.12);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);{% endif %}
+            ">
+              {% if ds == 'Verified' %}✅ Verified
+              {% elif ds == 'Pending' %}⏳ Pending Review
+              {% elif ds == 'Rejected' %}❌ Rejected — Re-upload
+              {% else %}— Not Uploaded{% endif %}
+            </span>
+          </div>
+
+          <div style="padding: 1.2rem 1.5rem;">
+            {% if ds == 'Verified' %}
+              <p style="font-size:0.85rem; color:#34d399; margin:0 0 0.75rem;">
+                ✅ Your document has been verified by admin. You're fully verified!
+              </p>
+            {% elif ds == 'Pending' %}
+              <p style="font-size:0.85rem; color:#fbbf24; margin:0 0 0.75rem;">
+                ⏳ Your document is under review. Admin will verify it soon.
+              </p>
+            {% elif ds == 'Rejected' %}
+              <p style="font-size:0.85rem; color:#f87171; margin:0 0 0.75rem;">
+                ❌ Your document was rejected. Please upload a clearer, valid document.
+              </p>
+            {% else %}
+              <p style="font-size:0.85rem; color:var(--text-secondary); margin:0 0 0.75rem;">
+                Upload a valid proof document to verify your category and speed up pass approval.
+              </p>
+            {% endif %}
+
+            <!-- Hint based on category -->
+            <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:1rem; border:1px solid var(--glass-border);">
+              💡 <strong>{{ data.category }}</strong> —
+              {% if data.category == 'Student' %}Upload your College/School ID card or admission letter.
+              {% elif data.category == 'Employee' %}Upload your Company ID card or appointment letter.
+              {% elif data.category == 'Senior Citizen' %}Upload your Aadhaar card or Senior Citizen card.
+              {% else %}Upload any valid government-issued ID (Aadhaar, PAN, Voter ID).{% endif %}
+            </div>
+
+            <!-- Upload Form -->
+            {% if ds != 'Verified' %}
+            <form method="POST" action="/upload_doc" enctype="multipart/form-data">
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <label style="
+                  flex:1; min-width:180px;
+                  border: 2px dashed var(--glass-border); border-radius: var(--radius-md);
+                  padding: 10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px;
+                  font-size:0.83rem; color:var(--text-muted); transition:var(--transition);
+                " for="doc_file" id="docLabel">
+                  📎 <span id="docFileName">Choose PDF, PNG, or JPG (max 5MB)</span>
+                </label>
+                <input type="file" name="doc_file" id="doc_file" accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  style="display:none;"
+                  onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || 'Choose file'; document.getElementById('docLabel').style.borderColor='var(--accent)';" />
+                <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">
+                  📤 {% if ds == 'Rejected' %}Re-upload{% else %}Upload{% endif %} Document
+                </button>
+              </div>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
       </div>
 
     </div>
