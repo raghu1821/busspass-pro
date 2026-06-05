@@ -451,7 +451,7 @@ def apply_pass():
         return redirect("/dashboard?msg=Application+submitted+successfully!+Awaiting+admin+approval.&type=success")
 
     cursor.execute(
-        "SELECT * FROM Route"
+        "SELECT *, base_fare AS fare FROM Route"
     )
 
     routes = cursor.fetchall()
@@ -1409,16 +1409,23 @@ def delete_user(id):
     if "admin" not in session:
         return redirect("/admin_login")
 
-    cursor = get_db().cursor()
+    db = get_db()
+    cursor = db.cursor()
 
-    query = """
-    DELETE FROM Passenger
-    WHERE passenger_id=%s
-    """
-
-    cursor.execute(query, (id,))
-
-    get_db().commit()
+    # Get the passenger's full name first to clean up related records in other tables
+    cursor.execute("SELECT full_name FROM Passenger WHERE passenger_id=%s", (id,))
+    user_row = cursor.fetchone()
+    if user_row:
+        full_name = user_row[0]
+        # Delete related applications
+        cursor.execute("DELETE FROM Pass_Application WHERE passenger_name=%s", (full_name,))
+        # Delete related passes
+        cursor.execute("DELETE FROM Pass WHERE passenger_name=%s", (full_name,))
+        # Delete related feedback
+        cursor.execute("DELETE FROM Feedback WHERE passenger_name=%s", (full_name,))
+        # Finally delete the passenger
+        cursor.execute("DELETE FROM Passenger WHERE passenger_id=%s", (id,))
+        db.commit()
 
     return redirect("/manage_users")
 
@@ -1440,7 +1447,7 @@ def manage_routes():
 
         query = """
         INSERT INTO Route
-        (source, destination, fare)
+        (source, destination, base_fare)
         VALUES (%s, %s, %s)
         """
 
@@ -1451,7 +1458,7 @@ def manage_routes():
 
         get_db().commit()
 
-    cursor.execute("SELECT * FROM Route")
+    cursor.execute("SELECT *, base_fare AS fare FROM Route")
 
     routes = cursor.fetchall()
 
@@ -1476,7 +1483,7 @@ def update_route_fare(id):
         return redirect("/admin_login")
     fare = request.form.get("fare")
     cursor = get_db().cursor()
-    cursor.execute("UPDATE Route SET fare=%s WHERE route_id=%s", (fare, id))
+    cursor.execute("UPDATE Route SET base_fare=%s WHERE route_id=%s", (fare, id))
     get_db().commit()
     return redirect("/manage_routes?msg=Fare+updated+successfully!&type=success")
 
@@ -1675,14 +1682,26 @@ def renew_pass(pass_id):
     if cursor.fetchone():
         return redirect("/view_pass?msg=You+already+have+a+pending+renewal+application.&type=warning")
 
-    # Get default route (first route)
-    cursor.execute("SELECT * FROM Route LIMIT 1")
-    default_route = cursor.fetchone()
+    # Get route from the original completed application for this passenger
+    cursor.execute("""
+        SELECT route_id FROM Pass_Application
+        WHERE passenger_name=%s AND status='Completed'
+        ORDER BY application_id DESC LIMIT 1
+    """, (session["user"],))
+    app_route = cursor.fetchone()
+
+    if app_route:
+        route_id = app_route["route_id"]
+    else:
+        # Fallback if no completed applications exist
+        cursor.execute("SELECT route_id FROM Route LIMIT 1")
+        default_route = cursor.fetchone()
+        route_id = default_route["route_id"] if default_route else None
 
     # Submit renewal application
     cursor.execute(
         "INSERT INTO Pass_Application (passenger_name, route_id, pass_type, duration_months, status) VALUES (%s, %s, %s, %s, 'Pending')",
-        (session["user"], default_route["route_id"], old_pass["pass_type"], 1)
+        (session["user"], route_id, old_pass["pass_type"], 1)
     )
     get_db().commit()
     return redirect("/dashboard?msg=Renewal+application+submitted!+Awaiting+admin+approval.&type=success")
