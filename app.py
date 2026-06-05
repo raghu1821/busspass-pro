@@ -322,24 +322,22 @@ def view_pass():
 
     pass_data = cursor.fetchone()
 
-    # Auto-regenerate QR if missing (fallback for old passes with file paths)
-    if pass_data and pass_data.get('qr_code') and not pass_data['qr_code'].startswith('data:'):
-        qr_path = os.path.join(os.getcwd(), "static", "qrcodes", pass_data['qr_code'])
-        if not os.path.exists(qr_path):
-            base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
-            qr_data_str = f"{base_url}/verify/{pass_data['pass_id']}"
-            import qrcode, io, base64
-            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
-            qr.add_data(qr_data_str)
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="#0d1117", back_color="white")
-            buffer = io.BytesIO()
-            img.save(buffer, format="PNG")
-            b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            qr_uri = f"data:image/png;base64,{b64_str}"
-            cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_data['pass_id']))
-            get_db().commit()
-            pass_data['qr_code'] = qr_uri
+    # Auto-regenerate QR if missing or old format (not a base64 URI)
+    if pass_data and (not pass_data.get('qr_code') or not pass_data['qr_code'].startswith('data:')):
+        base_url = os.getenv("APP_URL", "https://busspass-pro.onrender.com")
+        qr_data_str = f"{base_url}/verify/{pass_data['pass_id']}"
+        import qrcode, io, base64
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+        qr.add_data(qr_data_str)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#0d1117", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        qr_uri = f"data:image/png;base64,{b64_str}"
+        cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_data['pass_id']))
+        get_db().commit()
+        pass_data['qr_code'] = qr_uri
 
     # Check if they have an approved but unpaid application
     cursor.execute("""
@@ -380,6 +378,16 @@ def generate_qr(pass_id):
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="#0d1117", back_color="white")
+
+    # Save as base64 data URI to database
+    import io, base64
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    qr_uri = f"data:image/png;base64,{b64_str}"
+    
+    cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_id))
+    get_db().commit()
 
     # Absolute folder path
     folder_path = os.path.join(
