@@ -50,22 +50,22 @@
     <!-- Stat Cards -->
     <div class="stats-row">
       <div class="stat-card blue animate-fade-up animate-delay-1">
-        <div class="stat-icon">📋</div>
+        <div class="stat-icon"><i data-lucide="clipboard-list" style="width:28px;height:28px;color:#60a5fa;"></i></div>
         <div class="stat-value">{{ total_apps }}</div>
         <div class="stat-label">Total Applications</div>
       </div>
       <div class="stat-card green animate-fade-up animate-delay-2">
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon"><i data-lucide="check-circle" style="width:28px;height:28px;color:#34d399;"></i></div>
         <div class="stat-value">{{ approved }}</div>
         <div class="stat-label">Approved</div>
       </div>
       <div class="stat-card orange animate-fade-up animate-delay-3">
-        <div class="stat-icon">⏳</div>
+        <div class="stat-icon"><i data-lucide="clock" style="width:28px;height:28px;color:#fbbf24;"></i></div>
         <div class="stat-value">{{ pending }}</div>
         <div class="stat-label">Pending</div>
       </div>
       <div class="stat-card purple animate-fade-up animate-delay-4">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon"><i data-lucide="users" style="width:28px;height:28px;color:#c084fc;"></i></div>
         <div class="stat-value">{{ users }}</div>
         <div class="stat-label">Registered Users</div>
       </div>
@@ -143,12 +143,12 @@
               <div class="actions-cell">
                 <button class="btn btn-primary btn-sm"
                   onclick="showUserModal(`{{ app.passenger_name }}`, `{{ app.photo }}`, `{{ app.email }}`, `{{ app.phone }}`, `{{ app.category }}`, `{{ app.address }}`, `{{ app.doc_status }}`, {{ app.has_doc }})">
-                  🔍 View
+                  <i data-lucide="search" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> View
                 </button>
                 {% if app.has_doc %}
                 <a href="/admin/view_doc/{{ app.passenger_name }}" class="btn btn-ghost btn-sm" target="_blank"
                    style="background:rgba(79,142,247,0.1);border-color:rgba(79,142,247,0.3);color:#7cb3ff;">
-                  📄 Doc
+                  <i data-lucide="file-text" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Doc
                 </a>
                 {% endif %}
                 {% if app.status == 'Pending' %}
@@ -161,7 +161,7 @@
                       reload: true,
                       reloadDelay: 1500
                     })">
-                    ✅ Approve
+                    <i data-lucide="check" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Approve
                   </button>
                   <button class="btn btn-danger btn-sm"
                     onclick="ajaxAction('/reject/{{ app.application_id }}', {
@@ -172,7 +172,7 @@
                       reload: true,
                       reloadDelay: 1500
                     })">
-                    ❌ Reject
+                    <i data-lucide="x" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Reject
                   </button>
                 {% elif app.status == 'Approved' %}
                   <button class="btn btn-warning btn-sm"
@@ -184,7 +184,7 @@
                       reload: true,
                       reloadDelay: 1500
                     })">
-                    🚫 Revoke Pass
+                    <i data-lucide="ban" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Revoke Pass
                   </button>
                 {% else %}
                   <span class="text-muted-sm">Processed</span>
@@ -227,15 +227,15 @@
 
       <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1.2rem; border:1px solid var(--glass-border); margin-bottom:1rem;">
         <div style="margin-bottom:10px; display:flex; gap:10px;">
-          <span style="color:var(--text-secondary); width:80px;">📧 Email:</span>
+          <span style="color:var(--text-secondary); width:80px;"><i data-lucide="mail" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Email:</span>
           <span id="modal-email" style="font-weight:600;"></span>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
-          <span style="color:var(--text-secondary); width:80px;">📱 Phone:</span>
+          <span style="color:var(--text-secondary); width:80px;"><i data-lucide="phone" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Phone:</span>
           <span id="modal-phone" style="font-weight:600;"></span>
         </div>
         <div style="display:flex; gap:10px;">
-          <span style="color:var(--text-secondary); width:80px;">📍 Address:</span>
+          <span style="color:var(--text-secondary); width:80px;"><i data-lucide="map-pin" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Address:</span>
           <span id="modal-address" style="font-weight:600;"></span>
         </div>
       </div>
@@ -243,7 +243,7 @@
       <!-- Document Verification Section -->
       <div id="modal-doc-section" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1rem 1.2rem; border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
         <div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">📄 Verification Document</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;"><i data-lucide="file-check" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> Verification Document</div>
           <span id="modal-doc-badge" style="font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:20px;">—</span>
         </div>
         <a id="modal-doc-link" href="#" target="_blank" class="btn btn-ghost btn-sm" style="display:none;">View Doc →</a>

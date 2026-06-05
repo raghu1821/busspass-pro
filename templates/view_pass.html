@@ -136,7 +136,7 @@
 
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
-      <div class="page-title">🎫 My Digital Pass</div>
+      <div class="page-title"><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--accent);"></i> My Digital Pass</div>
       <div class="page-subtitle">Your current active bus pass</div>
     </div>
 
@@ -159,11 +159,11 @@
       <!-- Top Row -->
       <div class="pass-top">
         <div class="pass-brand">
-          <span class="pass-brand-icon">🚌</span>
+          <i data-lucide="bus" style="width:20px;height:20px;margin-right:4px;color:#fff;vertical-align:-3px;"></i>
           <span class="pass-brand-name">BusPass Pro</span>
         </div>
         <span class="pass-status-badge {% if pass_data.status == 'Active' %}status-active{% else %}status-expired{% endif %}">
-          {% if pass_data.status == 'Active' %}✅ Active{% else %}⏰ {{ pass_data.status }}{% endif %}
+          {% if pass_data.status == 'Active' %}<i data-lucide="check-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Active{% else %}<i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> {{ pass_data.status }}{% endif %}
         </span>
       </div>
 
@@ -219,14 +219,14 @@
         <button
           onclick="window.print()"
           class="btn btn-ghost btn-sm">
-          🖨️ Print Pass
+          <i data-lucide="printer" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Print Pass
         </button>
         <a
           href="/download_pass/{{ pass_data.pass_id }}"
           class="btn btn-ghost btn-sm"
           id="downloadBtn"
           target="_blank">
-          📄 Download PDF
+          <i data-lucide="download" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Download PDF
         </a>
         <button
           class="btn btn-ghost btn-sm"
@@ -239,9 +239,9 @@
             reload: true,
             reloadDelay: 1500
           })">
-          🔄 Refresh QR
+          <i data-lucide="refresh-cw" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Refresh QR
         </button>
-        <a href="/apply_pass" class="btn btn-ghost btn-sm">📝 Renew Pass</a>
+        <a href="/apply_pass" class="btn btn-ghost btn-sm"><i data-lucide="refresh-ccw" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Renew Pass</a>
       </div>
 
     </div>

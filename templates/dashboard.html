@@ -49,13 +49,13 @@
       border-radius: var(--radius-lg); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
     ">
       <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-size:1.5rem;">📄</span>
+        <i data-lucide="file-warning" style="width:24px;height:24px;color:#fbbf24;"></i>
         <div>
           <div style="font-weight:700; font-size:0.92rem; color:#fbbf24;">Verification Document Required</div>
           <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:2px;">Upload your proof document to verify your identity and speed up pass approval.</div>
         </div>
       </div>
-      <a href="/profile" class="btn btn-warning btn-sm" style="white-space:nowrap;">📤 Upload Now</a>
+      <a href="/profile" class="btn btn-warning btn-sm" style="white-space:nowrap;"><i data-lucide="upload" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Upload Now</a>
     </div>
     {% elif doc_status == 'Rejected' %}
     <div class="animate-fade-up" style="
@@ -64,13 +64,13 @@
       border-radius: var(--radius-lg); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
     ">
       <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-size:1.5rem;">❌</span>
+        <i data-lucide="x-circle" style="width:24px;height:24px;color:#f87171;"></i>
         <div>
           <div style="font-weight:700; font-size:0.92rem; color:#f87171;">Document Rejected — Action Required</div>
           <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:2px;">Your submitted document was rejected by admin. Please re-upload a valid document.</div>
         </div>
       </div>
-      <a href="/profile" class="btn btn-danger btn-sm" style="white-space:nowrap;">📤 Re-upload</a>
+      <a href="/profile" class="btn btn-danger btn-sm" style="white-space:nowrap;"><i data-lucide="upload" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Re-upload</a>
     </div>
     {% elif doc_status == 'Pending' %}
     <div class="animate-fade-up" style="
@@ -78,7 +78,7 @@
       background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.25);
       border-radius: var(--radius-lg); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
     ">
-      <span style="font-size:1.5rem;">⏳</span>
+      <i data-lucide="clock" style="width:24px;height:24px;color:#7cb3ff;"></i>
       <div>
         <div style="font-weight:700; font-size:0.92rem; color:#7cb3ff;">Document Under Review</div>
         <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:2px;">Admin is reviewing your document. You'll be fully verified once approved.</div>
@@ -95,25 +95,25 @@
     <div class="action-grid animate-fade-up animate-delay-2">
 
       <a href="/apply_pass" class="action-card">
-        <div class="action-icon blue">📝</div>
+        <div class="action-icon blue"><i data-lucide="file-text" style="width:24px;height:24px;color:#60a5fa;"></i></div>
         <h3>Apply for Pass</h3>
         <p>Submit a new bus pass application</p>
       </a>
 
       <a href="/view_pass" class="action-card">
-        <div class="action-icon purple">🎫</div>
+        <div class="action-icon purple"><i data-lucide="credit-card" style="width:24px;height:24px;color:#c084fc;"></i></div>
         <h3>View My Pass</h3>
         <p>See your digital bus pass & QR code</p>
       </a>
 
       <a href="/profile" class="action-card">
-        <div class="action-icon teal">👤</div>
+        <div class="action-icon teal"><i data-lucide="user" style="width:24px;height:24px;color:#22d3ee;"></i></div>
         <h3>My Profile</h3>
         <p>View and edit your account details</p>
       </a>
 
       <a href="/feedback" class="action-card">
-        <div class="action-icon orange">💬</div>
+        <div class="action-icon orange"><i data-lucide="message-square" style="width:24px;height:24px;color:#fbbf24;"></i></div>
         <h3>Send Feedback</h3>
         <p>Share your experience with us</p>
       </a>
@@ -122,7 +122,7 @@
 
     <!-- Recent Applications -->
     <div class="section-title-row animate-fade-up animate-delay-3" style="margin-top: 2.5rem;">
-      <span class="section-heading">📋 My Applications</span>
+      <span class="section-heading"><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> My Applications</span>
       <a href="/apply_pass" class="btn btn-ghost btn-sm">+ New Application</a>
     </div>
 
@@ -152,13 +152,13 @@
             <td>{{ app.duration_months }} month(s)</td>
             <td>
               {% if app.status == 'Pending' %}
-                <span class="badge badge-pending">⏳ Pending</span>
+                <span class="badge badge-pending"><i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Pending</span>
               {% elif app.status == 'Approved' %}
-                <span class="badge badge-approved">✅ Approved</span>
+                <span class="badge badge-approved"><i data-lucide="check-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Approved</span>
               {% elif app.status == 'Rejected' %}
-                <span class="badge badge-rejected">❌ Rejected</span>
+                <span class="badge badge-rejected"><i data-lucide="x-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Rejected</span>
               {% elif app.status == 'Revoked' %}
-                <span class="badge badge-expired">🚫 Revoked</span>
+                <span class="badge badge-expired"><i data-lucide="ban" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Revoked</span>
               {% else %}
                 <span class="badge">{{ app.status }}</span>
               {% endif %}
@@ -182,10 +182,10 @@
     </div>
     {% else %}
     <div class="empty-state glass-card animate-fade-up animate-delay-4">
-      <div class="empty-icon">📋</div>
+      <div class="empty-icon"><i data-lucide="clipboard-x" style="width:48px;height:48px;color:var(--text-muted);opacity:0.6;"></i></div>
       <h3 style="margin-bottom:8px; color: var(--text-primary);">No Applications Yet</h3>
       <p style="margin-bottom:1.5rem;">You haven't applied for a bus pass yet. Get started now!</p>
-      <a href="/apply_pass" class="btn btn-primary">📝 Apply Now</a>
+      <a href="/apply_pass" class="btn btn-primary"><i data-lucide="file-text" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Apply Now</a>
     </div>
     {% endif %}
 

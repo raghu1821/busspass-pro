@@ -20,20 +20,20 @@
   <!-- ── NAVBAR ── -->
   <nav class="navbar">
     <a href="/" class="navbar-brand">
-      <span class="bus-icon">🚌</span>
+      <i data-lucide="bus" style="color:var(--accent); margin-right:6px; vertical-align:-3px;"></i>
       BusPass Pro
     </a>
     <ul class="nav-links">
-      <li><a href="/">🏠 Home</a></li>
+      <li><a href="/"><i data-lucide="home" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Home</a></li>
       {% if session.get('user') %}
-        <li><a href="/dashboard" class="nav-btn">📊 Dashboard</a></li>
-        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;">🚪 Logout</a></li>
+        <li><a href="/dashboard" class="nav-btn"><i data-lucide="layout-dashboard" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Dashboard</a></li>
+        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Logout</a></li>
       {% elif session.get('admin') %}
-        <li><a href="/admin" class="nav-btn">🛡️ Admin Panel</a></li>
-        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;">🚪 Logout</a></li>
+        <li><a href="/admin" class="nav-btn"><i data-lucide="shield-check" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Admin Panel</a></li>
+        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Logout</a></li>
       {% else %}
-        <li><a href="/login" class="nav-btn">🔑 Login</a></li>
-        <li><a href="/register" class="nav-btn" style="background: var(--accent); color:#fff;">✨ Register</a></li>
+        <li><a href="/login" class="nav-btn"><i data-lucide="key" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Login</a></li>
+        <li><a href="/register" class="nav-btn" style="background: var(--accent); color:#fff;"><i data-lucide="sparkles" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Register</a></li>
       {% endif %}
     </ul>
   </nav>
@@ -46,7 +46,7 @@
 
     <div class="hero-content animate-fade-up">
       <div class="hero-badge">
-        🚌 Smart Digital Transport
+        <i data-lucide="bus" style="width:16px;height:16px;margin-right:6px;color:var(--accent);vertical-align:-2px;"></i> Smart Digital Transport
       </div>
 
       <h1 class="hero-title">
@@ -62,31 +62,31 @@
       <div class="hero-actions animate-fade-up animate-delay-3">
         {% if session.get('user') %}
           <a href="/dashboard" class="btn btn-primary btn-lg">
-            🚀 Go to Dashboard
+            <i data-lucide="layout-dashboard" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Go to Dashboard
           </a>
           <a href="/view_pass" class="btn btn-ghost btn-lg">
-            🎫 My Pass
+            <i data-lucide="credit-card" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> My Pass
           </a>
         {% elif session.get('admin') %}
           <a href="/admin" class="btn btn-primary btn-lg">
-            🛡️ Go to Admin Panel
+            <i data-lucide="shield-check" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Go to Admin Panel
           </a>
         {% else %}
           <a href="/register" class="btn btn-primary btn-lg">
-            🚀 Get Started
+            <i data-lucide="rocket" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Get Started
           </a>
           <a href="/login" class="btn btn-ghost btn-lg">
-            🔑 Login
+            <i data-lucide="key" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Login
           </a>
         {% endif %}
-        <button id="installAppBtn" class="btn btn-ghost btn-lg" style="display:none; background: rgba(79,142,247,0.15); border-color: var(--accent);">📱 Install App</button>
+        <button id="installAppBtn" class="btn btn-ghost btn-lg" style="display:none; background: rgba(79,142,247,0.15); border-color: var(--accent);"><i data-lucide="download" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Install App</button>
       </div>
 
       <!-- Trust pills -->
       <div class="hero-pills">
-        <span class="hero-pill">✅ Instant Approval</span>
-        <span class="hero-pill">🔒 Secure &amp; Encrypted</span>
-        <span class="hero-pill">📱 Mobile Friendly</span>
+        <span class="hero-pill"><i data-lucide="check-circle" style="width:14px;height:14px;margin-right:4px;color:#34d399;vertical-align:-2px;"></i> Instant Approval</span>
+        <span class="hero-pill"><i data-lucide="lock" style="width:14px;height:14px;margin-right:4px;color:#34d399;vertical-align:-2px;"></i> Secure &amp; Encrypted</span>
+        <span class="hero-pill"><i data-lucide="smartphone" style="width:14px;height:14px;margin-right:4px;color:#34d399;vertical-align:-2px;"></i> Mobile Friendly</span>
       </div>
     </div>
   </section>
@@ -106,7 +106,7 @@
 
         <div class="feature-card">
           <div class="feature-icon" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
-            📝
+            <i data-lucide="file-text" style="width:24px;height:24px;color:#fff;"></i>
           </div>
           <h3 class="feature-title">Online Pass Application</h3>
           <p class="feature-desc">
@@ -118,7 +118,7 @@
 
         <div class="feature-card">
           <div class="feature-icon" style="background: linear-gradient(135deg,#06b6d4,#0ea5e9);">
-            🔍
+            <i data-lucide="qr-code" style="width:24px;height:24px;color:#fff;"></i>
           </div>
           <h3 class="feature-title">QR Code Verification</h3>
           <p class="feature-desc">
@@ -130,7 +130,7 @@
 
         <div class="feature-card">
           <div class="feature-icon" style="background: linear-gradient(135deg,#10b981,#059669);">
-            📄
+            <i data-lucide="file-check" style="width:24px;height:24px;color:#fff;"></i>
           </div>
           <h3 class="feature-title">PDF Bus Pass</h3>
           <p class="feature-desc">
@@ -148,32 +148,32 @@
   <section class="section section-alt" id="stats">
     <div class="section-inner">
       <div class="section-header animate-fade-up">
-        <span class="section-tag">📊 Why Choose Us?</span>
+        <span class="section-tag"><i data-lucide="bar-chart-2" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Why Choose Us?</span>
         <h2 class="section-title">Trusted by thousands of daily commuters</h2>
       </div>
 
       <div class="stats-grid animate-fade-up animate-delay-2">
 
         <div class="stat-card blue">
-          <div class="stat-icon">👥</div>
+          <div class="stat-icon"><i data-lucide="users" style="width:28px;height:28px;color:#60a5fa;"></i></div>
           <div class="stat-number">10k+</div>
           <div class="stat-label">Passengers</div>
         </div>
 
         <div class="stat-card green">
-          <div class="stat-icon">🗺️</div>
+          <div class="stat-icon"><i data-lucide="map" style="width:28px;height:28px;color:#34d399;"></i></div>
           <div class="stat-number">50+</div>
           <div class="stat-label">Routes Covered</div>
         </div>
 
         <div class="stat-card orange">
-          <div class="stat-icon">⚡</div>
+          <div class="stat-icon"><i data-lucide="zap" style="width:28px;height:28px;color:#fbbf24;"></i></div>
           <div class="stat-number">99%</div>
           <div class="stat-label">System Uptime</div>
         </div>
 
         <div class="stat-card purple">
-          <div class="stat-icon">✅</div>
+          <div class="stat-icon"><i data-lucide="check-circle" style="width:28px;height:28px;color:#c084fc;"></i></div>
           <div class="stat-number">Instant</div>
           <div class="stat-label">Approval Process</div>
         </div>
@@ -186,7 +186,7 @@
   <section class="section" id="how">
     <div class="section-inner">
       <div class="section-header animate-fade-up">
-        <span class="section-tag">🛤️ Process</span>
+        <span class="section-tag"><i data-lucide="trending-up" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Process</span>
         <h2 class="section-title">Get your pass in 3 simple steps</h2>
       </div>
       <div class="steps-grid animate-fade-up animate-delay-1">
@@ -214,9 +214,9 @@
   <!-- ── CTA BANNER ── -->
   <section class="cta-banner animate-fade-up animate-delay-3">
     <div class="cta-content">
-      <h2>Ready to ditch the paper passes? 🎉</h2>
+      <h2>Ready to ditch the paper passes? <i data-lucide="sparkles" style="width:24px;height:24px;color:#fbbf24;display:inline-block;vertical-align:-3px;"></i></h2>
       <p>Join thousands of smart commuters who've already gone digital.</p>
-      <a href="/register" class="btn btn-primary btn-lg">Start for Free →</a>
+      <a href="/register" class="btn btn-primary btn-lg"><i data-lucide="arrow-right" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Start for Free</a>
     </div>
   </section>
 
@@ -224,7 +224,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <span>🚌</span>
+        <i data-lucide="bus" style="width:20px;height:20px;color:var(--accent);margin-right:6px;vertical-align:-3px;"></i>
         <strong>BusPass Pro</strong>
       </div>
       <p class="footer-copy">© 2025 BusPass Pro. All rights reserved. Built with ❤️ for better commutes.</p>
@@ -238,6 +238,7 @@
     </div>
   </footer>
 
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/toast.js"></script>
   <script>
     lucide.createIcons();

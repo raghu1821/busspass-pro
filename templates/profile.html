@@ -95,7 +95,7 @@
 
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
-      <div class="page-title">👤 My Profile</div>
+      <div class="page-title"><i data-lucide="user" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--accent);"></i> My Profile</div>
       <div class="page-subtitle">View and manage your account information</div>
     </div>
 
@@ -116,8 +116,8 @@
           </div>
 
           <div class="profile-actions-col">
-            <a href="/edit_profile" class="btn btn-primary btn-block">✏️ Edit Profile</a>
-            <a href="/change_password" class="btn btn-ghost btn-block">🔐 Change Password</a>
+            <a href="/edit_profile" class="btn btn-primary btn-block"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Edit Profile</a>
+            <a href="/change_password" class="btn btn-ghost btn-block"><i data-lucide="key" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Change Password</a>
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@
           <div class="profile-details-header">Account Information</div>
 
           <div class="profile-field-row">
-            <div class="field-icon">👤</div>
+            <div class="field-icon"><i data-lucide="user" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Full Name</div>
               <div class="field-val">{{ data.full_name }}</div>
@@ -136,7 +136,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon">📧</div>
+            <div class="field-icon"><i data-lucide="mail" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Email Address</div>
               <div class="field-val">{{ data.email }}</div>
@@ -144,7 +144,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon">📞</div>
+            <div class="field-icon"><i data-lucide="phone" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Phone Number</div>
               <div class="field-val">{{ data.phone }}</div>
@@ -152,7 +152,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon">🏠</div>
+            <div class="field-icon"><i data-lucide="home" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Address</div>
               <div class="field-val">{{ data.address }}</div>
@@ -160,7 +160,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon">🏷️</div>
+            <div class="field-icon"><i data-lucide="tag" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Category</div>
               <div class="field-val">{{ data.category }}</div>
@@ -170,9 +170,9 @@
 
         <!-- Quick links -->
         <div style="display:flex; gap:10px; margin-top:1rem; flex-wrap:wrap;">
-          <a href="/view_pass"  class="btn btn-ghost btn-sm">🎫 View Pass</a>
-          <a href="/apply_pass" class="btn btn-ghost btn-sm">📝 Apply Pass</a>
-          <a href="/feedback"   class="btn btn-ghost btn-sm">💬 Feedback</a>
+          <a href="/view_pass"  class="btn btn-ghost btn-sm"><i data-lucide="credit-card" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> View Pass</a>
+          <a href="/apply_pass" class="btn btn-ghost btn-sm"><i data-lucide="file-text" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Apply Pass</a>
+          <a href="/feedback"   class="btn btn-ghost btn-sm"><i data-lucide="message-square" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Feedback</a>
         </div>
 
         <!-- Document Verification Card -->
@@ -189,7 +189,7 @@
             display: flex; align-items: center; justify-content: space-between;
           ">
             <div>
-              <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">📄 Verification Document</div>
+              <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;"><i data-lucide="file-check" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> Verification Document</div>
             </div>
             {% set ds = data.doc_status if data.doc_status else 'Not Uploaded' %}
             <span style="
@@ -199,9 +199,9 @@
               {% elif ds == 'Rejected' %}background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);
               {% else %}background:rgba(100,116,139,0.12);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);{% endif %}
             ">
-              {% if ds == 'Verified' %}✅ Verified
-              {% elif ds == 'Pending' %}⏳ Pending Review
-              {% elif ds == 'Rejected' %}❌ Rejected — Re-upload
+              {% if ds == 'Verified' %}<i data-lucide="check-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Verified
+              {% elif ds == 'Pending' %}<i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Pending Review
+              {% elif ds == 'Rejected' %}<i data-lucide="x-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Rejected — Re-upload
               {% else %}— Not Uploaded{% endif %}
             </span>
           </div>
@@ -209,15 +209,15 @@
           <div style="padding: 1.2rem 1.5rem;">
             {% if ds == 'Verified' %}
               <p style="font-size:0.85rem; color:#34d399; margin:0 0 0.75rem;">
-                ✅ Your document has been verified by admin. You're fully verified!
+                <i data-lucide="check" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Your document has been verified by admin. You're fully verified!
               </p>
             {% elif ds == 'Pending' %}
               <p style="font-size:0.85rem; color:#fbbf24; margin:0 0 0.75rem;">
-                ⏳ Your document is under review. Admin will verify it soon.
+                <i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Your document is under review. Admin will verify it soon.
               </p>
             {% elif ds == 'Rejected' %}
               <p style="font-size:0.85rem; color:#f87171; margin:0 0 0.75rem;">
-                ❌ Your document was rejected. Please upload a clearer, valid document.
+                <i data-lucide="x" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Your document was rejected. Please upload a clearer, valid document.
               </p>
             {% else %}
               <p style="font-size:0.85rem; color:var(--text-secondary); margin:0 0 0.75rem;">
@@ -227,7 +227,7 @@
 
             <!-- Hint based on category -->
             <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:1rem; border:1px solid var(--glass-border);">
-              💡 <strong>{{ data.category }}</strong> —
+              <i data-lucide="lightbulb" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;color:#fbbf24;"></i> <strong>{{ data.category }}</strong> —
               {% if data.category == 'Student' %}Upload your College/School ID card or admission letter.
               {% elif data.category == 'Employee' %}Upload your Company ID card or appointment letter.
               {% elif data.category == 'Senior Citizen' %}Upload your Aadhaar card or Senior Citizen card.
@@ -244,13 +244,13 @@
                   padding: 10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px;
                   font-size:0.83rem; color:var(--text-muted); transition:var(--transition);
                 " for="doc_file" id="docLabel">
-                  📎 <span id="docFileName">Choose PDF, PNG, or JPG (max 5MB)</span>
+                  <i data-lucide="paperclip" style="width:16px;height:16px;color:var(--text-muted);vertical-align:-3px;margin-right:4px;"></i> <span id="docFileName">Choose PDF, PNG, or JPG (max 5MB)</span>
                 </label>
                 <input type="file" name="doc_file" id="doc_file" accept=".pdf,.png,.jpg,.jpeg,.webp"
                   style="display:none;"
                   onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || 'Choose file'; document.getElementById('docLabel').style.borderColor='var(--accent)';" />
                 <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">
-                  📤 {% if ds == 'Rejected' %}Re-upload{% else %}Upload{% endif %} Document
+                  <i data-lucide="upload" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> {% if ds == 'Rejected' %}Re-upload{% else %}Upload{% endif %} Document
                 </button>
               </div>
             </form>

@@ -66,7 +66,7 @@
 
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
-      <div class="page-title">💬 Feedback</div>
+      <div class="page-title"><i data-lucide="message-square" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--accent);"></i> Feedback</div>
       <div class="page-subtitle">Help us improve your experience</div>
     </div>
 
@@ -91,7 +91,7 @@
       </div>
       {% endif %}
       <div class="fb-icon-header">
-        <div class="fb-icon-circle">💬</div>
+        <div class="fb-icon-circle"><i data-lucide="message-square" style="width:32px;height:32px;color:#fff;"></i></div>
         <h2>Send Feedback</h2>
         <p>We value your thoughts — every message is read by our team</p>
       </div>
@@ -108,7 +108,7 @@
         margin-bottom: 1.5rem;
       ">
         <div style="font-size:0.85rem; color: var(--text-secondary);">
-          📊 Today's usage
+          <i data-lucide="bar-chart-2" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> Today's usage
         </div>
         <div style="display:flex; align-items:center; gap: 8px;">
           {% for i in range(5) %}
@@ -138,18 +138,18 @@
 
         <!-- Quick Topic Chips -->
         <div class="form-group">
-          <label class="form-label">📌 Topic</label>
+          <label class="form-label"><i data-lucide="tag" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> Topic</label>
           <div class="topic-chips">
-            <span class="topic-chip active" onclick="setTopic(this, 'General')">💡 General</span>
-            <span class="topic-chip" onclick="setTopic(this, 'Technical')">🔧 Technical</span>
-            <span class="topic-chip" onclick="setTopic(this, 'Suggestion')">✨ Suggestion</span>
-            <span class="topic-chip" onclick="setTopic(this, 'Complaint')">⚠️ Complaint</span>
+            <span class="topic-chip active" onclick="setTopic(this, 'General')"><i data-lucide="lightbulb" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> General</span>
+            <span class="topic-chip" onclick="setTopic(this, 'Technical')"><i data-lucide="settings" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Technical</span>
+            <span class="topic-chip" onclick="setTopic(this, 'Suggestion')"><i data-lucide="sparkles" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Suggestion</span>
+            <span class="topic-chip" onclick="setTopic(this, 'Complaint')"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Complaint</span>
           </div>
         </div>
 
         <!-- Message -->
         <div class="form-group">
-          <label class="form-label">✍️ Your Message</label>
+          <label class="form-label"><i data-lucide="pencil" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> Your Message</label>
           <textarea
             name="message"
             id="msgArea"
@@ -169,11 +169,11 @@
 
         <!-- Rules reminder -->
         <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:1.25rem; line-height:1.6;">
-          ⚡ <b>Rules:</b> Max 5 messages/day &nbsp;•&nbsp; 10-min cooldown between messages &nbsp;•&nbsp; Duplicate messages not allowed
+          <i data-lucide="alert-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;color:var(--warning);"></i> <b>Rules:</b> Max 5 messages/day &nbsp;•&nbsp; 10-min cooldown between messages &nbsp;•&nbsp; Duplicate messages not allowed
         </div>
 
         <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg" disabled>
-          🚀 Submit Feedback
+          <i data-lucide="send" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Submit Feedback
         </button>
       </form>
       {% endif %}
@@ -182,17 +182,17 @@
     <!-- Customer Support Card -->
     <div class="feedback-card animate-fade-up animate-delay-2" style="margin-top: 2rem; padding: 1.5rem 2.5rem; text-align: center; border-color: rgba(79,142,247,0.3);">
       <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        👨‍💼 Need Human Assistance?
+        <i data-lucide="user-check" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> Need Human Assistance?
       </h3>
       <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
         Our customer support team is available 24/7 to help you with urgent issues.
       </p>
       <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
         <a href="tel:+9118004252255" class="btn btn-ghost btn-sm" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);">
-          📞 1800-425-2255 (Toll Free)
+          <i data-lucide="phone" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> 1800-425-2255 (Toll Free)
         </a>
         <a href="mailto:busspasspro@gmail.com" class="btn btn-ghost btn-sm" style="background: rgba(79,142,247,0.15); color: #7cb3ff; border-color: rgba(79,142,247,0.3);">
-          📧 busspasspro@gmail.com
+          <i data-lucide="mail" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> busspasspro@gmail.com
         </a>
       </div>
     </div>

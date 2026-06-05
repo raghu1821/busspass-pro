@@ -160,7 +160,7 @@
 
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
-      <div class="page-title">📝 Apply for Bus Pass</div>
+      <div class="page-title"><i data-lucide="file-text" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--accent);"></i> Apply for Bus Pass</div>
       <div class="page-subtitle">Fill out the form below to submit your application</div>
     </div>
 
@@ -173,7 +173,7 @@
         <form id="apply-form" method="POST">
 
           <div class="form-group">
-            <label class="form-label">🗺️ Select Route</label>
+            <label class="form-label"><i data-lucide="map" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> Select Route</label>
             <select name="route_id" id="route-select" class="form-control" required>
               <option value="" disabled selected>Choose your route...</option>
               {% for route in routes %}
@@ -188,7 +188,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">🎫 Pass Type</label>
+            <label class="form-label"><i data-lucide="credit-card" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> Pass Type</label>
             <select name="pass_type" id="pass-type" class="form-control" required>
               <option value="" disabled selected>Choose pass type...</option>
               <option value="Daily">🌅 Daily Pass</option>
@@ -198,7 +198,7 @@
           </div>
 
           <div class="form-group" id="duration-group">
-            <label class="form-label">⏱️ Duration (Months)</label>
+            <label class="form-label"><i data-lucide="clock" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> Duration (Months)</label>
             <input
               type="number" name="duration_months" id="duration-months" class="form-control"
               placeholder="e.g. 3" min="1" max="11" required
@@ -217,7 +217,7 @@
           </div>
 
           <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.2rem;">
-            🚀 Submit Application
+            <i data-lucide="send" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Submit Application
           </button>
         </form>
       </div>
@@ -225,7 +225,7 @@
       <!-- Info Side Panel -->
       <div class="animate-fade-up animate-delay-2">
         <div class="info-card" style="margin-bottom:1rem;">
-          <h4 style="margin-bottom:1rem; font-size:0.95rem;">📋 How it works</h4>
+          <h4 style="margin-bottom:1rem; font-size:0.95rem;"><i data-lucide="help-circle" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> How it works</h4>
           <ul class="steps-list">
             <li>
               <div class="step-num">1</div>
@@ -259,7 +259,7 @@
         </div>
 
         <div class="info-card" style="border-color:rgba(79,142,247,0.3); background:rgba(79,142,247,0.06);">
-          <div style="font-size:1.3rem; margin-bottom:8px;">ℹ️</div>
+          <div style="font-size:1.3rem; margin-bottom:8px;"><i data-lucide="info" style="width:24px;height:24px;color:var(--accent);"></i></div>
           <p style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
             You can only have <strong style="color:var(--accent);">one pending application</strong> at a time.
             If you have an active pass, renew it after it expires.
