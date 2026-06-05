@@ -112,6 +112,44 @@ def _run_migrations():
             db.commit()
             print("Migration: Added doc_status column to Passenger")
 
+        # 7. Ensure Route table exists and is populated with real BMTC routes and fares
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS Route (
+                route_id INT AUTO_INCREMENT PRIMARY KEY,
+                source VARCHAR(100) DEFAULT NULL,
+                destination VARCHAR(100) DEFAULT NULL,
+                base_fare DECIMAL(10,2) DEFAULT NULL
+            )
+        """)
+        db.commit()
+
+        # Update routes 1 to 6 to actual BMTC routes
+        routes_to_update = [
+            (1, "Majestic (KBS)", "Electronic City (Route 356N)", 25.00),
+            (2, "BTM Layout", "ITPL / Whitefield (Route 500C)", 23.00),
+            (3, "KR Market", "Hebbal (Route 279)", 18.00),
+            (4, "Majestic (KBS)", "ITPL / Whitefield (Route 335E)", 25.00),
+            (5, "Yelahanka", "Kengeri (Route 401B)", 30.00),
+            (6, "Majestic (KBS)", "Nelamangala (Route 252)", 25.00)
+        ]
+        for r_id, src, dst, fare in routes_to_update:
+            c.execute("UPDATE Route SET source=%s, destination=%s, base_fare=%s WHERE route_id=%s", (src, dst, fare, r_id))
+        db.commit()
+
+        # Insert new real BMTC routes 7 to 10
+        routes_to_insert = [
+            ("Hebbal", "Silk Board (Route 500D)", 28.00),
+            ("Majestic (KBS)", "Bannerghatta National Park (Route 365)", 25.00),
+            ("Majestic (KBS)", "Srinagar (Route 201G)", 15.00),
+            ("Majestic (KBS)", "Vidyaranyapura (Route 276)", 20.00)
+        ]
+        for src, dst, fare in routes_to_insert:
+            c.execute("SELECT 1 FROM Route WHERE source=%s AND destination=%s", (src, dst))
+            if not c.fetchone():
+                c.execute("INSERT INTO Route (source, destination, base_fare) VALUES (%s, %s, %s)", (src, dst, fare))
+        db.commit()
+        print("Migration: Updated Route table with BMTC routes and fares")
+
         c.close()
         print("Migrations: All checks passed.")
     except Exception as e:
