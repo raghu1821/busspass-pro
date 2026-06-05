@@ -980,7 +980,7 @@ def stats():
         try:
             c2 = db.cursor(dictionary=True)
             c2.execute("""
-                SELECT DATE_FORMAT(created_at, '%%b %%Y') AS month,
+                SELECT DATE_FORMAT(created_at, '%b %Y') AS month,
                        YEAR(created_at) AS yr, MONTH(created_at) AS mo,
                        COUNT(*) AS total
                 FROM Pass_Application
@@ -1015,7 +1015,7 @@ def stats():
             c4 = db.cursor(dictionary=True)
             c4.execute("""
                 SELECT DAY(created_at) AS day_num,
-                       DATE_FORMAT(created_at, '%%b %%d') AS day_label,
+                       DATE_FORMAT(created_at, '%b %d') AS day_label,
                        COUNT(*) AS total
                 FROM Pass_Application
                 WHERE YEAR(created_at)  = YEAR(NOW())
@@ -1033,7 +1033,7 @@ def stats():
         try:
             c5 = db.cursor(dictionary=True)
             c5.execute("""
-                SELECT DATE_FORMAT(created_at, '%%b') AS month_label,
+                SELECT DATE_FORMAT(created_at, '%b') AS month_label,
                        MONTH(created_at) AS mo,
                        COUNT(*) AS total
                 FROM Pass_Application
