@@ -291,8 +291,6 @@ def dashboard():
     )
 @app.route("/view_pass")
 def view_pass():
-    if "user" not in session: return redirect("/login")
-
     if "user" not in session:
         return redirect("/login")
 
@@ -370,9 +368,6 @@ def generate_qr(pass_id):
     WHERE Pass.pass_id=%s AND Passenger.full_name=%s
     """
     cursor.execute(query, (pass_id, session["user"]))
-
-    cursor.execute(query, (pass_id,))
-
     pass_data = cursor.fetchone()
 
     if not pass_data:
@@ -402,12 +397,7 @@ def generate_qr(pass_id):
 
     img.save(file_path)
 
-    return f"""
-    QR Generated Successfully
-
-    Saved At:
-    {file_path}
-    """
+    return redirect("/view_pass?msg=QR+Code+regenerated+successfully!&type=success")
 
 @app.route("/apply_pass", methods=["GET", "POST"])
 def apply_pass():
@@ -573,6 +563,8 @@ def admin():
 
 @app.route("/approve/<int:id>")
 def approve(id):
+    if "admin" not in session:
+        return redirect("/admin_login")
 
     cursor = get_db().cursor(dictionary=True)
     check_query = """
@@ -651,6 +643,8 @@ def activate_pass(app_id):
 
 @app.route("/reject/<int:id>")
 def reject(id):
+    if "admin" not in session:
+        return redirect("/admin_login")
 
     cursor = get_db().cursor(dictionary=True)
     check_query = """
@@ -1025,8 +1019,6 @@ def stats():
 
 @app.route("/profile")
 def profile():
-    if "user" not in session: return redirect("/login")
-
     if "user" not in session:
         return redirect("/login")
 
@@ -1071,7 +1063,7 @@ def upload_doc():
     if len(doc_bytes) > 5 * 1024 * 1024:  # 5MB limit
         return redirect("/profile?msg=File+too+large.+Maximum+size+is+5MB.&type=error")
 
-    mime = doc_file.mimetype or f"image/{ext}" if ext != "pdf" else "application/pdf"
+    mime = doc_file.mimetype or (f"image/{ext}" if ext != "pdf" else "application/pdf")
     b64 = base64.b64encode(doc_bytes).decode("utf-8")
     doc_uri = f"data:{mime};base64,{b64}"
 
@@ -1130,9 +1122,6 @@ def view_doc(passenger_name):
 
 @app.route("/edit_profile", methods=["GET", "POST"])
 def edit_profile():
-
-    if "user" not in session: return redirect("/login")
-
     if "user" not in session:
         return redirect("/login")
 
@@ -1186,8 +1175,6 @@ def edit_profile():
 @app.route("/change_password", methods=["GET", "POST"])
 
 def change_password():
-    if "user" not in session: return redirect("/login")
-
     if "user" not in session:
         return redirect("/login")
 
@@ -1619,25 +1606,39 @@ def resend_otp():
     session["otp_expires"] = expires.isoformat()
 
     mail_user = os.getenv("MAIL_USER", "")
-    if mail_user:
-        def send_async(app_ctx, message):
-            with app_ctx:
-                try:
-                    mail.send(message)
-                except Exception:
-                    pass
+    mail_pass = os.getenv("MAIL_PASS", "")
 
-        msg = Message(subject="BusPass Pro - Your New OTP", recipients=[email])
-        msg.html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
-          <h2 style="color:#4f8ef7;">BusPass Pro</h2>
-          <h3>Your New OTP</h3>
-          <p>Your previous OTP was resent. It expires in <strong>10 minutes</strong>.</p>
-          <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:24px;margin:24px 0;">
-            <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#4f8ef7;">{otp}</span>
-          </div>
-        </div>"""
-        t = threading.Thread(target=send_async, args=(app.app_context(), msg), daemon=True)
+    if mail_user and mail_pass:
+        def send_otp_email(to_email, otp_code, sender, password):
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            try:
+                html_body = f"""
+                <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
+                  <h2 style="color:#4f8ef7;">🚌 BusPass Pro</h2>
+                  <h3>Your New OTP</h3>
+                  <p>Your previous OTP was resent. It expires in <strong>10 minutes</strong>.</p>
+                  <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:28px;margin:24px 0;">
+                    <span style="font-size:44px;font-weight:900;letter-spacing:14px;color:#4f8ef7;">{otp_code}</span>
+                  </div>
+                </div>"""
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = "BusPass Pro — Your New OTP"
+                msg["From"]    = f"BusPass Pro <{sender}>"
+                msg["To"]      = to_email
+                msg.attach(MIMEText(html_body, "html"))
+                with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(sender, password)
+                    server.sendmail(sender, to_email, msg.as_string())
+                print(f"Resend OTP email sent to {to_email}")
+            except Exception as e:
+                print(f"Resend OTP email error: {e}")
+
+        t = threading.Thread(target=send_otp_email, args=(email, otp, mail_user, mail_pass), daemon=True)
         t.start()
         return redirect(f"/verify_otp?email={email}&msg=New+OTP+sent+to+your+email!&type=success")
     else:
