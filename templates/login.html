@@ -1,74 +1,190 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>Citizen Login — BMTC Bus Pass Portal</title>
+  <meta name="description" content="Login to the official BMTC Bus Pass Management Portal. Government of Karnataka." />
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
-    .auth-wrapper { position: relative; overflow: hidden; }
-    .auth-orb {
-      position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
-      filter: blur(80px); opacity: 0.15;
+    .auth-page-wrapper {
+      min-height: 100vh;
+      background: var(--bg-page);
+      display: flex;
+      flex-direction: column;
     }
-    .auth-orb-1 { width: 400px; height: 400px; background: var(--accent);    top: -100px; left: -100px; }
-    .auth-orb-2 { width: 300px; height: 300px; background: var(--accent-2);  bottom: -50px; right: -50px; }
-    .auth-card  { position: relative; z-index: 1; }
-    .divider    { display: flex; align-items: center; gap: 12px; margin: 1.2rem 0; }
-    .divider::before, .divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--glass-border);
+    .auth-page-top {
+      background: var(--gov-navy-dark);
+      border-bottom: 4px solid var(--gov-orange);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    .divider span { color: var(--text-muted); font-size: 0.78rem; }
+    .auth-page-top .auth-emblem {
+      width: 46px; height: 46px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      border: 2px solid var(--gov-orange);
+      overflow: hidden;
+    }
+    .auth-page-top .auth-portal-name {
+      font-size: 16px; font-weight: 700; color: #fff;
+      font-family: 'Noto Serif', serif;
+    }
+    .auth-page-top .auth-portal-sub {
+      font-size: 11px; color: #a0bce0;
+    }
+    .auth-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+    }
+    .auth-form-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+    .auth-form-header {
+      background: var(--gov-navy);
+      padding: 20px 24px;
+      text-align: center;
+      border-bottom: 4px solid var(--gov-orange);
+    }
+    .auth-form-header .auth-icon {
+      width: 52px; height: 52px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 10px;
+      border: 2px solid var(--gov-orange);
+    }
+    .auth-form-header h1 {
+      font-size: 16px; color: #fff; font-weight: 700; margin: 0 0 3px;
+    }
+    .auth-form-header p {
+      font-size: 11px; color: #a0bce0; margin: 0;
+    }
+    .auth-form-body { padding: 24px; }
+    .divider { display:flex;align-items:center;gap:10px;margin:14px 0; }
+    .divider::before,.divider::after { content:'';flex:1;height:1px;background:var(--border); }
+    .divider span { color:var(--text-light);font-size:11px; }
+    .auth-footer-note {
+      background: #ebf0fa;
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      font-size: 11px;
+      color: var(--gov-navy);
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div class="auth-orb auth-orb-1"></div>
-  <div class="auth-orb auth-orb-2"></div>
+  <div class="auth-page-wrapper">
 
-  <div class="auth-wrapper">
-    <div class="auth-card animate-fade-up">
-      <div class="auth-logo">
-        <div class="logo-icon">🚌</div>
-        <h1>Welcome Back</h1>
-        <p>Sign in to your BusPass Pro account</p>
+    <!-- Compact Government Header -->
+    <div class="auth-page-top">
+      <div class="auth-emblem">
+        <img src="/static/icons/icon-192.png" alt="BMTC" style="width:42px;height:42px;object-fit:contain;" onerror="this.style.display='none';this.parentElement.textContent='🚌';" />
       </div>
-
-      <form method="POST" id="loginForm">
-        <div class="form-group">
-          <label class="form-label">📧 Email Address</label>
-          <input type="email" name="email" class="form-control" placeholder="you@example.com" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label">🔐 Password</label>
-          <input type="password" name="password" class="form-control" placeholder="Enter your password" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">
-          🔑 Sign In
-        </button>
-      </form>
-
-      <div class="divider"><span>OR</span></div>
-
-      <div class="text-center" style="color: var(--text-secondary); font-size:0.9rem;">
-        Don't have an account?
-        <a href="/register" style="color: var(--accent); font-weight:600; margin-left:4px;">
-          Create one →
-        </a>
-      </div>
-
-      <div class="text-center" style="margin-top:.75rem;">
-        <a href="/forgot_password" style="color:var(--text-muted);font-size:.85rem;">🔑 Forgot Password?</a>
-      </div>
-
-      <div class="text-center" style="margin-top:1rem;">
-        <a href="/admin_login" style="color: var(--text-muted); font-size:0.8rem;">
-          🛡️ Admin Login
-        </a>
+      <div>
+        <div class="auth-portal-name">BMTC Bus Pass Management System</div>
+        <div class="auth-portal-sub">Bangalore Metropolitan Transport Corporation &mdash; Government of Karnataka</div>
       </div>
     </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+      <a href="/">Home</a> <span>&rsaquo;</span> Citizen Login
+    </div>
+
+    <!-- Center Auth Card -->
+    <div class="auth-center">
+      <div class="auth-form-card animate-fade-up">
+
+        <div class="auth-form-header">
+          <div class="auth-icon">&#128274;</div>
+          <h1>Citizen Login</h1>
+          <p>Authorised Citizens Only &mdash; BMTC Bus Pass Portal</p>
+        </div>
+
+        <div class="auth-form-body">
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}" style="margin-bottom:14px;">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          <form method="POST" id="loginForm">
+            <div class="form-group">
+              <label class="form-label">Email Address <span class="required">*</span></label>
+              <input type="email" name="email" id="email" class="form-control" placeholder="Enter registered email address" required autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password <span class="required">*</span></label>
+              <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:6px;" id="loginBtn">
+              &#128274; Sign In to Portal
+            </button>
+          </form>
+
+          <div class="divider"><span>OR</span></div>
+
+          <div class="text-center" style="font-size:13px;color:var(--text-muted);">
+            New citizen?
+            <a href="/register" style="color:var(--gov-navy);font-weight:600;margin-left:4px;">
+              Register Here &rarr;
+            </a>
+          </div>
+
+          <div class="text-center" style="margin-top:10px;">
+            <a href="/forgot_password" style="color:var(--text-light);font-size:12px;">
+              &#128274; Forgot Password?
+            </a>
+          </div>
+
+          <div class="text-center" style="margin-top:8px;">
+            <a href="/admin_login" style="color:var(--text-light);font-size:11px;">
+              &#128737; Admin / Staff Login
+            </a>
+          </div>
+        </div>
+
+        <div class="auth-footer-note">
+          &#128274; This is a secure government portal. Unauthorised access is an offence.
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:var(--gov-navy-dark);padding:10px 20px;text-align:center;font-size:11px;color:#5a7a9a;border-top:4px solid var(--gov-orange);">
+      &copy; 2025 BMTC &mdash; Bangalore Metropolitan Transport Corporation. Government of Karnataka. All Rights Reserved.
+    </div>
   </div>
+
   <script src="/static/toast.js"></script>
-  <script src="/static/theme.js"></script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function() {
+      const btn = document.getElementById('loginBtn');
+      btn.classList.add('btn-loading');
+      btn.textContent = 'Signing in...';
+    });
+  </script>
 </body>
 </html>

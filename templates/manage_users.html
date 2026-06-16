@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manage Users — BusPass Pro Admin</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>Manage Users — BMTC Bus Pass Portal Admin</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
     .page-top-row {
       display: flex;
@@ -18,13 +18,13 @@
       width: 42px; height: 42px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid var(--glass-border);
+      border: 2px solid var(--border);
       display: block;
     }
     .user-avatar-fallback {
       width: 42px; height: 42px;
       border-radius: 50%;
-      background: var(--gradient-btn);
+      background: var(--gov-navy);
       display: flex; align-items: center; justify-content: center;
       font-size: 1rem; color: #fff; font-weight: 700;
       flex-shrink: 0;
@@ -35,9 +35,9 @@
       gap: 10px;
     }
     .count-badge {
-      background: rgba(79,142,247,0.15);
+      background: #ebf0fa;
       border: 1px solid rgba(79,142,247,0.3);
-      color: var(--accent);
+      color: var(--gov-navy);
       padding: 4px 12px;
       border-radius: 20px;
       font-size: 0.8rem;
@@ -96,8 +96,8 @@
             <td>
               <span style="font-weight:600;">{{ user.full_name }}</span>
             </td>
-            <td style="color:var(--text-secondary);">{{ user.email }}</td>
-            <td style="color:var(--text-secondary);">{{ user.phone }}</td>
+            <td style="color:var(--text-muted);">{{ user.email }}</td>
+            <td style="color:var(--text-muted);">{{ user.phone }}</td>
             <td>
               <span class="badge badge-info">{{ user.category }}</span>
             </td>

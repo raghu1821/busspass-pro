@@ -1,183 +1,211 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>BusPass Pro — Smart Digital Transport</title>
-  <meta name="description" content="Apply, manage and verify your bus pass entirely online. No queues, no paperwork." />
-  <meta name="theme-color" content="#4f8ef7" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="BusPass Pro" />
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
+  <title>BMTC Bus Pass Management System — Government of Karnataka</title>
+  <meta name="description" content="Official online portal for BMTC Bus Pass application, renewal and management. Government of Karnataka." />
+  <meta name="theme-color" content="#1a3c6e" />
   <link rel="icon" type="image/png" href="/static/icons/icon-192.png" />
   <link rel="manifest" href="/static/manifest.json" />
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
 </head>
 <body>
 
-  <!-- ── NAVBAR ── -->
+  <!-- ── TOP TICKER BAR ── -->
+  <div class="gov-ticker">
+    <div class="ticker-left">
+      <span>&#9679;</span>
+      <span>Official Portal of Bangalore Metropolitan Transport Corporation (BMTC) | Government of Karnataka</span>
+    </div>
+    <div class="ticker-right">
+      Helpline: 080-22251777 &nbsp;|&nbsp; Mon–Sat 9:00 AM – 5:30 PM
+    </div>
+  </div>
+
+  <!-- ── GOVERNMENT HEADER ── -->
+  <div class="gov-header">
+    <div class="gov-emblem">
+      <img src="/static/icons/icon-192.png" alt="BMTC Emblem" style="width:52px;height:52px;object-fit:contain;" onerror="this.style.display='none';this.parentElement.textContent='🚌';" />
+    </div>
+    <div class="gov-title-block">
+      <div class="gov-portal-name">BMTC Bus Pass Management System</div>
+      <div class="gov-sub-name">Bangalore Metropolitan Transport Corporation &nbsp;|&nbsp; Government of Karnataka</div>
+    </div>
+    <div class="gov-header-right">
+      <div>Version 2.0 &nbsp;|&nbsp; Managed by BMTC-IT</div>
+      <div>NIC Certified Portal</div>
+    </div>
+  </div>
+
+  <!-- ── MAIN NAVBAR ── -->
   <nav class="navbar">
     <a href="/" class="navbar-brand">
-      <i data-lucide="bus" style="color:var(--accent); margin-right:6px; vertical-align:-3px;"></i>
-      BusPass Pro
+      &#128652; BMTC Pass Portal
     </a>
     <ul class="nav-links">
-      <li><a href="/"><i data-lucide="home" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Home</a></li>
+      <li><a href="/" class="active">&#127968; Home</a></li>
       {% if session.get('user') %}
-        <li><a href="/dashboard" class="nav-btn"><i data-lucide="layout-dashboard" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Dashboard</a></li>
-        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Logout</a></li>
+        <li><a href="/dashboard">&#128202; Dashboard</a></li>
+        <li><a href="/logout" class="nav-btn">&#128274; Logout</a></li>
       {% elif session.get('admin') %}
-        <li><a href="/admin" class="nav-btn"><i data-lucide="shield-check" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Admin Panel</a></li>
-        <li><a href="/logout" class="nav-btn" style="background: var(--danger); color:#fff; border:none;"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Logout</a></li>
+        <li><a href="/admin">&#128737; Admin Panel</a></li>
+        <li><a href="/logout" class="nav-btn">&#128274; Logout</a></li>
       {% else %}
-        <li><a href="/login" class="nav-btn"><i data-lucide="key" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Login</a></li>
-        <li><a href="/register" class="nav-btn" style="background: var(--accent); color:#fff;"><i data-lucide="sparkles" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px;"></i> Register</a></li>
+        <li><a href="/login" class="nav-btn">&#128274; Citizen Login</a></li>
+        <li><a href="/register" class="nav-btn" style="background:#1e7e34;border-color:#155724;">&#10010; Register</a></li>
       {% endif %}
     </ul>
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
-  <!-- ── HERO ── -->
+  <!-- Mobile nav drawer -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="/">&#127968; Home</a>
+    {% if session.get('user') %}
+      <a href="/dashboard">&#128202; Dashboard</a>
+      <a href="/logout" class="nav-logout">&#128274; Logout</a>
+    {% elif session.get('admin') %}
+      <a href="/admin">&#128737; Admin Panel</a>
+      <a href="/logout" class="nav-logout">&#128274; Logout</a>
+    {% else %}
+      <a href="/login">&#128274; Citizen Login</a>
+      <a href="/register">&#10010; Register</a>
+    {% endif %}
+  </div>
+
+  <!-- ── HERO BANNER ── -->
   <section class="hero">
-    <!-- Decorative blobs -->
-    <div class="hero-blob hero-blob-1"></div>
-    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-inner">
+      <div class="hero-content animate-fade-up">
+        <div class="hero-eyebrow">&#127470;&#127475; Government of Karnataka — Official Portal</div>
 
-    <div class="hero-content animate-fade-up">
-      <div class="hero-badge">
-        <i data-lucide="bus" style="width:16px;height:16px;margin-right:6px;color:var(--accent);vertical-align:-2px;"></i> Smart Digital Transport
+        <h1 class="hero-title">
+          BMTC Digital Bus Pass<br>
+          <span>Online Application Portal</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Apply, renew and manage your BMTC bus pass entirely online through this official portal.
+          No queues, no paper forms — secure digital service for all citizens of Bengaluru.
+        </p>
+
+        <div class="hero-actions animate-fade-up animate-delay-2">
+          {% if session.get('user') %}
+            <a href="/dashboard" class="btn btn-primary btn-lg">&#128202; Go to Dashboard</a>
+            <a href="/view_pass" class="btn btn-ghost btn-lg">&#127915; My Bus Pass</a>
+          {% elif session.get('admin') %}
+            <a href="/admin" class="btn btn-primary btn-lg">&#128737; Admin Panel</a>
+          {% else %}
+            <a href="/register" class="btn btn-primary btn-lg">&#128196; Apply for Bus Pass</a>
+            <a href="/login" class="btn btn-ghost btn-lg">&#128274; Citizen Login</a>
+          {% endif %}
+        </div>
+
+        <div class="hero-pills animate-fade-up animate-delay-3">
+          <span class="hero-pill">&#10003; 100% Online Process</span>
+          <span class="hero-pill">&#10003; Secure Government Portal</span>
+          <span class="hero-pill">&#10003; Instant QR Code Pass</span>
+        </div>
       </div>
 
-      <h1 class="hero-title">
-        Your Digital Bus Pass,<br>
-        <span class="hero-highlight">Reinvented.</span>
-      </h1>
-
-      <p class="hero-subtitle">
-        Apply, manage and verify your bus pass entirely online. No queues, no paperwork —
-        just instant access to seamless public transit across 50+ routes.
-      </p>
-
-      <div class="hero-actions animate-fade-up animate-delay-3">
-        {% if session.get('user') %}
-          <a href="/dashboard" class="btn btn-primary btn-lg">
-            <i data-lucide="layout-dashboard" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Go to Dashboard
-          </a>
-          <a href="/view_pass" class="btn btn-ghost btn-lg">
-            <i data-lucide="credit-card" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> My Pass
-          </a>
-        {% elif session.get('admin') %}
-          <a href="/admin" class="btn btn-primary btn-lg">
-            <i data-lucide="shield-check" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Go to Admin Panel
-          </a>
-        {% else %}
-          <a href="/register" class="btn btn-primary btn-lg">
-            <i data-lucide="rocket" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Get Started
-          </a>
-          <a href="/login" class="btn btn-ghost btn-lg">
-            <i data-lucide="key" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Login
-          </a>
-        {% endif %}
-        <button id="installAppBtn" class="btn btn-ghost btn-lg" style="display:none; background: rgba(79,142,247,0.15); border-color: var(--accent);"><i data-lucide="download" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Install App</button>
-      </div>
-
-      <!-- Trust pills -->
-      <div class="hero-pills">
-        <span class="hero-pill"><i data-lucide="check-circle" style="width:14px;height:14px;margin-right:4px;color:#34d399;vertical-align:-2px;"></i> Instant Approval</span>
-        <span class="hero-pill"><i data-lucide="lock" style="width:14px;height:14px;margin-right:4px;color:#34d399;vertical-align:-2px;"></i> Secure &amp; Encrypted</span>
-        <span class="hero-pill"><i data-lucide="smartphone" style="width:14px;height:14px;margin-right:4px;color:#34d399;vertical-align:-2px;"></i> Mobile Friendly</span>
+      <div class="animate-fade-up animate-delay-2" style="flex:0 0 auto;">
+        <div style="background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:20px;text-align:center;min-width:200px;">
+          <div style="font-size:48px;margin-bottom:8px;">🚌</div>
+          <div style="color:#ffd700;font-size:13px;font-weight:700;margin-bottom:4px;">BMTC</div>
+          <div style="color:#a0bce0;font-size:11px;">Bangalore Metropolitan<br>Transport Corporation</div>
+          <hr style="border-color:rgba(255,255,255,0.15);margin:12px 0;">
+          <div style="color:#fff;font-size:11px;font-weight:600;">50+ Routes &bull; 10,000+ Pass Holders</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ── FEATURES ── -->
-  <section class="section" id="features">
+  <!-- ── NOTICE BAR ── -->
+  <div style="background:#fff3cd;border-bottom:1px solid #ffe082;padding:8px 20px;font-size:12px;color:#7d5a00;display:flex;align-items:center;gap:8px;">
+    <span>&#9888;</span>
+    <span><strong>Important Notice:</strong> For pass renewal or new applications, please ensure your Aadhaar details are verified. For help, contact BMTC Help Desk at 080-22251777.</span>
+  </div>
+
+  <!-- ── QUICK SERVICES ── -->
+  <section class="section" id="services">
     <div class="section-inner">
-      <div class="section-header animate-fade-up">
-        <span class="section-tag">✨ Features</span>
-        <h2 class="section-title">Everything you need, all in one place</h2>
-        <p class="section-sub">
-          Powerful tools designed to make your commute effortless and stress-free.
-        </p>
+      <div class="section-heading" style="margin-bottom:20px;">
+        &#128196; Citizen Services — Quick Access
       </div>
 
       <div class="features-grid animate-fade-up animate-delay-1">
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
-            <i data-lucide="file-text" style="width:24px;height:24px;color:#fff;"></i>
-          </div>
-          <h3 class="feature-title">Online Pass Application</h3>
+          <div class="feature-icon">&#128196;</div>
+          <h3 class="feature-title">Apply for New Pass</h3>
           <p class="feature-desc">
-            Apply for your bus pass from anywhere, anytime. Fill the form, upload your photo
-            and get approved — all without stepping into an office.
+            Submit a fresh bus pass application online. Select your route, category and validity. Attach your photo and ID proof. Admin will review within 2–3 working days.
           </p>
-          <a href="/register" class="feature-link">Apply now →</a>
+          <a href="/register" class="feature-link">Apply Now &rarr;</a>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: linear-gradient(135deg,#06b6d4,#0ea5e9);">
-            <i data-lucide="qr-code" style="width:24px;height:24px;color:#fff;"></i>
-          </div>
+          <div class="feature-icon">&#128269;</div>
           <h3 class="feature-title">QR Code Verification</h3>
           <p class="feature-desc">
-            Each pass comes with a unique QR code for lightning-fast verification at the
-            bus gate. Say goodbye to paper tickets forever.
+            Each approved pass is issued with a unique QR code for instant verification by BMTC conductors. Valid across all BMTC routes on the approved corridor.
           </p>
-          <a href="/register" class="feature-link">Learn more →</a>
+          <a href="/register" class="feature-link">Learn More &rarr;</a>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: linear-gradient(135deg,#10b981,#059669);">
-            <i data-lucide="file-check" style="width:24px;height:24px;color:#fff;"></i>
-          </div>
-          <h3 class="feature-title">PDF Bus Pass</h3>
+          <div class="feature-icon">&#128196;</div>
+          <h3 class="feature-title">Download PDF Pass</h3>
           <p class="feature-desc">
-            Download a beautifully formatted PDF of your bus pass instantly. Print it or
-            keep it on your phone — your choice.
+            Download your digitally-signed bus pass as a PDF after approval. Can be shown on mobile or printed. Valid as an official BMTC travel document.
           </p>
-          <a href="/register" class="feature-link">Get yours →</a>
+          <a href="/register" class="feature-link">Get Yours &rarr;</a>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">&#128100;</div>
+          <h3 class="feature-title">Track Application</h3>
+          <p class="feature-desc">
+            Log in to track the status of your bus pass application in real-time — from submission to admin review, approval, and pass issuance.
+          </p>
+          <a href="/login" class="feature-link">Track Now &rarr;</a>
         </div>
 
       </div>
     </div>
   </section>
 
-  <!-- ── WHY CHOOSE US ── -->
+  <!-- ── STATISTICS ── -->
   <section class="section section-alt" id="stats">
     <div class="section-inner">
-      <div class="section-header animate-fade-up">
-        <span class="section-tag"><i data-lucide="bar-chart-2" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Why Choose Us?</span>
-        <h2 class="section-title">Trusted by thousands of daily commuters</h2>
+      <div class="section-heading" style="margin-bottom:20px;">
+        &#128202; Portal Statistics
       </div>
 
-      <div class="stats-grid animate-fade-up animate-delay-2">
-
+      <div class="stats-grid animate-fade-up animate-delay-1">
         <div class="stat-card blue">
-          <div class="stat-icon"><i data-lucide="users" style="width:28px;height:28px;color:#60a5fa;"></i></div>
-          <div class="stat-number">10k+</div>
-          <div class="stat-label">Passengers</div>
+          <div class="stat-icon">&#128100;</div>
+          <div class="stat-number">10,000+</div>
+          <div class="stat-label">Registered Citizens</div>
         </div>
-
         <div class="stat-card green">
-          <div class="stat-icon"><i data-lucide="map" style="width:28px;height:28px;color:#34d399;"></i></div>
+          <div class="stat-icon">&#128506;</div>
           <div class="stat-number">50+</div>
           <div class="stat-label">Routes Covered</div>
         </div>
-
         <div class="stat-card orange">
-          <div class="stat-icon"><i data-lucide="zap" style="width:28px;height:28px;color:#fbbf24;"></i></div>
+          <div class="stat-icon">&#127915;</div>
+          <div class="stat-number">8,500+</div>
+          <div class="stat-label">Active Bus Passes</div>
+        </div>
+        <div class="stat-card teal">
+          <div class="stat-icon">&#128202;</div>
           <div class="stat-number">99%</div>
           <div class="stat-label">System Uptime</div>
         </div>
-
-        <div class="stat-card purple">
-          <div class="stat-icon"><i data-lucide="check-circle" style="width:28px;height:28px;color:#c084fc;"></i></div>
-          <div class="stat-number">Instant</div>
-          <div class="stat-label">Approval Process</div>
-        </div>
-
       </div>
     </div>
   </section>
@@ -185,130 +213,111 @@
   <!-- ── HOW IT WORKS ── -->
   <section class="section" id="how">
     <div class="section-inner">
-      <div class="section-header animate-fade-up">
-        <span class="section-tag"><i data-lucide="trending-up" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Process</span>
-        <h2 class="section-title">Get your pass in 3 simple steps</h2>
+      <div class="section-heading" style="margin-bottom:20px;">
+        &#128196; How to Apply — Step by Step Process
       </div>
       <div class="steps-grid animate-fade-up animate-delay-1">
         <div class="step-card">
           <div class="step-number">01</div>
-          <h3>Create Account</h3>
-          <p>Register with your details, upload a photo and verify your email.</p>
+          <h3 style="font-size:14px;margin-bottom:6px;">Register Account</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Create your citizen account with email, phone and upload a passport photo and ID proof.</p>
         </div>
-        <div class="step-connector">→</div>
+        <div class="step-connector">&rarr;</div>
         <div class="step-card">
           <div class="step-number">02</div>
-          <h3>Apply for Pass</h3>
-          <p>Select your route, pass type and duration. Submit the application.</p>
+          <h3 style="font-size:14px;margin-bottom:6px;">Submit Application</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Select your route, pass type (monthly/quarterly/annual) and submit the application form.</p>
         </div>
-        <div class="step-connector">→</div>
+        <div class="step-connector">&rarr;</div>
         <div class="step-card">
           <div class="step-number">03</div>
-          <h3>Download &amp; Go</h3>
-          <p>Once approved, download your PDF pass or show the QR code.</p>
+          <h3 style="font-size:14px;margin-bottom:6px;">Admin Verification</h3>
+          <p style="font-size:12px;color:var(--text-muted);">BMTC officials verify your documents and approve or reject the application within 2–3 working days.</p>
+        </div>
+        <div class="step-connector">&rarr;</div>
+        <div class="step-card">
+          <div class="step-number">04</div>
+          <h3 style="font-size:14px;margin-bottom:6px;">Download Pass</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Once approved, download your digital bus pass with QR code and start commuting.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ── CTA BANNER ── -->
-  <section class="cta-banner animate-fade-up animate-delay-3">
+  <section class="cta-banner animate-fade-up animate-delay-2">
     <div class="cta-content">
-      <h2>Ready to ditch the paper passes? <i data-lucide="sparkles" style="width:24px;height:24px;color:#fbbf24;display:inline-block;vertical-align:-3px;"></i></h2>
-      <p>Join thousands of smart commuters who've already gone digital.</p>
-      <a href="/register" class="btn btn-primary btn-lg"><i data-lucide="arrow-right" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Start for Free</a>
+      <h2>Apply for Your BMTC Bus Pass Online</h2>
+      <p>This is the official, secure portal for BMTC bus pass services. No third-party agents required.</p>
+      <a href="/register" class="btn btn-primary btn-lg">&#128196; Start Application</a>
     </div>
   </section>
 
   <!-- ── FOOTER ── -->
   <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <i data-lucide="bus" style="width:20px;height:20px;color:var(--accent);margin-right:6px;vertical-align:-3px;"></i>
-        <strong>BusPass Pro</strong>
+    <div class="footer-top">
+      <div class="footer-brand-block">
+        <div class="footer-brand">&#128652; BMTC Bus Pass Management System</div>
+        <div style="color:#7a96b4;font-size:11px;margin-top:4px;">An initiative of Bangalore Metropolitan Transport Corporation</div>
+        <div style="color:#7a96b4;font-size:11px;">Government of Karnataka | NIC Certified</div>
       </div>
-      <p class="footer-copy">© 2025 BusPass Pro. All rights reserved. Built with ❤️ for better commutes.</p>
-      <div class="footer-links">
-        <a href="/login">Login</a>
-        <span class="separator">•</span>
-        <a href="/register">Register</a>
-        <span class="separator">•</span>
-        <a href="/feedback">Feedback</a>
+      <div>
+        <div style="color:#a0bce0;font-size:12px;font-weight:600;margin-bottom:8px;">Quick Links</div>
+        <nav class="footer-nav" style="flex-direction:column;gap:4px;">
+          <a href="/login">Citizen Login</a>
+          <a href="/register">New Registration</a>
+          <a href="/feedback">Grievances &amp; Feedback</a>
+          <a href="/admin_login">Admin Login</a>
+        </nav>
       </div>
+      <div>
+        <div style="color:#a0bce0;font-size:12px;font-weight:600;margin-bottom:8px;">Contact</div>
+        <div style="color:#7a96b4;font-size:11px;line-height:1.8;">
+          BMTC Central Offices<br>
+          Shantinagar, Bangalore — 560027<br>
+          Helpline: 080-22251777<br>
+          Email: itcell@bmtcinfo.com
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2025 Bangalore Metropolitan Transport Corporation (BMTC). Government of Karnataka. All Rights Reserved.
+      &nbsp;|&nbsp; Website Policy &nbsp;|&nbsp; Accessibility Statement &nbsp;|&nbsp; Terms of Service
     </div>
   </footer>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/toast.js"></script>
   <script>
-    lucide.createIcons();
-    
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
-          .catch(err => console.warn('[PWA] SW registration failed:', err));
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
 
-    // Check URL for msg parameter and show toast
+    // Hamburger menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobileNav');
+    if (hamburger && mobileNav) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('open');
+        mobileNav.classList.toggle('open');
+      });
+    }
+
+    // Toast from URL params
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const msg = urlParams.get('msg');
       const type = urlParams.get('type') || 'info';
-      
-      if (msg) {
-        if (window.showToast) {
-           let title = 'Info';
-           if (type === 'success') title = '✅ Success';
-           if (type === 'error') title = '❌ Error';
-           if (type === 'warning') title = '⚠️ Warning';
-           showToast(title, msg, type);
-        } else {
-           alert(msg);
-        }
+      if (msg && window.showToast) {
+        let title = 'Information';
+        if (type === 'success') title = 'Success';
+        if (type === 'error')   title = 'Error';
+        if (type === 'warning') title = 'Warning';
+        showToast(title, msg, type);
       }
     });
-
-    // PWA Install Button Logic
-    let deferredPrompt;
-    const installBtn = document.getElementById('installAppBtn');
-    
-    if (installBtn) {
-      // Check if already installed
-      const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      
-      // If not installed, show the button to everyone (critical for iPhone users)
-      if (!isInstalled) {
-        installBtn.style.display = 'inline-block';
-      }
-
-      // Capture the automatic install prompt on Android/Chrome
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-      });
-
-      installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          // Android / Chrome: Show native install modal
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          if (outcome === 'accepted') {
-            installBtn.style.display = 'none';
-          }
-          deferredPrompt = null;
-        } else {
-          // iPhone / iOS Safari: Native modal isn't supported, so tell them how to do it manually
-          if (window.showToast) {
-             showToast('📱 Installation', 'Tap the Share button and select "Add to Home Screen" to install the app!', 'info');
-          } else {
-             alert('To install on iPhone: Tap the Share button (square with arrow) at the bottom and select "Add to Home Screen".');
-          }
-        }
-      });
-    }
   </script>
 
   {% include 'chatbot.html' %}

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Profile — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>My Profile — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
     .profile-layout {
       display: grid;
@@ -15,38 +15,37 @@
     @media(max-width:900px){ .profile-layout { grid-template-columns: 1fr; } }
 
     .profile-card-left {
-      background: var(--bg-card);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
-      overflow: visible; /* IMPORTANT: allow avatar to overflow banner */
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: visible;
     }
-
     .profile-banner-area {
-      height: 100px;
-      background: var(--gradient-btn);
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      height: 80px;
+      background: linear-gradient(90deg, var(--gov-navy-dark), var(--gov-navy));
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
       position: relative;
       overflow: hidden;
+      border-bottom: 3px solid var(--gov-orange);
     }
     .profile-banner-area::after {
-      content: '🚌';
+      content: '\1F68C';
       position: absolute;
       bottom: 6px; right: 16px;
-      font-size: 2.2rem;
-      opacity: 0.25;
+      font-size: 2rem;
+      opacity: 0.2;
     }
 
-    /* Avatar sits over the banner — z-index fix */
     .profile-avatar-section {
-      padding: 0 1.5rem 1.5rem;
+      padding: 0 1.2rem 1.2rem;
       text-align: center;
       position: relative;
       z-index: 2;
     }
     .profile-avatar-img {
-      width: 96px; height: 96px;
+      width: 90px; height: 90px;
       border-radius: 50%;
-      border: 4px solid var(--bg-secondary);
+      border: 4px solid var(--bg-white);
       object-fit: cover;
       margin-top: -48px;       /* pull up over banner */
       position: relative;
@@ -57,19 +56,19 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 
-    .profile-name  { font-size:1.2rem; font-weight:800; margin: 14px 0 4px; color:var(--text-primary); }
-    .profile-email { font-size:0.82rem; color:var(--text-secondary); margin-bottom:14px; }
+    .profile-name  { font-size:1.2rem; font-weight:800; margin: 14px 0 4px; color:var(--text-main); }
+    .profile-email { font-size:0.82rem; color:var(--text-muted); margin-bottom:14px; }
     .profile-actions-col { display:flex; flex-direction:column; gap:8px; padding: 0 1.2rem 1.5rem; }
 
     .profile-details-card {
-      background: var(--bg-card);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       overflow: hidden;
     }
     .profile-details-header {
       padding: 1.1rem 1.5rem;
-      border-bottom: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--border);
       font-size: 0.78rem;
       font-weight: 700;
       color: var(--text-muted);
@@ -79,7 +78,7 @@
     .profile-field-row {
       display: flex;
       padding: 1rem 1.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--bg-light);
       gap: 1rem;
       align-items: flex-start;
     }
@@ -87,7 +86,7 @@
     .field-icon  { font-size: 1rem; width: 22px; text-align:center; flex-shrink:0; margin-top:3px; }
     .field-body  { flex:1; }
     .field-lbl   { font-size: 0.72rem; color: var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px; font-weight:600; }
-    .field-val   { font-size: 0.92rem; color: var(--text-primary); font-weight: 500; word-break:break-word; }
+    .field-val   { font-size: 0.92rem; color: var(--text-main); font-weight: 500; word-break:break-word; }
   </style>
 </head>
 <body>
@@ -95,7 +94,7 @@
 
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
-      <div class="page-title"><i data-lucide="user" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--accent);"></i> My Profile</div>
+      <div class="page-title"><i data-lucide="user" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--gov-navy);"></i> My Profile</div>
       <div class="page-subtitle">View and manage your account information</div>
     </div>
 
@@ -128,7 +127,7 @@
           <div class="profile-details-header">Account Information</div>
 
           <div class="profile-field-row">
-            <div class="field-icon"><i data-lucide="user" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
+            <div class="field-icon"><i data-lucide="user" style="width:16px;height:16px;color:var(--gov-navy);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Full Name</div>
               <div class="field-val">{{ data.full_name }}</div>
@@ -136,7 +135,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon"><i data-lucide="mail" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
+            <div class="field-icon"><i data-lucide="mail" style="width:16px;height:16px;color:var(--gov-navy);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Email Address</div>
               <div class="field-val">{{ data.email }}</div>
@@ -144,7 +143,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon"><i data-lucide="phone" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
+            <div class="field-icon"><i data-lucide="phone" style="width:16px;height:16px;color:var(--gov-navy);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Phone Number</div>
               <div class="field-val">{{ data.phone }}</div>
@@ -152,7 +151,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon"><i data-lucide="home" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
+            <div class="field-icon"><i data-lucide="home" style="width:16px;height:16px;color:var(--gov-navy);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Address</div>
               <div class="field-val">{{ data.address }}</div>
@@ -160,7 +159,7 @@
           </div>
 
           <div class="profile-field-row">
-            <div class="field-icon"><i data-lucide="tag" style="width:16px;height:16px;color:var(--accent);vertical-align:-2px;"></i></div>
+            <div class="field-icon"><i data-lucide="tag" style="width:16px;height:16px;color:var(--gov-navy);vertical-align:-2px;"></i></div>
             <div class="field-body">
               <div class="field-lbl">Category</div>
               <div class="field-val">{{ data.category }}</div>
@@ -178,18 +177,18 @@
         <!-- Document Verification Card -->
         <div style="
           margin-top: 1.5rem;
-          background: var(--bg-card);
-          border: 1px solid var(--glass-border);
-          border-radius: var(--radius-xl);
+          background: var(--bg-white);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
           overflow: hidden;
         ">
           <div style="
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
           ">
             <div>
-              <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;"><i data-lucide="file-check" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> Verification Document</div>
+              <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;"><i data-lucide="file-check" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--gov-navy);"></i> Verification Document</div>
             </div>
             {% set ds = data.doc_status if data.doc_status else 'Not Uploaded' %}
             <span style="
@@ -197,7 +196,7 @@
               {% if ds == 'Verified' %}background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);
               {% elif ds == 'Pending' %}background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);
               {% elif ds == 'Rejected' %}background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);
-              {% else %}background:rgba(100,116,139,0.12);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);{% endif %}
+              {% else %}background:rgba(100,116,139,0.12);color:var(--text-muted);border:1px solid rgba(100,116,139,0.2);{% endif %}
             ">
               {% if ds == 'Verified' %}<i data-lucide="check-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Verified
               {% elif ds == 'Pending' %}<i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Pending Review
@@ -220,13 +219,13 @@
                 <i data-lucide="x" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Your document was rejected. Please upload a clearer, valid document.
               </p>
             {% else %}
-              <p style="font-size:0.85rem; color:var(--text-secondary); margin:0 0 0.75rem;">
+              <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 0.75rem;">
                 Upload a valid proof document to verify your category and speed up pass approval.
               </p>
             {% endif %}
 
             <!-- Hint based on category -->
-            <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:1rem; border:1px solid var(--glass-border);">
+            <div style="font-size:0.78rem; color:var(--text-muted); background:var(--bg-light); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:1rem; border:1px solid var(--border);">
               <i data-lucide="lightbulb" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;color:#fbbf24;"></i> <strong>{{ data.category }}</strong> —
               {% if data.category == 'Student' %}Upload your College/School ID card or admission letter.
               {% elif data.category == 'Employee' %}Upload your Company ID card or appointment letter.
@@ -240,7 +239,7 @@
               <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <label style="
                   flex:1; min-width:180px;
-                  border: 2px dashed var(--glass-border); border-radius: var(--radius-md);
+                  border: 2px dashed var(--border); border-radius: var(--radius-md);
                   padding: 10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px;
                   font-size:0.83rem; color:var(--text-muted); transition:var(--transition);
                 " for="doc_file" id="docLabel">
@@ -248,7 +247,7 @@
                 </label>
                 <input type="file" name="doc_file" id="doc_file" accept=".pdf,.png,.jpg,.jpeg,.webp"
                   style="display:none;"
-                  onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || 'Choose file'; document.getElementById('docLabel').style.borderColor='var(--accent)';" />
+                  onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || 'Choose file'; document.getElementById('docLabel').style.borderColor='var(--gov-navy)';" />
                 <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">
                   <i data-lucide="upload" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> {% if ds == 'Rejected' %}Re-upload{% else %}Upload{% endif %} Document
                 </button>

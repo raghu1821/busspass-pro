@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manage Routes — BusPass Pro Admin</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>Manage Routes — BMTC Bus Pass Portal Admin</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
     .routes-layout {
       display: grid;
@@ -15,9 +15,9 @@
     @media(max-width:900px){ .routes-layout { grid-template-columns: 1fr; } }
 
     .add-card {
-      background: var(--bg-card);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       padding: 2rem;
       position: sticky;
       top: 90px;
@@ -33,7 +33,7 @@
       font-size: 1.2rem;
     }
     .add-card-header h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 2px; }
-    .add-card-header p  { font-size: 0.8rem; color: var(--text-secondary); }
+    .add-card-header p  { font-size: 0.8rem; color: var(--text-muted); }
 
     .routes-header {
       display: flex; align-items: center;
@@ -133,7 +133,7 @@
                 <td><span style="font-weight:600;">{{ route.source }}</span></td>
                 <td>
                   <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="color:var(--accent);">→</span>
+                    <span style="color:var(--gov-navy);">→</span>
                     <span>{{ route.destination }}</span>
                   </div>
                 </td>
@@ -150,7 +150,7 @@
                     <form method="POST" action="/update_route_fare/{{ route.route_id }}" style="display:flex;gap:.35rem;">
                       <input type="number" name="fare" placeholder="₹ fare" min="1"
                         value="{{ route.fare or '' }}"
-                        style="width:80px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-size:.8rem;"/>
+                        style="width:80px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-white);color:var(--text-main);font-size:.8rem;"/>
                       <button type="submit" class="btn btn-success btn-sm">✓</button>
                     </form>
                     <!-- Delete route -->

@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Bus Pass — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>My Bus Pass — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
     .pass-card {
       max-width: 720px; margin: 0 auto;
       background: linear-gradient(135deg, #1a3a6e 0%, #2563eb 40%, #7c3aed 100%);
-      border-radius: var(--radius-xl);
+      border-radius: var(--radius-md);
       padding: 2rem;
-      box-shadow: 0 0 60px rgba(79,142,247,0.35), var(--shadow-lg);
+      box-shadow: 0 0 60px rgba(79,142,247,0.35), var(--shadow-card);
       position: relative; overflow: hidden;
       transform-style: preserve-3d;
       animation: autoWobble 8s infinite alternate ease-in-out;
@@ -61,11 +61,11 @@
     }
     .pass-card::before {
       content:''; position:absolute; top:-80px; right:-60px;
-      width:300px; height:300px; background:rgba(255,255,255,0.06); border-radius:50%;
+      width:300px; height:300px; background:var(--bg-light); border-radius:50%;
     }
     .pass-card::after {
       content:''; position:absolute; bottom:-60px; left:-40px;
-      width:200px; height:200px; background:rgba(255,255,255,0.04); border-radius:50%;
+      width:200px; height:200px; background:var(--bg-light); border-radius:50%;
     }
     .pass-top {
       display:flex; justify-content:space-between; align-items:center;
@@ -112,7 +112,7 @@
       display:flex; gap:10px; position:relative; z-index:1; flex-wrap:wrap;
     }
     .status-active  { background:rgba(16,185,129,0.25); color:#6ee7b7; border:1px solid rgba(16,185,129,0.4); }
-    .status-expired { background:rgba(100,116,139,0.25); color:#94a3b8; border:1px solid rgba(100,116,139,0.4); }
+    .status-expired { background:rgba(100,116,139,0.25); color:var(--text-muted); border:1px solid rgba(100,116,139,0.4); }
     .pass-status-badge {
       padding:5px 12px; border-radius:20px; font-size:0.75rem; font-weight:700;
     }
@@ -136,20 +136,19 @@
 
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
-      <div class="page-title"><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--accent);"></i> My Digital Pass</div>
+      <div class="page-title"><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:-4px;margin-right:4px;color:var(--gov-navy);"></i> My Digital Pass</div>
       <div class="page-subtitle">Your current active bus pass</div>
     </div>
 
     {% if unpaid_app %}
-    <div class="glass-card animate-fade-up animate-delay-1" style="padding:3rem; text-align:center; max-width:540px; margin:0 auto 2rem; border: 2px solid var(--accent); background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(37,99,235,0.1));">
-      <div style="font-size:4rem; margin-bottom:1rem; filter: drop-shadow(0 0 20px rgba(37,99,235,0.5));">💳</div>
-      <h2 style="margin-bottom:8px; font-weight:800; color:#fff;">Payment Required</h2>
-      <p style="margin-bottom:2rem; color:var(--text-secondary); font-size:1.05rem;">
-        Your application for a <strong>{{ unpaid_app.pass_type }}</strong> pass has been approved! 
-        <br><br>
-        Please pay the activation fee to instantly generate your digital 3D holographic pass.
+    <div class="glass-card animate-fade-up animate-delay-1" style="padding:24px;text-align:center;max-width:540px;margin:0 auto 20px;border:2px solid var(--gov-orange);background:var(--gov-orange-bg);">
+      <div style="font-size:48px;margin-bottom:12px;">&#128179;</div>
+      <h2 style="margin-bottom:8px;font-weight:700;color:var(--gov-navy);font-size:18px;">Payment Required to Activate Pass</h2>
+      <p style="margin-bottom:20px;color:var(--text-muted);font-size:13px;">
+        Your application for a <strong>{{ unpaid_app.pass_type }}</strong> pass has been approved!<br>
+        Please complete payment on the dashboard to generate your digital bus pass.
       </p>
-      <a href="/dashboard" class="btn btn-primary btn-lg" style="box-shadow: var(--glow-blue);">Go to Dashboard to Pay →</a>
+      <a href="/dashboard" class="btn btn-primary btn-lg">&#128202; Go to Dashboard to Pay &rarr;</a>
     </div>
 
     {% elif pass_data %}
@@ -160,7 +159,7 @@
       <div class="pass-top">
         <div class="pass-brand">
           <i data-lucide="bus" style="width:20px;height:20px;margin-right:4px;color:#fff;vertical-align:-3px;"></i>
-          <span class="pass-brand-name">BusPass Pro</span>
+          <span class="pass-brand-name">BMTC Bus Pass Portal</span>
         </div>
         <span class="pass-status-badge {% if pass_data.status == 'Active' %}status-active{% else %}status-expired{% endif %}">
           {% if pass_data.status == 'Active' %}<i data-lucide="check-circle" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> Active{% else %}<i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"></i> {{ pass_data.status }}{% endif %}
@@ -251,7 +250,7 @@
     <div class="glass-card animate-fade-up animate-delay-1" style="padding:3rem; text-align:center; max-width:480px; margin:0 auto;">
       <div style="font-size:4rem; margin-bottom:1rem;">🎫</div>
       <h2 style="margin-bottom:8px;">No Active Pass Found</h2>
-      <p style="margin-bottom:2rem; color:var(--text-secondary);">
+      <p style="margin-bottom:2rem; color:var(--text-muted);">
         You don't have an active bus pass yet. Apply for one and get approved to access your digital pass.
       </p>
       <a href="/apply_pass" class="btn btn-primary btn-lg">📝 Apply for Pass</a>

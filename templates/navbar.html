@@ -1,50 +1,76 @@
-<!-- User navigation bar -->
+<!-- User navigation bar — BMTC Government Portal -->
+
+<!-- Top Ticker -->
+<div class="gov-ticker">
+  <div class="ticker-left">
+    <span>&#9679;</span>
+    <span>Official BMTC Bus Pass Portal &mdash; Government of Karnataka</span>
+  </div>
+  <div class="ticker-right">Helpline: 080-22251777 &nbsp;|&nbsp; Mon&ndash;Sat 9 AM &ndash; 5:30 PM</div>
+</div>
+
+<!-- Government Header -->
+<div class="gov-header">
+  <div class="gov-emblem">
+    <img src="/static/icons/icon-192.png" alt="BMTC" style="width:52px;height:52px;object-fit:contain;" onerror="this.style.display='none';this.parentElement.textContent='🚌';" />
+  </div>
+  <div class="gov-title-block">
+    <div class="gov-portal-name">BMTC Bus Pass Management System</div>
+    <div class="gov-sub-name">Bangalore Metropolitan Transport Corporation &nbsp;|&nbsp; Government of Karnataka</div>
+  </div>
+  <div class="gov-header-right">
+    <div>Citizen Services Portal</div>
+    <div>Secure &bull; Official &bull; Authorised</div>
+  </div>
+</div>
+
+<!-- Main Navigation -->
 <nav class="navbar">
-  <a href="/" class="navbar-brand">
-    <i data-lucide="bus" style="color:var(--accent); margin-right:4px;"></i>
-    BusPass Pro
-  </a>
+  <a href="/" class="navbar-brand">&#128652; BMTC Pass Portal</a>
 
   <ul class="nav-links">
-    <li><a href="/"><i data-lucide="home" style="width:16px;height:16px;margin-right:4px;"></i> Home</a></li>
-    <li><a href="/dashboard"><i data-lucide="layout-dashboard" style="width:16px;height:16px;margin-right:4px;"></i> Dashboard</a></li>
-    <li><a href="/view_pass"><i data-lucide="credit-card" style="width:16px;height:16px;margin-right:4px;"></i> My Pass</a></li>
-    <li><a href="/apply_pass"><i data-lucide="file-text" style="width:16px;height:16px;margin-right:4px;"></i> Apply</a></li>
-    <li><a href="/profile"><i data-lucide="user" style="width:16px;height:16px;margin-right:4px;"></i> Profile</a></li>
-    <li><a href="/feedback"><i data-lucide="message-square" style="width:16px;height:16px;margin-right:4px;"></i> Feedback</a></li>
-    <li><a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;"></i> Logout</a></li>
+    <li><a href="/">&#127968; Home</a></li>
+    <li><a href="/dashboard">&#128202; Dashboard</a></li>
+    <li><a href="/view_pass">&#127915; My Pass</a></li>
+    <li><a href="/apply_pass">&#128196; Apply</a></li>
+    <li><a href="/profile">&#128100; Profile</a></li>
+    <li><a href="/feedback">&#128172; Feedback</a></li>
+    <li><a href="/logout" class="nav-logout">&#128274; Logout</a></li>
   </ul>
 
-  <div style="display:flex; align-items:center; gap:10px;">
-    <!-- Theme toggle -->
-    <span class="theme-icon" id="themeIcon">🌙</span>
-    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" aria-label="Toggle theme"></button>
-
-    <!-- Hamburger (mobile only) -->
+  <div style="display:flex;align-items:center;gap:8px;">
     <button class="hamburger" id="hamburger" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 
-{% include 'chatbot.html' %}
-
 <!-- Mobile nav drawer -->
 <div class="mobile-nav" id="mobileNav">
-  <a href="/"><i data-lucide="home" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Home</a>
-  <a href="/dashboard"><i data-lucide="layout-dashboard" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Dashboard</a>
-  <a href="/view_pass"><i data-lucide="credit-card" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> My Pass</a>
-  <a href="/apply_pass"><i data-lucide="file-text" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Apply</a>
-  <a href="/profile"><i data-lucide="user" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Profile</a>
-  <a href="/feedback"><i data-lucide="message-square" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Feedback</a>
-  <a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Logout</a>
+  <a href="/">&#127968; Home</a>
+  <a href="/dashboard">&#128202; Dashboard</a>
+  <a href="/view_pass">&#127915; My Pass</a>
+  <a href="/apply_pass">&#128196; Apply</a>
+  <a href="/profile">&#128100; Profile</a>
+  <a href="/feedback">&#128172; Feedback</a>
+  <a href="/logout" class="nav-logout">&#128274; Logout</a>
 </div>
 
 <!-- Global scripts -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="/static/toast.js"></script>
-<script src="/static/theme.js"></script>
 <script>
-  // Initialize icons
-  lucide.createIcons();
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+  });
+
+  // Hamburger toggle
+  const hamburger = document.getElementById('hamburger');
+  const mobileNav = document.getElementById('mobileNav');
+  if (hamburger && mobileNav) {
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+    });
+  }
 </script>

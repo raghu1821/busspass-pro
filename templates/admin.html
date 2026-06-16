@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>Admin Dashboard — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1.25rem;
-      margin-bottom: 2rem;
+      gap: 14px;
+      margin-bottom: 18px;
     }
     @media(max-width:900px){ .stats-row { grid-template-columns: repeat(2,1fr); } }
     @media(max-width:540px){ .stats-row { grid-template-columns: 1fr; } }
@@ -37,14 +37,12 @@
   <div class="page-wrapper">
 
     <!-- Header -->
-    <div class="page-header animate-fade-up" style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="page-header animate-fade-up">
       <div>
-        <div class="page-title">📋 Applications</div>
-        <div class="page-subtitle">Review and manage all bus pass applications</div>
+        <div class="page-title">&#128203; Pass Applications — Administration</div>
+        <div class="page-subtitle">Review, approve and manage all bus pass applications</div>
       </div>
-      <a href="/export_applications" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:6px;">
-        <i data-lucide="download" style="width:16px;height:16px;"></i> Export to CSV
-      </a>
+      <a href="/export_applications" class="btn btn-ghost btn-sm" style="background:#fff;color:var(--gov-navy);border-color:var(--border);">&#11015; Export CSV</a>
     </div>
 
     <!-- Stat Cards -->
@@ -105,13 +103,11 @@
         <tbody>
           {% for app in applications %}
           <tr>
-            <td style="color:var(--text-muted); font-size:0.82rem;" title="Application ID">App #{{ app.application_id }}</td>
+            <td style="color:var(--text-muted); font-size:12px;">#{{ app.application_id }}</td>
+            <td><span style="font-weight:600;font-size:13px;">{{ app.passenger_name }}</span></td>
             <td>
-              <span style="font-weight:600;">{{ app.passenger_name }}</span>
-            </td>
-            <td>
-              <span style="color:var(--text-secondary);">{{ app.source }}</span>
-              <span style="color:var(--accent); margin:0 4px;">→</span>
+              <span>{{ app.source }}</span>
+              <span style="color:var(--gov-navy); margin:0 4px;">&rarr;</span>
               <span>{{ app.destination }}</span>
             </td>
             <td>{{ app.pass_type }}</td>
@@ -119,22 +115,22 @@
             <td>
               {% set ds = app.doc_status if app.doc_status else 'Not Uploaded' %}
               {% if ds == 'Verified' %}
-                <span class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);">✅ Verified</span>
+                <span class="badge badge-approved">&#10003; Verified</span>
               {% elif ds == 'Pending' %}
-                <span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);">⏳ Pending</span>
+                <span class="badge badge-pending">&#9203; Pending</span>
               {% elif ds == 'Rejected' %}
-                <span class="badge" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);">❌ Rejected</span>
+                <span class="badge badge-rejected">&#10006; Rejected</span>
               {% else %}
-                <span class="badge" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);">— None</span>
+                <span class="badge badge-expired">&mdash; None</span>
               {% endif %}
             </td>
             <td>
               {% if app.status == 'Pending' %}
-                <span class="badge badge-pending">⏳ Pending</span>
+                <span class="badge badge-pending">&#9203; Pending</span>
               {% elif app.status == 'Approved' %}
-                <span class="badge badge-approved">✅ Approved</span>
+                <span class="badge badge-approved">&#10003; Approved</span>
               {% elif app.status == 'Rejected' %}
-                <span class="badge badge-rejected">❌ Rejected</span>
+                <span class="badge badge-rejected">&#10006; Rejected</span>
               {% else %}
                 <span class="badge">{{ app.status }}</span>
               {% endif %}
@@ -143,48 +139,47 @@
               <div class="actions-cell">
                 <button class="btn btn-primary btn-sm"
                   onclick="showUserModal(`{{ app.passenger_name }}`, `{{ app.photo }}`, `{{ app.email }}`, `{{ app.phone }}`, `{{ app.category }}`, `{{ app.address }}`, `{{ app.doc_status }}`, {{ app.has_doc }})">
-                  <i data-lucide="search" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> View
+                  &#128269; View
                 </button>
                 {% if app.has_doc %}
-                <a href="/admin/view_doc/{{ app.passenger_name }}" class="btn btn-ghost btn-sm" target="_blank"
-                   style="background:rgba(79,142,247,0.1);border-color:rgba(79,142,247,0.3);color:#7cb3ff;">
-                  <i data-lucide="file-text" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Doc
+                <a href="/admin/view_doc/{{ app.passenger_name }}" class="btn btn-ghost btn-sm" target="_blank">
+                  &#128196; Doc
                 </a>
                 {% endif %}
                 {% if app.status == 'Pending' %}
                   <button class="btn btn-success btn-sm"
                     onclick="ajaxAction('/approve/{{ app.application_id }}', {
                       btn: this,
-                      loadingText: 'Approving…',
-                      successTitle: '✅ Approved!',
-                      successMsg: 'Email notification sent to {{ app.passenger_name }}.',
+                      loadingText: 'Approving...',
+                      successTitle: 'Approved',
+                      successMsg: 'Email sent to {{ app.passenger_name }}.',
                       reload: true,
                       reloadDelay: 1500
                     })">
-                    <i data-lucide="check" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Approve
+                    &#10003; Approve
                   </button>
                   <button class="btn btn-danger btn-sm"
                     onclick="ajaxAction('/reject/{{ app.application_id }}', {
                       btn: this,
-                      loadingText: 'Rejecting…',
-                      successTitle: '❌ Rejected',
+                      loadingText: 'Rejecting...',
+                      successTitle: 'Rejected',
                       successMsg: 'Rejection email sent to {{ app.passenger_name }}.',
                       reload: true,
                       reloadDelay: 1500
                     })">
-                    <i data-lucide="x" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Reject
+                    &#10006; Reject
                   </button>
                 {% elif app.status == 'Approved' %}
                   <button class="btn btn-warning btn-sm"
                     onclick="ajaxAction('/revoke/{{ app.application_id }}', {
                       btn: this,
-                      loadingText: 'Revoking…',
-                      successTitle: '🚫 Revoked',
-                      successMsg: '{{ app.passenger_name }}\'s pass has been revoked.',
+                      loadingText: 'Revoking...',
+                      successTitle: 'Revoked',
+                      successMsg: '{{ app.passenger_name }} pass revoked.',
                       reload: true,
                       reloadDelay: 1500
                     })">
-                    <i data-lucide="ban" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px;"></i> Revoke Pass
+                    &#128683; Revoke
                   </button>
                 {% else %}
                   <span class="text-muted-sm">Processed</span>
@@ -215,38 +210,36 @@
   </div>
 
   <!-- Passenger Details Modal -->
-  <div id="user-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999; opacity:0; pointer-events:none; transition:opacity 0.3s; display:flex; align-items:center; justify-content:center;">
-    <div id="user-modal" class="glass-card" style="width:90%; max-width:500px; transform:translateY(30px) scale(0.96); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); padding:2rem; position:relative;">
-      <button onclick="closeUserModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
-      
-      <div style="text-align:center; margin-bottom:1.5rem;">
-        <img id="modal-photo" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--accent); margin-bottom:1rem;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=4f8ef7&color=fff&size=100'" />
-        <h3 id="modal-name" style="margin-bottom:4px; font-size:1.4rem;">Passenger Name</h3>
-        <span id="modal-cat" class="badge badge-info">Category</span>
+  <div id="user-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;opacity:0;pointer-events:none;transition:opacity 0.3s;display:flex;align-items:center;justify-content:center;">
+    <div id="user-modal" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);width:90%;max-width:480px;transform:translateY(20px);transition:transform 0.3s ease;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+
+      <div style="background:var(--gov-navy);padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:4px solid var(--gov-orange);">
+        <div style="font-size:14px;font-weight:700;color:#fff;">&#128100; Passenger Details</div>
+        <button onclick="closeUserModal()" style="margin-left:auto;background:rgba(255,255,255,0.15);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">&times;</button>
       </div>
 
-      <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1.2rem; border:1px solid var(--glass-border); margin-bottom:1rem;">
-        <div style="margin-bottom:10px; display:flex; gap:10px;">
-          <span style="color:var(--text-secondary); width:80px;"><i data-lucide="mail" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Email:</span>
-          <span id="modal-email" style="font-weight:600;"></span>
+      <div style="padding:20px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <img id="modal-photo" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--gov-navy);margin-bottom:10px;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=1a3c6e&color=fff&size=100'" />
+          <h3 id="modal-name" style="margin-bottom:4px;font-size:16px;">Passenger Name</h3>
+          <span id="modal-cat" class="badge badge-info">Category</span>
         </div>
-        <div style="margin-bottom:10px; display:flex; gap:10px;">
-          <span style="color:var(--text-secondary); width:80px;"><i data-lucide="phone" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Phone:</span>
-          <span id="modal-phone" style="font-weight:600;"></span>
-        </div>
-        <div style="display:flex; gap:10px;">
-          <span style="color:var(--text-secondary); width:80px;"><i data-lucide="map-pin" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Address:</span>
-          <span id="modal-address" style="font-weight:600;"></span>
-        </div>
-      </div>
 
-      <!-- Document Verification Section -->
-      <div id="modal-doc-section" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1rem 1.2rem; border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-        <div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;"><i data-lucide="file-check" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--accent);"></i> Verification Document</div>
-          <span id="modal-doc-badge" style="font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:20px;">—</span>
+        <div style="background:var(--bg-light);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;">
+          <table style="width:100%;font-size:13px;">
+            <tr><td style="color:var(--text-muted);width:80px;padding:4px 0;font-weight:600;">Email:</td><td id="modal-email" style="font-weight:600;"></td></tr>
+            <tr><td style="color:var(--text-muted);padding:4px 0;font-weight:600;">Phone:</td><td id="modal-phone" style="font-weight:600;"></td></tr>
+            <tr><td style="color:var(--text-muted);padding:4px 0;font-weight:600;">Address:</td><td id="modal-address" style="font-weight:600;"></td></tr>
+          </table>
         </div>
-        <a id="modal-doc-link" href="#" target="_blank" class="btn btn-ghost btn-sm" style="display:none;">View Doc →</a>
+
+        <div id="modal-doc-section" style="background:#ebf0fa;border:1px solid #adc4e8;border-left:3px solid var(--gov-navy);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;color:var(--gov-navy);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">&#128196; Verification Document</div>
+            <span id="modal-doc-badge" style="font-size:12px;font-weight:700;">—</span>
+          </div>
+          <a id="modal-doc-link" href="#" target="_blank" class="btn btn-primary btn-sm" style="display:none;">View Doc &rarr;</a>
+        </div>
       </div>
     </div>
   </div>
@@ -265,15 +258,15 @@
       const badge = document.getElementById('modal-doc-badge');
       const link  = document.getElementById('modal-doc-link');
       const ds    = docStatus || 'Not Uploaded';
-      const styles = {
-        'Verified':     { bg:'rgba(16,185,129,0.15)', color:'#34d399', border:'rgba(16,185,129,0.3)', icon:'✅' },
-        'Pending':      { bg:'rgba(245,158,11,0.15)',  color:'#fbbf24', border:'rgba(245,158,11,0.3)',  icon:'⏳' },
-        'Rejected':     { bg:'rgba(239,68,68,0.15)',   color:'#f87171', border:'rgba(239,68,68,0.3)',   icon:'❌' },
-        'Not Uploaded': { bg:'rgba(100,116,139,0.12)', color:'#94a3b8', border:'rgba(100,116,139,0.2)', icon:'—' },
+      const colorMap = {
+        'Verified':     { color:'var(--gov-green)',  icon:'\u2713' },
+        'Pending':      { color:'var(--gov-yellow)', icon:'\u23f3' },
+        'Rejected':     { color:'var(--gov-red)',    icon:'\u2717' },
+        'Not Uploaded': { color:'var(--text-muted)', icon:'\u2014' },
       };
-      const s = styles[ds] || styles['Not Uploaded'];
+      const s = colorMap[ds] || colorMap['Not Uploaded'];
       badge.textContent = s.icon + ' ' + ds;
-      badge.style.cssText = `background:${s.bg}; color:${s.color}; border:1px solid ${s.border}; font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:20px;`;
+      badge.style.color = s.color;
 
       if (hasDoc) {
         link.href = '/admin/view_doc/' + encodeURIComponent(name);

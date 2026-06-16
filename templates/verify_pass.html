@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pass Verification — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0"/>
+  <title>Pass Verification — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0"/>
   <style>
     body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
     .verify-card {
       width: 100%; max-width: 420px;
-      background: var(--bg-card);
+      background: var(--bg-white);
       border: 1px solid var(--border);
-      border-radius: 24px;
+      border-radius:var(--radius-md);
       overflow: hidden;
       box-shadow: 0 24px 64px rgba(0,0,0,0.4);
       animation: fadeUp .5s ease;
@@ -43,13 +43,13 @@
       font-size: .9rem;
     }
     .verify-row:last-child { border-bottom: none; }
-    .verify-label { color: var(--text-secondary); font-weight: 500; }
-    .verify-value { font-weight: 700; color: var(--text-primary); }
+    .verify-label { color: var(--text-muted); font-weight: 500; }
+    .verify-value { font-weight: 700; color: var(--text-main); }
     .verify-footer {
       text-align: center; padding: 1rem 1.5rem 1.5rem;
-      color: var(--text-secondary); font-size: .78rem;
+      color: var(--text-muted); font-size: .78rem;
     }
-    .brand-mark { display: flex; align-items: center; justify-content: center; gap: .4rem; font-weight: 700; color: var(--accent); font-size: .9rem; margin-bottom: .4rem; }
+    .brand-mark { display: flex; align-items: center; justify-content: center; gap: .4rem; font-weight: 700; color: var(--gov-navy); font-size: .9rem; margin-bottom: .4rem; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
     .pulse { animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
@@ -106,7 +106,7 @@
       </div>
 
       <div class="verify-footer">
-        <div class="brand-mark">🚌 BusPass Pro</div>
+        <div class="brand-mark">🚌 BMTC Bus Pass Portal</div>
         Verified at {{ '' }}
         <script>document.write(new Date().toLocaleTimeString());</script>
         — Scan result is real-time
@@ -121,8 +121,8 @@
         <div class="status-sub">This QR code does not match any pass in our system.</div>
       </div>
       <div class="verify-body" style="text-align:center;padding:2rem;">
-        <p style="color:var(--text-secondary);">The pass may have been deleted or this is an invalid QR code.</p>
-        <a href="/" class="btn btn-primary" style="margin-top:1rem;">🏠 Go to BusPass Pro</a>
+        <p style="color:var(--text-muted);">The pass may have been deleted or this is an invalid QR code.</p>
+        <a href="/" class="btn btn-primary" style="margin-top:1rem;">🏠 Go to BMTC Bus Pass Portal</a>
       </div>
     </div>
   {% endif %}

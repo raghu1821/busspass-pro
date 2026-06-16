@@ -1,21 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Activity Log — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0"/>
+  <title>Activity Log — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0"/>
   <style>
     .timeline { position:relative; padding-left:2rem; margin-top:1.5rem; }
-    .timeline::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, var(--accent), var(--accent-2)); border-radius:2px; }
+    .timeline::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, var(--gov-navy), var(--gov-orange)); border-radius:2px; }
     .timeline-item { position:relative; margin-bottom:1.5rem; animation:fadeUp .4s ease both; }
-    .timeline-item::before { content:''; position:absolute; left:-2.45rem; top:.35rem; width:14px; height:14px; border-radius:50%; border:2px solid var(--accent); background:var(--bg-card); }
+    .timeline-item::before { content:''; position:absolute; left:-2.45rem; top:.35rem; width:14px; height:14px; border-radius:50%; border:2px solid var(--gov-navy); background:var(--bg-white); }
     .timeline-item.approved::before { background:var(--success); border-color:var(--success); }
     .timeline-item.rejected::before { background:var(--danger); border-color:var(--danger); }
     .timeline-item.pending::before { background:var(--warning); border-color:var(--warning); }
-    .tl-card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1rem 1.25rem; }
+    .tl-card { background:var(--bg-white); border:1px solid var(--border); border-radius:12px; padding:1rem 1.25rem; }
     .tl-title { font-weight:700; margin-bottom:.25rem; display:flex; align-items:center; gap:.5rem; }
-    .tl-date { font-size:.8rem; color:var(--text-secondary); }
+    .tl-date { font-size:.8rem; color:var(--text-muted); }
     @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
   </style>
 </head>

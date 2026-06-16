@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>System Statistics — BusPass Pro Admin</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>System Statistics — BMTC Bus Pass Portal Admin</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     .stats-grid {
@@ -14,8 +14,8 @@
       margin-bottom: 2rem;
     }
     .stat-box {
-      background: var(--bg-card);
-      border: 1px solid var(--glass-border);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 1.5rem;
       display: flex;
@@ -25,18 +25,18 @@
       overflow: hidden;
       transition: transform .2s, box-shadow .2s;
     }
-    .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+    .stat-box:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
     .stat-box::before {
-      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      content:''; position:absolute; top:0; left:0; right:0; height:4px;
     }
-    .stat-box.blue::before   { background: linear-gradient(90deg,#2563eb,#60a5fa); }
-    .stat-box.green::before  { background: linear-gradient(90deg,#059669,#34d399); }
-    .stat-box.red::before    { background: linear-gradient(90deg,#dc2626,#f87171); }
-    .stat-box.orange::before { background: linear-gradient(90deg,#d97706,#fbbf24); }
-    .stat-box.purple::before { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
+    .stat-box.blue::before   { background: var(--gov-navy); }
+    .stat-box.green::before  { background: var(--gov-green); }
+    .stat-box.red::before    { background: var(--gov-red); }
+    .stat-box.orange::before { background: var(--gov-orange); }
+    .stat-box.purple::before { background: #6c3483; }
     .stat-icon { font-size: 1.8rem; }
-    .stat-val  { font-size: 2.2rem; font-weight: 900; color: var(--text-primary); line-height:1; }
-    .stat-lbl  { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
+    .stat-val  { font-size: 2rem; font-weight: 900; color: var(--text-main); line-height:1; }
+    .stat-lbl  { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
     /* Charts grid */
     .charts-grid {
@@ -48,14 +48,14 @@
     @media(max-width:860px){ .charts-grid { grid-template-columns:1fr; } }
 
     .chart-card {
-      background: var(--bg-card);
-      border: 1px solid var(--glass-border);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 1.6rem;
     }
     .chart-title {
       font-size: .95rem; font-weight: 800;
-      color: var(--text-primary);
+      color: var(--text-main);
       margin-bottom: 1.2rem;
       display: flex; align-items: center; gap: .5rem;
     }
@@ -72,19 +72,19 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 1.4rem; font-weight: 900; color: #fff;
       margin: 0 auto .6rem;
-      background: conic-gradient(#059669 0%, #059669 var(--pct), #1e293b var(--pct));
-      box-shadow: 0 0 0 6px rgba(5,150,105,.15);
+      background: conic-gradient(var(--gov-green) 0%, var(--gov-green) var(--pct), #e0e6ef var(--pct));
+      box-shadow: 0 0 0 6px rgba(30,126,52,0.12);
     }
     .rate-ring-inner {
       width: 76px; height: 76px; border-radius: 50%;
-      background: var(--bg-card);
+      background: var(--bg-white);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.15rem; font-weight: 900; color: var(--text-primary);
+      font-size: 1.15rem; font-weight: 900; color: var(--text-main);
     }
-    .rate-label { font-size:.78rem; color:var(--text-secondary); font-weight:600; }
+    .rate-label { font-size:.78rem; color:var(--text-muted); font-weight:600; }
     .rate-stat { text-align:center; }
     .rate-stat .big { font-size:1.6rem; font-weight:900; }
-    .rate-stat .lbl { font-size:.78rem; color:var(--text-secondary); }
+    .rate-stat .lbl { font-size:.78rem; color:var(--text-muted); }
   </style>
 </head>
 <body>
@@ -93,7 +93,7 @@
   <div class="page-wrapper">
     <div class="page-header animate-fade-up">
       <div class="page-title">📈 System Statistics</div>
-      <div class="page-subtitle">Real-time overview of BusPass Pro activity</div>
+      <div class="page-subtitle">Real-time overview of BMTC Bus Pass Portal activity</div>
     </div>
 
     <!-- Stat Boxes -->
@@ -247,9 +247,9 @@
           legend: { display: false },
           tooltip: {
             backgroundColor: '#ffffff',
-            titleColor: '#0f172a',
-            bodyColor: '#475569',
-            borderColor: '#e2e8f0',
+            titleColor: 'var(--text-main)',
+            bodyColor: 'var(--text-muted)',
+            borderColor: 'var(--border)',
             borderWidth: 1,
             padding: 12,
             boxPadding: 4,
@@ -300,7 +300,7 @@
         datasets: [{
           data: routeData.length ? routeData : [1],
           backgroundColor: routeData.length ? palette : ['#334155'],
-          borderColor: '#0f172a',
+          borderColor: 'var(--border)',
           borderWidth: 3,
           hoverOffset: 6
         }]

@@ -51,9 +51,9 @@
     width: 380px;
     max-width: calc(100vw - 40px);
     background: rgba(15, 22, 38, 0.85); /* Darker glass background */
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+    
+    -webkit-
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg, 16px);
     box-shadow: 0 10px 40px rgba(0,0,0,0.4);
     overflow: hidden;
@@ -149,8 +149,8 @@
   }
 
   .msg-bot .msg-bubble {
-    background: rgba(255,255,255,0.08);
-    color: var(--text-primary, #fff);
+    background: var(--bg-light);
+    color: var(--text-main);
     border-bottom-left-radius: 4px;
   }
 
@@ -162,49 +162,50 @@
 
   .chat-input-area {
     padding: 15px;
-    border-top: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+    border-top: 1px solid var(--border);
     display: flex;
     gap: 10px;
-    background: var(--bg-card, #0d1117);
+    background: var(--bg-white);
   }
 
   .chat-input {
     flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text-primary, #fff);
-    padding: 12px 16px;
-    border-radius: 20px;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 4px;
     outline: none;
-    font-size: 0.95rem;
+    font-size: 13px;
     transition: border-color 0.2s;
   }
 
   .chat-input:focus {
-    border-color: #2563eb;
+    border-color: var(--gov-navy);
   }
 
   .chat-send-btn {
-    background: #2563eb;
+    background: var(--gov-navy);
     color: #fff;
     border: none;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    flex-shrink: 0;
   }
 
   .chat-send-btn:hover {
-    background: #1d4ed8;
-    transform: scale(1.05);
+    background: var(--gov-navy-hover);
+    transform: none;
   }
 
   .chat-send-btn:disabled {
-    background: rgba(255,255,255,0.1);
+    background: var(--border);
     cursor: not-allowed;
     transform: none;
   }
@@ -224,18 +225,18 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
 
 <style>
-  /* Custom Driver.js Theme to match our dark UI */
+  /* Driver.js popover — government theme */
   .driver-popover {
-    background: #1e293b !important;
-    color: #f8fafc !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+    background: var(--gov-navy) !important;
+    color: #fff !important;
+    border: 1px solid var(--gov-orange) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
   }
-  .driver-popover-title { font-size: 1.1rem !important; font-weight: 700 !important; margin-bottom: 8px !important; }
-  .driver-popover-description { font-size: 0.9rem !important; color: #cbd5e1 !important; line-height: 1.5 !important; }
-  .driver-popover-close-btn { color: #cbd5e1 !important; }
-  .driver-popover-arrow { border-color: #1e293b !important; }
+  .driver-popover-title { font-size: 13px !important; font-weight: 700 !important; margin-bottom: 6px !important; color: #ffd700 !important; }
+  .driver-popover-description { font-size: 12px !important; color: #a0bce0 !important; line-height: 1.5 !important; }
+  .driver-popover-close-btn { color: #a0bce0 !important; }
+  .driver-popover-arrow { border-color: var(--gov-navy) !important; }
 </style>
 
 <button class="chatbot-toggler" id="chat-toggler">
@@ -367,7 +368,7 @@
         return { text: "⏳ <b>Approvals:</b> After you apply, an Admin must review your details. You will receive an email notification once your pass is approved or rejected." };
       }
       else if (text.includes('hi') || text.includes('hello') || text.includes('hey')) {
-        return { text: "Hello again! How can I assist you with BusPass Pro today?" };
+        return { text: "Hello again! How can I assist you with BMTC Bus Pass Portal today?" };
       }
       else if (text.includes('thank') || text.includes('thx')) {
         return { text: "You're very welcome! Let me know if you need anything else. 😊" };

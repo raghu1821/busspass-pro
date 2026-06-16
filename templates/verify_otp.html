@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verify OTP — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0"/>
+  <title>Verify OTP — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0"/>
   <style>
     .otp-inputs { display:flex; gap:.75rem; justify-content:center; margin:1.5rem 0; }
-    .otp-inputs input { width:52px; height:62px; text-align:center; font-size:1.6rem; font-weight:800; border:2px solid var(--border); border-radius:12px; background:var(--bg-card); color:var(--text-primary); transition:border-color .2s; }
-    .otp-inputs input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.15); }
-    .timer { font-size:.88rem; color:var(--text-secondary); text-align:center; margin-bottom:1rem; }
-    .timer span { color:var(--accent); font-weight:700; }
-    .demo-otp-box { background:rgba(79,142,247,.1); border:1px solid var(--accent); border-radius:10px; padding:.85rem 1rem; margin-bottom:1.25rem; font-size:.88rem; color:var(--text-secondary); text-align:center; }
-    .demo-otp-box strong { color:var(--accent); font-size:1.4rem; letter-spacing:6px; display:block; margin-top:.25rem; }
+    .otp-inputs input { width:52px; height:62px; text-align:center; font-size:1.6rem; font-weight:800; border:2px solid var(--border); border-radius:12px; background:var(--bg-white); color:var(--text-main); transition:border-color .2s; }
+    .otp-inputs input:focus { outline:none; border-color:var(--gov-navy); box-shadow:0 0 0 3px rgba(79,142,247,.15); }
+    .timer { font-size:.88rem; color:var(--text-muted); text-align:center; margin-bottom:1rem; }
+    .timer span { color:var(--gov-navy); font-weight:700; }
+    .demo-otp-box { background:rgba(79,142,247,.1); border:1px solid var(--gov-navy); border-radius:10px; padding:.85rem 1rem; margin-bottom:1.25rem; font-size:.88rem; color:var(--text-muted); text-align:center; }
+    .demo-otp-box strong { color:var(--gov-navy); font-size:1.4rem; letter-spacing:6px; display:block; margin-top:.25rem; }
   </style>
 </head>
 <body>
@@ -20,20 +20,20 @@
     <div class="auth-card animate-fade-up" style="max-width:460px">
       <div class="auth-logo">📬</div>
       <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:.35rem">Enter OTP</h1>
-      <p style="color:var(--text-secondary);margin-bottom:1.25rem;font-size:.92rem">
-        We sent a 6-digit code to <strong style="color:var(--text-primary)">{{ email }}</strong>. It expires in 10 minutes.
+      <p style="color:var(--text-muted);margin-bottom:1.25rem;font-size:.92rem">
+        We sent a 6-digit code to <strong style="color:var(--text-main)">{{ email }}</strong>. It expires in 10 minutes.
       </p>
 
       {% if demo_otp %}
       <div class="demo-otp-box">
         🔐 Your OTP Code:
         <strong>{{ demo_otp }}</strong>
-        <small style="display:block;margin-top:.35rem;color:var(--text-secondary);">Also check your email inbox & spam folder.</small>
+        <small style="display:block;margin-top:.35rem;color:var(--text-muted);">Also check your email inbox & spam folder.</small>
       </div>
       {% else %}
       <div class="demo-otp-box" style="background:rgba(34,197,94,.08);border-color:var(--success);">
         📩 OTP sent to your email! Check your inbox &amp; spam folder.<br/>
-        <small style="color:var(--text-secondary);">Email may take up to 30 seconds to arrive.</small>
+        <small style="color:var(--text-muted);">Email may take up to 30 seconds to arrive.</small>
       </div>
       {% endif %}
 
@@ -58,8 +58,8 @@
       </form>
 
       <div class="separator" style="margin:1.5rem 0"></div>
-      <p style="text-align:center;font-size:.9rem;color:var(--text-secondary)">
-        Didn't receive it? <a href="/resend_otp" style="color:var(--accent);font-weight:600">Resend OTP</a>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-muted)">
+        Didn't receive it? <a href="/resend_otp" style="color:var(--gov-navy);font-weight:600">Resend OTP</a>
       </p>
     </div>
   </div>

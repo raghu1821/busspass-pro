@@ -1,23 +1,48 @@
-<!-- Admin navigation bar -->
+<!-- Admin navigation bar — BMTC Government Portal -->
+
+<!-- Top Ticker -->
+<div class="gov-ticker">
+  <div class="ticker-left">
+    <span>&#9679;</span>
+    <span>BMTC Admin Panel &mdash; Restricted Access &mdash; Authorised Personnel Only</span>
+  </div>
+  <div class="ticker-right">Government of Karnataka &nbsp;|&nbsp; BMTC Administration</div>
+</div>
+
+<!-- Government Header -->
+<div class="gov-header">
+  <div class="gov-emblem">
+    <img src="/static/icons/icon-192.png" alt="BMTC" style="width:52px;height:52px;object-fit:contain;" onerror="this.style.display='none';this.parentElement.textContent='🚌';" />
+  </div>
+  <div class="gov-title-block">
+    <div class="gov-portal-name">BMTC Bus Pass Management &mdash; Admin Panel</div>
+    <div class="gov-sub-name">Bangalore Metropolitan Transport Corporation &nbsp;|&nbsp; Administration Console</div>
+  </div>
+  <div class="gov-header-right">
+    <div>&#128737; Admin Access Only</div>
+    <div>Secure Government System</div>
+  </div>
+</div>
+
+<!-- Main Navigation -->
 <nav class="navbar">
-  <a href="/admin" class="navbar-brand">
-    <i data-lucide="shield-check" style="color:var(--accent); margin-right:4px;"></i>
-    BusPass Admin
-  </a>
+  <a href="/admin" class="navbar-brand">&#128737; BMTC Admin</a>
 
   <ul class="nav-links">
-    <li><a href="/admin" id="appsLink"><i data-lucide="clipboard-list" style="width:16px;height:16px;margin-right:4px;"></i> Applications <span id="pendingBadge" style="display:none;background:var(--danger);color:#fff;border-radius:999px;font-size:.7rem;padding:1px 7px;margin-left:4px;font-weight:700;"></span></a></li>
-    <li><a href="/stats"><i data-lucide="bar-chart-2" style="width:16px;height:16px;margin-right:4px;"></i> Statistics</a></li>
-    <li><a href="/manage_users"><i data-lucide="users" style="width:16px;height:16px;margin-right:4px;"></i> Users</a></li>
-    <li><a href="/manage_routes"><i data-lucide="map" style="width:16px;height:16px;margin-right:4px;"></i> Routes</a></li>
-    <li><a href="/view_feedback"><i data-lucide="message-square" style="width:16px;height:16px;margin-right:4px;"></i> Feedback</a></li>
-    <li><a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:16px;height:16px;margin-right:4px;"></i> Logout</a></li>
+    <li>
+      <a href="/admin" id="appsLink">
+        &#128203; Applications
+        <span id="pendingBadge" style="display:none;background:#c0392b;color:#fff;border-radius:2px;font-size:10px;padding:1px 6px;margin-left:4px;font-weight:700;"></span>
+      </a>
+    </li>
+    <li><a href="/stats">&#128202; Statistics</a></li>
+    <li><a href="/manage_users">&#128101; Users</a></li>
+    <li><a href="/manage_routes">&#128506; Routes</a></li>
+    <li><a href="/view_feedback">&#128172; Feedback</a></li>
+    <li><a href="/logout" class="nav-logout">&#128274; Logout</a></li>
   </ul>
 
-  <div style="display:flex; align-items:center; gap:10px;">
-    <span class="theme-icon" id="themeIcon">🌙</span>
-    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" aria-label="Toggle theme"></button>
-
+  <div style="display:flex;align-items:center;gap:8px;">
     <button class="hamburger" id="hamburger" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
@@ -26,21 +51,31 @@
 
 <!-- Mobile nav drawer -->
 <div class="mobile-nav" id="mobileNav">
-  <a href="/admin"><i data-lucide="clipboard-list" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Applications</a>
-  <a href="/stats"><i data-lucide="bar-chart-2" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Statistics</a>
-  <a href="/manage_users"><i data-lucide="users" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Users</a>
-  <a href="/manage_routes"><i data-lucide="map" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Routes</a>
-  <a href="/view_feedback"><i data-lucide="message-square" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Feedback</a>
-  <a href="/logout" class="nav-logout"><i data-lucide="log-out" style="width:18px;height:18px;margin-right:6px;vertical-align:-3px;"></i> Logout</a>
+  <a href="/admin">&#128203; Applications</a>
+  <a href="/stats">&#128202; Statistics</a>
+  <a href="/manage_users">&#128101; Users</a>
+  <a href="/manage_routes">&#128506; Routes</a>
+  <a href="/view_feedback">&#128172; Feedback</a>
+  <a href="/logout" class="nav-logout">&#128274; Logout</a>
 </div>
 
 <!-- Global scripts -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="/static/toast.js"></script>
-<script src="/static/theme.js"></script>
 <script>
-  // Initialize icons
-  lucide.createIcons();
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+  });
+
+  // Hamburger toggle
+  const hamburger = document.getElementById('hamburger');
+  const mobileNav = document.getElementById('mobileNav');
+  if (hamburger && mobileNav) {
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+    });
+  }
 
   // Real-time pending badge
   function fetchPending() {

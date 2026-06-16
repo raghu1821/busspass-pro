@@ -1,74 +1,161 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Login — BusPass Pro</title>
-  <link rel="stylesheet" href="/static/style.css?v=3.0" />
+  <title>Admin Login — BMTC Bus Pass Portal</title>
+  <link rel="stylesheet" href="/static/style.css?v=4.0" />
   <style>
-    .orb {
-      position: fixed; border-radius: 50%; pointer-events: none;
-      filter: blur(100px); opacity: 0.12; z-index: 0;
+    .auth-page-wrapper {
+      min-height: 100vh;
+      background: var(--bg-page);
+      display: flex;
+      flex-direction: column;
     }
-    .orb-1 { width: 500px; height: 500px; background: #7c3aed; top: -200px; left: -100px; }
-    .orb-2 { width: 400px; height: 400px; background: #ef4444; bottom: -150px; right: -100px; }
-    .auth-card { position: relative; z-index: 1; }
-    .divider { display:flex; align-items:center; gap:12px; margin:1.2rem 0; }
-    .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--glass-border); }
-    .divider span { color:var(--text-muted); font-size:0.78rem; }
-    .warn-note {
-      margin-top: 1.25rem;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.2);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 0.8rem;
-      color: #f87171;
+    .auth-page-top {
+      background: var(--gov-navy-dark);
+      border-bottom: 4px solid #c0392b;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .auth-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+    }
+    .auth-form-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+    .auth-form-header {
+      background: #6b1f1a;
+      padding: 20px 24px;
       text-align: center;
+      border-bottom: 4px solid #c0392b;
     }
+    .auth-form-header .auth-icon {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 10px;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .auth-form-header h1 { font-size: 16px; color: #fff; font-weight: 700; margin: 0 0 3px; }
+    .auth-form-header p  { font-size: 11px; color: #f5b8b8; margin: 0; }
+    .auth-form-body { padding: 24px; }
+    .warn-note {
+      margin-top: 14px;
+      background: var(--gov-red-bg);
+      border: 1px solid #f1948a;
+      border-left: 3px solid var(--gov-red);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-size: 11px;
+      color: var(--gov-red);
+    }
+    .divider { display:flex;align-items:center;gap:10px;margin:12px 0; }
+    .divider::before,.divider::after { content:'';flex:1;height:1px;background:var(--border); }
+    .divider span { color:var(--text-light);font-size:11px; }
   </style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
+  <div class="auth-page-wrapper">
 
-  <div class="auth-wrapper">
-    <div class="auth-card animate-fade-up">
-      <div class="auth-logo">
-        <div class="logo-icon" style="background: linear-gradient(135deg, #7c3aed, #ef4444);">🛡️</div>
-        <h1>Admin Portal</h1>
-        <p>Restricted access — authorized personnel only</p>
+    <!-- Compact Government Header -->
+    <div class="auth-page-top">
+      <div style="width:46px;height:46px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid #c0392b;">
+        &#128737;
       </div>
-
-      <form method="POST">
-        <div class="form-group">
-          <label class="form-label">👤 Username</label>
-          <input type="text" name="username" class="form-control"
-            placeholder="Admin username" required autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">🔐 Password</label>
-          <input type="password" name="password" class="form-control"
-            placeholder="Admin password" required />
-        </div>
-
-        <button type="submit" class="btn btn-block btn-lg"
-          style="background: linear-gradient(135deg, #7c3aed, #ef4444); color: #fff;
-                 box-shadow: 0 4px 20px rgba(124,58,237,0.35); margin-top: 0.25rem;">
-          🔓 Sign In
-        </button>
-      </form>
-
-      <div class="warn-note">
-        ⚠️ Unauthorized access is strictly prohibited and may be subject to legal action.
-      </div>
-
-      <div class="text-center" style="margin-top:1.25rem;">
-        <a href="/login" style="color:var(--text-muted); font-size:0.82rem;">← Back to User Login</a>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#fff;font-family:'Noto Serif',serif;">BMTC Administration — Restricted Access</div>
+        <div style="font-size:11px;color:#f5b8b8;">Authorised Personnel Only &mdash; Government of Karnataka</div>
       </div>
     </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+      <a href="/">Home</a> <span>&rsaquo;</span>
+      <a href="/login">Citizen Login</a> <span>&rsaquo;</span>
+      Admin Login
+    </div>
+
+    <div class="auth-center">
+      <div class="auth-form-card animate-fade-up">
+
+        <div class="auth-form-header">
+          <div class="auth-icon">&#128737;</div>
+          <h1>BMTC Admin Portal</h1>
+          <p>Restricted Access &mdash; Authorised Personnel Only</p>
+        </div>
+
+        <div class="auth-form-body">
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}" style="margin-bottom:14px;">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          <form method="POST" id="adminLoginForm">
+            <div class="form-group">
+              <label class="form-label">Admin Username <span class="required">*</span></label>
+              <input type="text" name="username" class="form-control" placeholder="Enter admin username" required autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password <span class="required">*</span></label>
+              <input type="password" name="password" class="form-control" placeholder="Enter admin password" required />
+            </div>
+
+            <button type="submit" class="btn btn-block btn-lg" id="adminLoginBtn"
+              style="background:#922b21;color:#fff;border-color:#6b1f1a;margin-top:4px;">
+              &#128274; Sign In — Admin
+            </button>
+          </form>
+
+          <div class="warn-note">
+            &#9888; Unauthorised access to this portal is strictly prohibited and may attract legal action under the IT Act 2000.
+          </div>
+
+          <div class="divider"><span>OR</span></div>
+
+          <div class="text-center">
+            <a href="/login" style="color:var(--text-light);font-size:12px;">&larr; Back to Citizen Login</a>
+          </div>
+        </div>
+
+        <div style="background:#fdf0ef;border-top:1px solid #f1948a;padding:10px 16px;font-size:11px;color:var(--gov-red);text-align:center;">
+          &#128737; This session is monitored and logged for security purposes.
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--gov-navy-dark);padding:10px 20px;text-align:center;font-size:11px;color:#5a7a9a;border-top:4px solid var(--gov-orange);">
+      &copy; 2025 BMTC &mdash; Bangalore Metropolitan Transport Corporation. Government of Karnataka. All Rights Reserved.
+    </div>
   </div>
+
   <script src="/static/toast.js"></script>
-  <script src="/static/theme.js"></script>
+  <script>
+    document.getElementById('adminLoginForm').addEventListener('submit', function() {
+      const btn = document.getElementById('adminLoginBtn');
+      btn.classList.add('btn-loading');
+      btn.textContent = 'Signing in...';
+    });
+  </script>
 </body>
 </html>
