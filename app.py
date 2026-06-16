@@ -658,11 +658,22 @@ def activate_pass(app_id):
     # Mark application as completed
     cursor.execute("UPDATE Pass_Application SET status='Completed' WHERE application_id=%s", (app_id,))
     
-    # Insert into Pass table
-    cursor.execute("""
-        INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
-        VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
-    """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
+    # Insert into Pass table with type-specific validity rules
+    if app_data["pass_type"] == 'Daily':
+        cursor.execute("""
+            INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+            VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s DAY), 'Active')
+        """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
+    elif app_data["pass_type"] == 'Yearly':
+        cursor.execute("""
+            INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+            VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL 12 MONTH), 'Active')
+        """, (app_data["passenger_name"], app_data["pass_type"]))
+    else: # Monthly
+        cursor.execute("""
+            INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+            VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
+        """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
     
     # Generate QR Code immediately for new pass
     cursor.execute("SELECT pass_id FROM Pass ORDER BY pass_id DESC LIMIT 1")
