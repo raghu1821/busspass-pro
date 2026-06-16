@@ -415,14 +415,17 @@
       this.value = v.replace(/(.{4})/g,'$1  ').trim();
     });
 
-    document.getElementById('pay-btn').addEventListener('click', function() {
-      const opt = routeSelect.options[routeSelect.selectedIndex];
-      if (!opt.value || !passTypeEl.value || !durationEl.value) {
-        alert('Please fill in all fields before proceeding.');
-        return;
-      }
-      openModal();
-    });
+    const payBtn = document.getElementById('pay-btn');
+    if (payBtn) {
+      payBtn.addEventListener('click', function() {
+        const opt = routeSelect.options[routeSelect.selectedIndex];
+        if (!opt.value || !passTypeEl.value || !durationEl.value) {
+          alert('Please fill in all fields before proceeding.');
+          return;
+        }
+        openModal();
+      });
+    }
 
     function openModal() {
       document.getElementById('pay-overlay').classList.add('show');

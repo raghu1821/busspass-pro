@@ -9,6 +9,7 @@ import random
 import string
 import threading
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
@@ -231,7 +232,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
     phone,
     address,
     category,
-    password,
+    generate_password_hash(password),
     photo_base64
 )
 
@@ -275,14 +276,14 @@ def login():
 
         query = """
         SELECT * FROM Passenger
-        WHERE email=%s AND password=%s
+        WHERE email=%s
         """
 
-        cursor.execute(query, (email, password))
+        cursor.execute(query, (email,))
 
         user = cursor.fetchone()
 
-        if user:
+        if user and (check_password_hash(user["password"], password) or user["password"] == password):
             session["user"] = user["full_name"]
             return redirect("/dashboard")
 
@@ -1240,23 +1241,17 @@ def change_password():
         """
 
         cursor.execute(
-            query,
-            (user, old_password)
+            "SELECT * FROM Passenger WHERE full_name=%s",
+            (user,)
         )
 
         data = cursor.fetchone()
 
-        if data:
-
-            query2 = """
-            UPDATE Passenger
-            SET password=%s
-            WHERE full_name=%s
-            """
+        if data and (check_password_hash(data["password"], old_password) or data["password"] == old_password):
 
             cursor.execute(
-                query2,
-                (new_password, user)
+                "UPDATE Passenger SET password=%s WHERE full_name=%s",
+                (generate_password_hash(new_password), user)
             )
 
             get_db().commit()
@@ -1566,19 +1561,23 @@ def forgot_password():
                 from email.mime.text import MIMEText
                 try:
                     html_body = f"""
-                    <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
-                      <h2 style="color:#4f8ef7;">🚌 BusPass Pro</h2>
-                      <h3>Password Reset OTP</h3>
-                      <p>Your one-time password expires in <strong>10 minutes</strong>.</p>
-                      <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:28px;margin:24px 0;">
-                        <span style="font-size:44px;font-weight:900;letter-spacing:14px;color:#4f8ef7;">{otp_code}</span>
+                    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 480px; margin: auto; background: #ffffff; color: #2c3e50; border: 1px solid #ccd3dd; border-top: 5px solid #1a3c6e; border-radius: 8px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                      <div style="text-align: center; margin-bottom: 24px;">
+                        <h2 style="color: #1a3c6e; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">BMTC Bus Pass Portal</h2>
+                        <span style="color: #e07b00; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 4px;">Government of Karnataka</span>
                       </div>
-                      <p style="color:#888;font-size:13px;">If you didn't request this, ignore this email.</p>
+                      <hr style="border: 0; border-top: 1px solid #ccd3dd; margin-bottom: 24px;">
+                      <h3 style="color: #2c3e50; margin-top: 0; font-size: 16px;">Password Reset Verification OTP</h3>
+                      <p style="font-size: 14px; line-height: 1.5; color: #5d6d7e;">You requested a password reset. Your One-Time Password (OTP) is below. This OTP is valid for <strong>10 minutes</strong>.</p>
+                      <div style="background: #f5f6fa; border: 1px solid #ccd3dd; border-radius: 6px; text-align: center; padding: 20px; margin: 24px 0;">
+                        <span style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #1a3c6e; font-family: monospace;">{otp_code}</span>
+                      </div>
+                      <p style="color: #5d6d7e; font-size: 12px; line-height: 1.5; margin-bottom: 0;">If you did not request this verification code, please ignore this email or contact support if you have security concerns.</p>
                     </div>"""
 
                     msg = MIMEMultipart("alternative")
-                    msg["Subject"] = "BusPass Pro — Your Password Reset OTP"
-                    msg["From"]    = f"BusPass Pro <{sender}>"
+                    msg["Subject"] = "BMTC Bus Pass Portal — Password Reset OTP"
+                    msg["From"]    = f"BMTC Bus Pass Portal <{sender}>"
                     msg["To"]      = to_email
                     msg.attach(MIMEText(html_body, "html"))
 
@@ -1628,10 +1627,10 @@ def verify_otp():
         if entered_otp != stored_otp:
             return redirect(f"/verify_otp?email={stored_email}&msg=Invalid+OTP.+Please+try+again.&type=error")
 
-        # Update password
+        # Update password with hash
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("UPDATE Passenger SET password=%s WHERE email=%s", (new_password, stored_email))
+        cursor.execute("UPDATE Passenger SET password=%s WHERE email=%s", (generate_password_hash(new_password), stored_email))
         db.commit()
 
         # Clear OTP session data
@@ -1668,17 +1667,21 @@ def resend_otp():
             from email.mime.text import MIMEText
             try:
                 html_body = f"""
-                <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;background:#0d1117;color:#fff;border-radius:12px;padding:32px;">
-                  <h2 style="color:#4f8ef7;">🚌 BusPass Pro</h2>
-                  <h3>Your New OTP</h3>
-                  <p>Your previous OTP was resent. It expires in <strong>10 minutes</strong>.</p>
-                  <div style="background:#161b22;border:2px solid #4f8ef7;border-radius:10px;text-align:center;padding:28px;margin:24px 0;">
-                    <span style="font-size:44px;font-weight:900;letter-spacing:14px;color:#4f8ef7;">{otp_code}</span>
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 480px; margin: auto; background: #ffffff; color: #2c3e50; border: 1px solid #ccd3dd; border-top: 5px solid #1a3c6e; border-radius: 8px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                  <div style="text-align: center; margin-bottom: 24px;">
+                    <h2 style="color: #1a3c6e; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">BMTC Bus Pass Portal</h2>
+                    <span style="color: #e07b00; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 4px;">Government of Karnataka</span>
+                  </div>
+                  <hr style="border: 0; border-top: 1px solid #ccd3dd; margin-bottom: 24px;">
+                  <h3 style="color: #2c3e50; margin-top: 0; font-size: 16px;">Your New OTP</h3>
+                  <p style="font-size: 14px; line-height: 1.5; color: #5d6d7e;">Your verification OTP has been resent. This OTP is valid for <strong>10 minutes</strong>.</p>
+                  <div style="background: #f5f6fa; border: 1px solid #ccd3dd; border-radius: 6px; text-align: center; padding: 20px; margin: 24px 0;">
+                    <span style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #1a3c6e; font-family: monospace;">{otp_code}</span>
                   </div>
                 </div>"""
                 msg = MIMEMultipart("alternative")
-                msg["Subject"] = "BusPass Pro — Your New OTP"
-                msg["From"]    = f"BusPass Pro <{sender}>"
+                msg["Subject"] = "BMTC Bus Pass Portal — Your New OTP"
+                msg["From"]    = f"BMTC Bus Pass Portal <{sender}>"
                 msg["To"]      = to_email
                 msg.attach(MIMEText(html_body, "html"))
                 with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:

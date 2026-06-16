@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -107,7 +107,7 @@
               <span>{{ app.destination }}</span>
             </td>
             <td>{{ app.pass_type }}</td>
-            <td>{{ app.duration_months }} month(s)</td>
+            <td>{% if app.pass_type == 'Yearly' %}1 Year{% elif app.pass_type == 'Daily' %}1 Day{% else %}{{ app.duration_months }} month(s){% endif %}</td>
             <td>
               {% if app.status == 'Pending' %}
                 <span class="badge badge-pending">&#9203; Pending</span>
@@ -231,16 +231,18 @@
 
   <script>
     let _currentAppId = null;
-    const typeMultiplier = { Daily:1, Monthly:26, Yearly:280 };
+    // Multipliers: Daily = 2 trips, Monthly = 26 working days, Yearly flat rate × 20 (discounted annual)
+    const typeMultiplier = { Daily: 2, Monthly: 26, Yearly: 20 };
 
     function showPayModal(appId, route, passType, months, baseFare) {
       _currentAppId = appId;
-      // Fare calc: Base Fare × 2 (Round trip) × Active Days
+      // Fare calc: Base Fare × pass multiplier × duration months
       const mult  = typeMultiplier[passType] || 1;
-      const total = (baseFare * 2 * mult * months).toFixed(2);
+      const total = (baseFare * mult * months).toFixed(2);
       document.getElementById('modal-amount').textContent  = '₹' + total;
       document.getElementById('btn-pay-amount').textContent = '₹' + total;
-      document.getElementById('modal-desc').textContent    = passType + ' Pass — ' + route;
+      const durationLabel = passType === 'Yearly' ? '1 Year' : passType === 'Daily' ? '1 Day' : months + ' month(s)';
+      document.getElementById('modal-desc').textContent    = passType + ' Pass (' + durationLabel + ') — ' + route;
 
       const overlay = document.getElementById('pay-overlay');
       const modal   = document.getElementById('pay-modal');
@@ -260,8 +262,8 @@
 
     function selectChip(el) {
       document.querySelectorAll('.pay-chip').forEach(c => {
-        c.style.borderColor = 'rgba(255,255,255,0.1)';
-        c.style.color = '#94a3b8';
+        c.style.borderColor = 'var(--border)';
+        c.style.color = 'var(--text-muted)';
         c.style.background = 'var(--bg-light)';
       });
       el.style.borderColor = '#2563eb';
