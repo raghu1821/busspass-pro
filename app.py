@@ -577,7 +577,7 @@ def admin():
     """
     SELECT COUNT(*) AS approved
     FROM Pass_Application
-    WHERE status='Approved'
+    WHERE status IN ('Approved', 'Completed')
     """
 )
 
@@ -983,7 +983,7 @@ def stats():
         # Core counts
         cur = db.cursor(dictionary=True)
         cur.execute("SELECT COUNT(*) AS v FROM Passenger"); total_users = cur.fetchone()["v"]
-        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Approved'"); approved = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status IN ('Approved', 'Completed')"); approved = cur.fetchone()["v"]
         cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Rejected'"); rejected = cur.fetchone()["v"]
         cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Pending'");  pending  = cur.fetchone()["v"]
         cur.close()
