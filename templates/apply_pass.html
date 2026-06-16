@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -349,8 +349,8 @@
     const durationEl    = document.getElementById('duration-months');
     const farePreview   = document.getElementById('fare-preview');
 
-    // Fare rates per pass type multiplier
-    const typeMultiplier = { Daily: 1, Monthly: 26, Yearly: 280 };
+    // Fare rates per pass type multiplier (representing monthly share or trip multiplier)
+    const typeMultiplier = { Daily: 2, Monthly: 26, Yearly: 20 };
 
     function updateFare() {
       const opt = routeSelect.options[routeSelect.selectedIndex];
@@ -360,14 +360,20 @@
       const durationGroup = document.getElementById('duration-group');
       const durationHint = document.getElementById('duration-hint');
       
-      // Auto-set duration based on pass type
+      // Auto-set duration based on pass type & dynamically update validation constraints
       if (passType === 'Yearly') {
         durationEl.value = '12';
+        durationEl.removeAttribute('max'); // Remove max constraint to allow 12 months
         durationGroup.style.display = 'none';
       } else if (passType === 'Daily') {
-        durationEl.value = '1'; // In this system, 1 unit
+        durationEl.value = '1'; // 1 day
+        durationEl.removeAttribute('max');
         durationGroup.style.display = 'none';
       } else {
+        durationEl.setAttribute('max', '11'); // Enforce max 11 months for monthly passes
+        if (durationEl.value === '12' || durationEl.value === '') {
+          durationEl.value = '1'; // Reset from Yearly default
+        }
         durationGroup.style.display = 'block';
       }
       
