@@ -10,6 +10,10 @@ import string
 import threading
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+
+# Load .env file so local dev uses the same cloud DB as Render
+load_dotenv()
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
