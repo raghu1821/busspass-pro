@@ -256,6 +256,7 @@
           </ul>
         </div>
 
+
         <div class="info-card" style="border-color:rgba(79,142,247,0.3); background:rgba(79,142,247,0.06);">
           <div style="font-size:1.3rem; margin-bottom:8px;"><i data-lucide="info" style="width:24px;height:24px;color:var(--gov-navy);"></i></div>
           <p style="font-size:0.82rem; color:var(--text-muted); margin:0;">
@@ -349,6 +350,17 @@
     const durationEl    = document.getElementById('duration-months');
     const farePreview   = document.getElementById('fare-preview');
 
+    const userCategory = "{{ category }}";
+
+    // Category discounts: Student gets 90% off, Senior Citizen 50% off, Employee 15% off, General 0%
+    const categoryDiscounts = {
+      'Student': 0.90,
+      'Senior Citizen': 0.50,
+      'Employee': 0.15,
+      'Physically Challenged': 1.00,
+      'General': 0.00
+    };
+
     // Fare rates per pass type multiplier (representing monthly share or trip multiplier)
     const typeMultiplier = { Daily: 2, Monthly: 26, Yearly: 20 };
 
@@ -383,7 +395,9 @@
       if (!baseFare || !passType || !duration) { farePreview.style.display='none'; return; }
 
       const mult  = typeMultiplier[passType] || 1;
-      const total = baseFare * mult * duration;
+      const originalTotal = baseFare * mult * duration;
+      const discount = categoryDiscounts[userCategory] || 0;
+      const total = originalTotal * (1 - discount);
 
       document.getElementById('fp-route').textContent    = src + ' → ' + dst;
       document.getElementById('fp-fare').textContent     = '₹' + baseFare;

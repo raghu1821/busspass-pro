@@ -155,6 +155,14 @@ def _run_migrations():
         db.commit()
         print("Migration: Updated Route table with BMTC routes and fares")
 
+        # 8. Ensure category ENUM supports 'Physically Challenged'
+        try:
+            c.execute("ALTER TABLE Passenger MODIFY COLUMN category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') NOT NULL")
+            db.commit()
+            print("Migration: Updated Passenger category enum to include Physically Challenged")
+        except Exception as e:
+            print(f"Migration category ENUM warning: {e}")
+
         c.close()
         print("Migrations: All checks passed.")
     except Exception as e:
@@ -180,7 +188,7 @@ def verify_pass(pass_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     # Auto-expire passes
-    cursor.execute("UPDATE Pass SET status='Expired' WHERE valid_until < CURDATE()")
+    cursor.execute("UPDATE Pass SET status='Expired' WHERE status='Active' AND valid_until < CURDATE()")
     db.commit()
     # Fetch pass with passenger photo
     cursor.execute("""
@@ -308,9 +316,10 @@ def dashboard():
         db = get_db()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
-            SELECT Pass_Application.*, Route.source, Route.destination, Route.base_fare
+            SELECT Pass_Application.*, Route.source, Route.destination, Route.base_fare, Passenger.category
             FROM Pass_Application
             JOIN Route ON Pass_Application.route_id = Route.route_id
+            JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
             WHERE passenger_name=%s
             ORDER BY application_id DESC
         """, (user,))
@@ -344,7 +353,7 @@ def view_pass():
     update_query = """
     UPDATE Pass
     SET status='Expired'
-    WHERE valid_until < CURDATE()
+    WHERE status='Active' AND valid_until < CURDATE()
     """
 
     cursor.execute(update_query)
@@ -507,9 +516,14 @@ def apply_pass():
 
     routes = cursor.fetchall()
 
+    cursor.execute("SELECT category FROM Passenger WHERE full_name=%s", (passenger_name,))
+    p_data = cursor.fetchone()
+    category = p_data["category"] if p_data else "General"
+
     return render_template(
         "apply_pass.html",
-        routes=routes
+        routes=routes,
+        category=category
     )
 
 @app.route("/admin")
@@ -1528,10 +1542,14 @@ def manage_routes():
 def delete_route(id):
     if "admin" not in session:
         return redirect("/admin_login")
-    cursor = get_db().cursor()
-    cursor.execute("DELETE FROM Route WHERE route_id=%s", (id,))
-    get_db().commit()
-    return redirect("/manage_routes?msg=Route+deleted+successfully.&type=success")
+    try:
+        cursor = get_db().cursor()
+        cursor.execute("DELETE FROM Route WHERE route_id=%s", (id,))
+        get_db().commit()
+        return redirect("/manage_routes?msg=Route+deleted+successfully.&type=success")
+    except Exception as e:
+        app.logger.error(f"Error deleting route {id}: {e}")
+        return redirect("/manage_routes?msg=Cannot+delete+route+because+pass+applications+or+passes+reference+it.&type=error")
 
 @app.route("/update_route_fare/<int:id>", methods=["POST"])
 def update_route_fare(id):

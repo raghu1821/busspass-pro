@@ -124,7 +124,7 @@
             <td>
               {% if app.status == 'Approved' %}
                 <button class="btn btn-success btn-sm"
-                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} to {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration_months or 1 }}', {{ app.base_fare or 20 }})">&#128179; Pay &amp; Activate</button>
+                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} to {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration_months or 1 }}', {{ app.base_fare or 20 }}, '{{ app.category }}')">&#128179; Pay &amp; Activate</button>
               {% elif app.status == 'Pending' %}
                 <span style="color:var(--text-muted);font-size:12px;">Under Review</span>
               {% else %}
@@ -234,13 +234,32 @@
     // Multipliers: Daily = 2 trips, Monthly = 26 working days, Yearly flat rate × 20 (discounted annual)
     const typeMultiplier = { Daily: 2, Monthly: 26, Yearly: 20 };
 
-    function showPayModal(appId, route, passType, months, baseFare) {
+    // Category discounts: Student gets 90% off, Senior Citizen 50% off, Employee 15% off, General 0%
+    const categoryDiscounts = {
+      'Student': 0.90,
+      'Senior Citizen': 0.50,
+      'Employee': 0.15,
+      'Physically Challenged': 1.00,
+      'General': 0.00
+    };
+
+    function showPayModal(appId, route, passType, months, baseFare, category) {
       _currentAppId = appId;
       // Fare calc: Base Fare × pass multiplier × duration months
       const mult  = typeMultiplier[passType] || 1;
-      const total = (baseFare * mult * months).toFixed(2);
-      document.getElementById('modal-amount').textContent  = '₹' + total;
-      document.getElementById('btn-pay-amount').textContent = '₹' + total;
+      const originalTotal = baseFare * mult * months;
+      const discount = categoryDiscounts[category] || 0;
+      const total = originalTotal * (1 - discount);
+
+      document.getElementById('modal-amount').textContent  = '₹' + total.toFixed(2);
+      
+      const payBtn = document.querySelector('button[onclick="processPayment()"]');
+      if (total === 0) {
+        payBtn.innerHTML = '&#128274; Activate Free Bus Pass';
+      } else {
+        payBtn.innerHTML = '&#128274; Pay <span id="btn-pay-amount">₹' + total.toFixed(2) + '</span> &amp; Activate Pass';
+      }
+
       const durationLabel = passType === 'Yearly' ? '1 Year' : passType === 'Daily' ? '1 Day' : months + ' month(s)';
       document.getElementById('modal-desc').textContent    = passType + ' Pass (' + durationLabel + ') — ' + route;
 
