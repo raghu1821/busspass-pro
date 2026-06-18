@@ -236,7 +236,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
     phone,
     address,
     category,
-    generate_password_hash(password),
+    password,
     photo_base64
 )
 
@@ -287,7 +287,7 @@ def login():
 
         user = cursor.fetchone()
 
-        if user and (check_password_hash(user["password"], password) or user["password"] == password):
+        if user and (user["password"] == password or check_password_hash(user["password"], password)):
             session["user"] = user["full_name"]
             return redirect("/dashboard")
 
@@ -1262,11 +1262,11 @@ def change_password():
 
         data = cursor.fetchone()
 
-        if data and (check_password_hash(data["password"], old_password) or data["password"] == old_password):
+        if data and (data["password"] == old_password or check_password_hash(data["password"], old_password)):
 
             cursor.execute(
                 "UPDATE Passenger SET password=%s WHERE full_name=%s",
-                (generate_password_hash(new_password), user)
+                (new_password, user)
             )
 
             get_db().commit()
@@ -1642,10 +1642,10 @@ def verify_otp():
         if entered_otp != stored_otp:
             return redirect(f"/verify_otp?email={stored_email}&msg=Invalid+OTP.+Please+try+again.&type=error")
 
-        # Update password with hash
+        # Update password
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("UPDATE Passenger SET password=%s WHERE email=%s", (generate_password_hash(new_password), stored_email))
+        cursor.execute("UPDATE Passenger SET password=%s WHERE email=%s", (new_password, stored_email))
         db.commit()
 
         # Clear OTP session data
