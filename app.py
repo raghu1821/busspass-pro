@@ -319,7 +319,7 @@ def dashboard():
             SELECT Pass_Application.*, Route.source, Route.destination, Route.base_fare, Passenger.category
             FROM Pass_Application
             JOIN Route ON Pass_Application.route_id = Route.route_id
-            JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+            LEFT JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
             WHERE passenger_name=%s
             ORDER BY application_id DESC
         """, (user,))
