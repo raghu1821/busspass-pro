@@ -1,5 +1,6 @@
 import sys
-sys.path.append('c:/Users/ragha/OneDrive/Documents/PROJECT/BUSS_PASS_MANAGEMENT')
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import app, get_db
 
 with app.test_client() as client:
