@@ -73,26 +73,26 @@ def _run_migrations():
         # 0. Clean up any orphaned records (where passenger_name does not match a valid full_name)
         try:
             c.execute("""
-                DELETE FROM Pass_Application 
-                WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+                DELETE FROM pass_application 
+                WHERE passenger_name NOT IN (SELECT full_name FROM passenger)
             """)
             c.execute("""
-                DELETE FROM Pass 
-                WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+                DELETE FROM pass 
+                WHERE passenger_name NOT IN (SELECT full_name FROM passenger)
             """)
             # Clean orphaned Payment records (where application_id is not in Pass_Application)
             try:
                 c.execute("""
-                    DELETE FROM Payment 
-                    WHERE application_id NOT IN (SELECT application_id FROM Pass_Application)
+                    DELETE FROM payment 
+                    WHERE application_id NOT IN (SELECT application_id FROM pass_application)
                 """)
             except Exception:
                 pass  # Payment table may not exist yet on first run
             # Clean orphaned Feedback records
             try:
                 c.execute("""
-                    DELETE FROM Feedback 
-                    WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+                    DELETE FROM feedback 
+                    WHERE passenger_name NOT IN (SELECT full_name FROM passenger)
                 """)
             except Exception:
                 pass  # Feedback table may not exist yet on first run
@@ -101,10 +101,10 @@ def _run_migrations():
             # These are duplicates/leftovers that cause "Pay & Activate" to appear incorrectly
             try:
                 c.execute("""
-                    DELETE FROM Pass_Application
+                    DELETE FROM pass_application
                     WHERE status = 'Approved'
                     AND passenger_name IN (
-                        SELECT passenger_name FROM Pass WHERE status = 'Active'
+                        SELECT passenger_name FROM pass WHERE status = 'Active'
                     )
                 """)
             except Exception:
@@ -117,7 +117,7 @@ def _run_migrations():
 
         # 1. Create Payment table if it doesn't exist
         c.execute("""
-            CREATE TABLE IF NOT EXISTS Payment (
+            CREATE TABLE IF NOT EXISTS payment (
                 payment_id     INT AUTO_INCREMENT PRIMARY KEY,
                 application_id INT NOT NULL,
                 passenger_name VARCHAR(255) NOT NULL,
@@ -132,7 +132,7 @@ def _run_migrations():
 
         # 2. Also ensure Feedback table exists (used by /feedback route)
         c.execute("""
-            CREATE TABLE IF NOT EXISTS Feedback (
+            CREATE TABLE IF NOT EXISTS feedback (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 passenger_name VARCHAR(255) NOT NULL,
                 message TEXT NOT NULL,
@@ -144,29 +144,29 @@ def _run_migrations():
         print("Migration: Ensured Feedback table exists")
 
         # 4. Add created_at to Pass_Application if missing
-        c.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+        c.execute("SHOW COLUMNS FROM pass_application LIKE 'created_at'")
         if not c.fetchone():
-            c.execute("ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            c.execute("ALTER TABLE pass_application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
             db.commit()
             print("Migration: Added created_at column to Pass_Application")
 
         # 5. Add doc_proof (base64 document) to Passenger if missing
-        c.execute("SHOW COLUMNS FROM Passenger LIKE 'doc_proof'")
+        c.execute("SHOW COLUMNS FROM passenger LIKE 'doc_proof'")
         if not c.fetchone():
-            c.execute("ALTER TABLE Passenger ADD COLUMN doc_proof LONGTEXT DEFAULT NULL")
+            c.execute("ALTER TABLE passenger ADD COLUMN doc_proof LONGTEXT DEFAULT NULL")
             db.commit()
             print("Migration: Added doc_proof column to Passenger")
 
         # 6. Add doc_status to Passenger if missing
-        c.execute("SHOW COLUMNS FROM Passenger LIKE 'doc_status'")
+        c.execute("SHOW COLUMNS FROM passenger LIKE 'doc_status'")
         if not c.fetchone():
-            c.execute("ALTER TABLE Passenger ADD COLUMN doc_status VARCHAR(20) DEFAULT 'Not Uploaded'")
+            c.execute("ALTER TABLE passenger ADD COLUMN doc_status VARCHAR(20) DEFAULT 'Not Uploaded'")
             db.commit()
             print("Migration: Added doc_status column to Passenger")
 
         # 7. Ensure Route table exists and is populated with real BMTC routes and fares
         c.execute("""
-            CREATE TABLE IF NOT EXISTS Route (
+            CREATE TABLE IF NOT EXISTS route (
                 route_id INT AUTO_INCREMENT PRIMARY KEY,
                 source VARCHAR(100) DEFAULT NULL,
                 destination VARCHAR(100) DEFAULT NULL,
@@ -185,7 +185,7 @@ def _run_migrations():
             (6, "Majestic (KBS)", "Nelamangala (Route 252)", 25.00)
         ]
         for r_id, src, dst, fare in routes_to_update:
-            c.execute("UPDATE Route SET source=%s, destination=%s, base_fare=%s WHERE route_id=%s", (src, dst, fare, r_id))
+            c.execute("UPDATE route SET source=%s, destination=%s, base_fare=%s WHERE route_id=%s", (src, dst, fare, r_id))
         db.commit()
 
         # Insert new real BMTC routes 7 to 10
@@ -196,18 +196,18 @@ def _run_migrations():
             ("Majestic (KBS)", "Vidyaranyapura (Route 276)", 20.00)
         ]
         for src, dst, fare in routes_to_insert:
-            c.execute("SELECT 1 FROM Route WHERE source=%s AND destination=%s", (src, dst))
+            c.execute("SELECT 1 FROM route WHERE source=%s AND destination=%s", (src, dst))
             if not c.fetchone():
-                c.execute("INSERT INTO Route (source, destination, base_fare) VALUES (%s, %s, %s)", (src, dst, fare))
+                c.execute("INSERT INTO route (source, destination, base_fare) VALUES (%s, %s, %s)", (src, dst, fare))
         db.commit()
         print("Migration: Updated Route table with BMTC routes and fares")
 
         # 8. Ensure category ENUM supports 'Physically Challenged'
         try:
-            c.execute("SHOW COLUMNS FROM Passenger LIKE 'category'")
+            c.execute("SHOW COLUMNS FROM passenger LIKE 'category'")
             row = c.fetchone()
             if row and 'Physically Challenged' not in row[1]:
-                c.execute("ALTER TABLE Passenger MODIFY COLUMN category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') NOT NULL")
+                c.execute("ALTER TABLE passenger MODIFY COLUMN category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') NOT NULL")
                 db.commit()
                 print("Migration: Updated Passenger category enum to include Physically Challenged")
             else:
@@ -217,9 +217,9 @@ def _run_migrations():
 
         # Ensure duration_months is renamed to duration in Pass_Application
         try:
-            c.execute("SHOW COLUMNS FROM Pass_Application LIKE 'duration_months'")
+            c.execute("SHOW COLUMNS FROM pass_application LIKE 'duration_months'")
             if c.fetchone():
-                c.execute("ALTER TABLE Pass_Application CHANGE COLUMN duration_months duration INT DEFAULT NULL")
+                c.execute("ALTER TABLE pass_application CHANGE COLUMN duration_months duration INT DEFAULT NULL")
                 db.commit()
                 print("Migration: Renamed duration_months to duration in Pass_Application")
             else:
@@ -252,14 +252,14 @@ def verify_pass(pass_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     # Auto-expire passes
-    cursor.execute("UPDATE Pass SET status='Expired' WHERE status='Active' AND valid_until < CURDATE()")
+    cursor.execute("UPDATE pass SET status='Expired' WHERE status='Active' AND valid_until < CURDATE()")
     db.commit()
     # Fetch pass with passenger photo
     cursor.execute("""
-        SELECT Pass.*, Passenger.photo, Passenger.category
-        FROM Pass
-        LEFT JOIN Passenger ON Pass.passenger_name = Passenger.full_name
-        WHERE Pass.pass_id = %s
+        SELECT pass.*, passenger.photo, passenger.category
+        FROM pass
+        LEFT JOIN passenger ON pass.passenger_name = passenger.full_name
+        WHERE pass.pass_id = %s
     """, (pass_id,))
     pass_data = cursor.fetchone()
     return render_template("verify_pass.html", pass_data=pass_data)
@@ -276,12 +276,12 @@ def register():
 
     if request.method == "POST":
 
-        full_name = request.form["full_name"]
-        email = request.form["email"]
-        phone = request.form["phone"]
-        address = request.form["address"]
-        category = request.form["category"]
-        password = request.form["password"]
+        full_name = request.form["full_name"].strip()
+        email = request.form["email"].strip()
+        phone = request.form["phone"].strip()
+        address = request.form["address"].strip()
+        category = request.form["category"].strip()
+        password = request.form["password"].strip()
 
         # Photo Upload
         photo = request.files.get("photo")
@@ -296,8 +296,14 @@ def register():
 
         cursor = get_db().cursor()
 
+        # Check if full_name is already taken (case-insensitive & trimmed)
+        cursor.execute("SELECT 1 FROM passenger WHERE LOWER(TRIM(full_name)) = LOWER(%s)", (full_name,))
+        if cursor.fetchone():
+            cursor.close()
+            return redirect("/register?msg=Username/Full+Name+already+taken.+Please+use+a+unique+name.&type=error")
+
         query = """
-INSERT INTO Passenger
+INSERT INTO passenger
 (full_name, email, phone, address, category, password, photo)
 VALUES (%s, %s, %s, %s, %s, %s, %s)
 """
@@ -329,7 +335,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s)
                         doc_uri = f"data:{mime};base64,{b64}"
                         doc_cursor = get_db().cursor()
                         doc_cursor.execute(
-                            "UPDATE Passenger SET doc_proof=%s, doc_status='Pending' WHERE full_name=%s",
+                            "UPDATE passenger SET doc_proof=%s, doc_status='Pending' WHERE full_name=%s",
                             (doc_uri, full_name)
                         )
                         get_db().commit()
@@ -345,13 +351,13 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form["email"].strip()
+        password = request.form["password"].strip()
 
         cursor = get_db().cursor(dictionary=True)
 
         query = """
-        SELECT * FROM Passenger
+        SELECT * FROM passenger
         WHERE email=%s
         """
 
@@ -380,22 +386,27 @@ def dashboard():
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
+        
+        # Auto-expire passes first to ensure correct dashboard state
+        cursor.execute("UPDATE pass SET status='Expired' WHERE status='Active' AND valid_until < CURDATE()")
+        db.commit()
+
         cursor.execute("""
-            SELECT Pass_Application.*, Route.source, Route.destination, Route.base_fare, Passenger.category
-            FROM Pass_Application
-            JOIN Route ON Pass_Application.route_id = Route.route_id
-            LEFT JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+            SELECT pass_application.*, route.source, route.destination, route.base_fare, passenger.category
+            FROM pass_application
+            JOIN route ON pass_application.route_id = route.route_id
+            LEFT JOIN passenger ON pass_application.passenger_name = passenger.full_name
             WHERE passenger_name=%s
             ORDER BY application_id DESC
         """, (user,))
         applications = cursor.fetchall()
 
         # Check if user already has an Active pass (used to hide Pay & Activate button)
-        cursor.execute("SELECT pass_id FROM Pass WHERE passenger_name=%s AND status='Active'", (user,))
+        cursor.execute("SELECT pass_id FROM pass WHERE passenger_name=%s AND status='Active'", (user,))
         has_active_pass = cursor.fetchone() is not None
 
         # Fetch document verification status
-        cursor.execute("SELECT doc_status FROM Passenger WHERE full_name=%s", (user,))
+        cursor.execute("SELECT doc_status FROM passenger WHERE full_name=%s", (user,))
         p = cursor.fetchone()
         if p and p.get('doc_status'):
             doc_status = p['doc_status']
@@ -422,7 +433,7 @@ def view_pass():
     cursor = get_db().cursor(dictionary=True)
 
     update_query = """
-    UPDATE Pass
+    UPDATE pass
     SET status='Expired'
     WHERE status='Active' AND valid_until < CURDATE()
     """
@@ -432,11 +443,11 @@ def view_pass():
     get_db().commit()
 
     query = """
-    SELECT Pass.*, Passenger.photo
-    FROM Pass
-    LEFT JOIN Passenger
-    ON Pass.passenger_name = Passenger.full_name
-    WHERE Pass.passenger_name=%s
+    SELECT pass.*, passenger.photo
+    FROM pass
+    LEFT JOIN passenger
+    ON pass.passenger_name = passenger.full_name
+    WHERE pass.passenger_name=%s
     ORDER BY pass_id DESC
     LIMIT 1
     """
@@ -458,13 +469,13 @@ def view_pass():
         img.save(buffer, format="PNG")
         b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
         qr_uri = f"data:image/png;base64,{b64_str}"
-        cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_data['pass_id']))
+        cursor.execute("UPDATE pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_data['pass_id']))
         get_db().commit()
         pass_data['qr_code'] = qr_uri
 
     # Check if they have an approved but unpaid application
     cursor.execute("""
-        SELECT * FROM Pass_Application 
+        SELECT * FROM pass_application 
         WHERE passenger_name=%s AND status='Approved'
         ORDER BY application_id DESC LIMIT 1
     """, (user,))
@@ -483,10 +494,10 @@ def generate_qr(pass_id):
     cursor = get_db().cursor(dictionary=True)
     
     query = """
-    SELECT Pass.*, Passenger.full_name
-    FROM Pass
-    LEFT JOIN Passenger ON Pass.passenger_name = Passenger.full_name
-    WHERE Pass.pass_id=%s AND Pass.passenger_name=%s
+    SELECT pass.*, passenger.full_name
+    FROM pass
+    LEFT JOIN passenger ON pass.passenger_name = passenger.full_name
+    WHERE pass.pass_id=%s AND pass.passenger_name=%s
     """
     cursor.execute(query, (pass_id, session["user"]))
     pass_data = cursor.fetchone()
@@ -509,7 +520,7 @@ def generate_qr(pass_id):
     b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
     qr_uri = f"data:image/png;base64,{b64_str}"
     
-    cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_id))
+    cursor.execute("UPDATE pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_id))
     get_db().commit()
 
     # Absolute folder path
@@ -540,14 +551,14 @@ def apply_pass():
 
     # Block users from applying if they already have an active pass or a pending/approved application
     cursor.execute(
-        "SELECT * FROM Pass_Application WHERE passenger_name=%s AND status IN ('Pending', 'Approved')",
+        "SELECT * FROM pass_application WHERE passenger_name=%s AND status IN ('Pending', 'Approved')",
         (passenger_name,)
     )
     if cursor.fetchone():
         return redirect("/dashboard?msg=You+already+have+a+pending+or+approved+application.+Check+your+dashboard.&type=warning")
 
     cursor.execute(
-        "SELECT * FROM Pass WHERE passenger_name=%s AND status='Active'",
+        "SELECT * FROM pass WHERE passenger_name=%s AND status='Active'",
         (passenger_name,)
     )
     if cursor.fetchone():
@@ -562,7 +573,7 @@ def apply_pass():
         duration = request.form["duration"]
 
         query = """
-        INSERT INTO Pass_Application
+        INSERT INTO pass_application
         (passenger_name, route_id, pass_type, duration, status)
         VALUES (%s, %s, %s, %s, %s)
         """
@@ -582,12 +593,12 @@ def apply_pass():
         return redirect("/dashboard?msg=Application+submitted+successfully!+Awaiting+admin+approval.&type=success")
 
     cursor.execute(
-        "SELECT *, base_fare AS fare FROM Route"
+        "SELECT *, base_fare AS fare FROM route"
     )
 
     routes = cursor.fetchall()
 
-    cursor.execute("SELECT category FROM Passenger WHERE full_name=%s", (passenger_name,))
+    cursor.execute("SELECT category FROM passenger WHERE full_name=%s", (passenger_name,))
     p_data = cursor.fetchone()
     category = p_data["category"] if p_data else "General"
 
@@ -611,21 +622,21 @@ def admin():
 
         query = """
         SELECT
-        Pass_Application.*,
-        Route.source,
-        Route.destination,
-        Passenger.photo,
-        Passenger.email,
-        Passenger.phone,
-        Passenger.category,
-        Passenger.address,
-        COALESCE(Passenger.doc_status,'Not Uploaded') AS doc_status,
-        CASE WHEN Passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
-        FROM Pass_Application
-        JOIN Route ON Pass_Application.route_id = Route.route_id
-        LEFT JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+        pass_application.*,
+        route.source,
+        route.destination,
+        passenger.photo,
+        passenger.email,
+        passenger.phone,
+        passenger.category,
+        passenger.address,
+        COALESCE(passenger.doc_status,'Not Uploaded') AS doc_status,
+        CASE WHEN passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
+        FROM pass_application
+        JOIN route ON pass_application.route_id = route.route_id
+        LEFT JOIN passenger ON pass_application.passenger_name = passenger.full_name
         WHERE passenger_name LIKE %s
-        ORDER BY Pass_Application.application_id DESC
+        ORDER BY pass_application.application_id DESC
         """
 
         cursor.execute(
@@ -637,27 +648,27 @@ def admin():
 
         query = """
         SELECT
-        Pass_Application.*,
-        Route.source,
-        Route.destination,
-        Passenger.photo,
-        Passenger.email,
-        Passenger.phone,
-        Passenger.category,
-        Passenger.address,
-        COALESCE(Passenger.doc_status,'Not Uploaded') AS doc_status,
-        CASE WHEN Passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
-        FROM Pass_Application
-        JOIN Route ON Pass_Application.route_id = Route.route_id
-        LEFT JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
-        ORDER BY Pass_Application.application_id DESC
+        pass_application.*,
+        route.source,
+        route.destination,
+        passenger.photo,
+        passenger.email,
+        passenger.phone,
+        passenger.category,
+        passenger.address,
+        COALESCE(passenger.doc_status,'Not Uploaded') AS doc_status,
+        CASE WHEN passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
+        FROM pass_application
+        JOIN route ON pass_application.route_id = route.route_id
+        LEFT JOIN passenger ON pass_application.passenger_name = passenger.full_name
+        ORDER BY pass_application.application_id DESC
         """
 
         cursor.execute(query)
 
     applications = cursor.fetchall()
     cursor.execute(
-    "SELECT COUNT(*) AS total FROM Pass_Application"
+    "SELECT COUNT(*) AS total FROM pass_application"
 )
 
     total_apps = cursor.fetchone()["total"]
@@ -665,7 +676,7 @@ def admin():
     cursor.execute(
     """
     SELECT COUNT(*) AS approved
-    FROM Pass_Application
+    FROM pass_application
     WHERE status IN ('Approved', 'Completed')
     """
 )
@@ -675,7 +686,7 @@ def admin():
     cursor.execute(
     """
     SELECT COUNT(*) AS pending
-    FROM Pass_Application
+    FROM pass_application
     WHERE status='Pending'
     """
 )
@@ -683,7 +694,7 @@ def admin():
     pending = cursor.fetchone()["pending"]
 
     cursor.execute(
-    "SELECT COUNT(*) AS users FROM Passenger"
+    "SELECT COUNT(*) AS users FROM passenger"
 )
 
     users = cursor.fetchone()["users"]
@@ -704,7 +715,7 @@ def approve(id):
 
     cursor = get_db().cursor(dictionary=True)
     check_query = """
-SELECT * FROM Pass_Application
+SELECT * FROM pass_application
 WHERE application_id=%s
 """
 
@@ -720,7 +731,7 @@ WHERE application_id=%s
 
     # Update application status ONLY (DO NOT create pass yet until payment)
     query = """
-    UPDATE Pass_Application
+    UPDATE pass_application
     SET status='Approved'
     WHERE application_id=%s
     """
@@ -738,48 +749,48 @@ def activate_pass(app_id):
     cursor = db.cursor(dictionary=True)
     
     # Verify application is approved and belongs to user
-    cursor.execute("SELECT * FROM Pass_Application WHERE application_id=%s AND passenger_name=%s AND status='Approved'", (app_id, session["user"]))
+    cursor.execute("SELECT * FROM pass_application WHERE application_id=%s AND passenger_name=%s AND status='Approved'", (app_id, session["user"]))
     app_data = cursor.fetchone()
     
     if not app_data:
         return "Invalid application", 400
 
     # Guard: reject activation if user already has an Active pass (prevent duplicates)
-    cursor.execute("SELECT pass_id FROM Pass WHERE passenger_name=%s AND status='Active'", (session["user"],))
+    cursor.execute("SELECT pass_id FROM pass WHERE passenger_name=%s AND status='Active'", (session["user"],))
     existing_active = cursor.fetchone()
     if existing_active:
         # Clean up this stale Approved application and return OK so the UI redirects cleanly
-        cursor.execute("UPDATE Pass_Application SET status='Completed' WHERE application_id=%s", (app_id,))
+        cursor.execute("UPDATE pass_application SET status='Completed' WHERE application_id=%s", (app_id,))
         db.commit()
         return "OK"
         
     # Mark application as completed
-    cursor.execute("UPDATE Pass_Application SET status='Completed' WHERE application_id=%s", (app_id,))
+    cursor.execute("UPDATE pass_application SET status='Completed' WHERE application_id=%s", (app_id,))
     
     # Insert into Pass table with type-specific validity rules
     if app_data["pass_type"] == 'Daily':
         cursor.execute("""
-            INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+            INSERT INTO pass (passenger_name, pass_type, valid_until, status)
             VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s DAY), 'Active')
         """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration"]))
     elif app_data["pass_type"] == 'Yearly':
         cursor.execute("""
-            INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+            INSERT INTO pass (passenger_name, pass_type, valid_until, status)
             VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL 12 MONTH), 'Active')
         """, (app_data["passenger_name"], app_data["pass_type"]))
     else: # Monthly
         cursor.execute("""
-            INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
+            INSERT INTO pass (passenger_name, pass_type, valid_until, status)
             VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
         """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration"]))
     
     # Calculate fare: fetch route base_fare and apply category discount
     cursor.execute("""
-        SELECT Route.base_fare, Passenger.category
-        FROM Route
-        JOIN Pass_Application ON Route.route_id = Pass_Application.route_id
-        JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
-        WHERE Pass_Application.application_id = %s
+        SELECT route.base_fare, passenger.category
+        FROM route
+        JOIN pass_application ON route.route_id = pass_application.route_id
+        JOIN passenger ON pass_application.passenger_name = passenger.full_name
+        WHERE pass_application.application_id = %s
     """, (app_id,))
     fare_data = cursor.fetchone()
     amount = 0.00
@@ -798,12 +809,12 @@ def activate_pass(app_id):
     import random, string as _string
     txn_ref = 'TXN' + ''.join(random.choices(_string.ascii_uppercase + _string.digits, k=10))
     cursor.execute("""
-        INSERT INTO Payment (application_id, passenger_name, amount, payment_mode, transaction_ref)
+        INSERT INTO payment (application_id, passenger_name, amount, payment_mode, transaction_ref)
         VALUES (%s, %s, %s, 'Online', %s)
     """, (app_id, app_data["passenger_name"], amount, txn_ref))
 
     # Generate QR Code immediately for new pass
-    cursor.execute("SELECT pass_id FROM Pass ORDER BY pass_id DESC LIMIT 1")
+    cursor.execute("SELECT pass_id FROM pass ORDER BY pass_id DESC LIMIT 1")
     new_pass = cursor.fetchone()
     pass_id = new_pass["pass_id"]
     
@@ -821,7 +832,7 @@ def activate_pass(app_id):
     b64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
     qr_uri = f"data:image/png;base64,{b64_str}"
     
-    cursor.execute("UPDATE Pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_id))
+    cursor.execute("UPDATE pass SET qr_code=%s WHERE pass_id=%s", (qr_uri, pass_id))
     db.commit()
 
     return "OK"
@@ -833,7 +844,7 @@ def reject(id):
 
     cursor = get_db().cursor(dictionary=True)
     check_query = """
-SELECT * FROM Pass_Application
+SELECT * FROM pass_application
 WHERE application_id=%s
 """
 
@@ -848,7 +859,7 @@ WHERE application_id=%s
         return redirect("/admin?msg=Application+already+processed.&type=warning")
 
     query = """
-    UPDATE Pass_Application
+    UPDATE pass_application
     SET status='Rejected'
     WHERE application_id=%s
     """
@@ -865,7 +876,7 @@ def revoke(id):
     
     cursor = get_db().cursor(dictionary=True)
     # Get the passenger name from the application
-    cursor.execute("SELECT passenger_name FROM Pass_Application WHERE application_id=%s", (id,))
+    cursor.execute("SELECT passenger_name FROM pass_application WHERE application_id=%s", (id,))
     app_data = cursor.fetchone()
     
     if not app_data:
@@ -874,8 +885,8 @@ def revoke(id):
     passenger = app_data["passenger_name"]
     
     # Update both Pass and Pass_Application status
-    cursor.execute("UPDATE Pass SET status='Revoked' WHERE passenger_name=%s AND status='Active'", (passenger,))
-    cursor.execute("UPDATE Pass_Application SET status='Revoked' WHERE application_id=%s", (id,))
+    cursor.execute("UPDATE pass SET status='Revoked' WHERE passenger_name=%s AND status='Active'", (passenger,))
+    cursor.execute("UPDATE pass_application SET status='Revoked' WHERE application_id=%s", (id,))
     
     get_db().commit()
     return "OK"
@@ -894,8 +905,8 @@ def export_applications():
     cursor.execute("""
         SELECT a.application_id, a.passenger_name, r.source, r.destination, 
                a.pass_type, a.duration, a.status, a.created_at
-        FROM Pass_Application a
-        JOIN Route r ON a.route_id = r.route_id
+        FROM pass_application a
+        JOIN route r ON a.route_id = r.route_id
         ORDER BY a.application_id DESC
     """)
     rows = cursor.fetchall()
@@ -936,10 +947,10 @@ def download_pass(pass_id):
 
     cursor = get_db().cursor(dictionary=True)
     cursor.execute("""
-        SELECT Pass.*, Passenger.photo, Passenger.category, Passenger.phone, Passenger.email
-        FROM Pass
-        LEFT JOIN Passenger ON Pass.passenger_name = Passenger.full_name
-        WHERE Pass.pass_id = %s AND Pass.passenger_name = %s
+        SELECT pass.*, passenger.photo, passenger.category, passenger.phone, passenger.email
+        FROM pass
+        LEFT JOIN passenger ON pass.passenger_name = passenger.full_name
+        WHERE pass.pass_id = %s AND pass.passenger_name = %s
     """, (pass_id, session["user"]))
     pass_data = cursor.fetchone()
 
@@ -1096,12 +1107,12 @@ def stats():
         # Auto-create created_at if missing (Render DB migration)
         try:
             sc = db.cursor()
-            sc.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
+            sc.execute("SHOW COLUMNS FROM pass_application LIKE 'created_at'")
             has_col = sc.fetchone()
             sc.close()
             if not has_col:
                 ac = db.cursor()
-                ac.execute("ALTER TABLE Pass_Application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                ac.execute("ALTER TABLE pass_application ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
                 ac.close()
                 db.commit()
         except Exception:
@@ -1109,10 +1120,10 @@ def stats():
 
         # Core counts
         cur = db.cursor(dictionary=True)
-        cur.execute("SELECT COUNT(*) AS v FROM Passenger"); total_users = cur.fetchone()["v"]
-        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status IN ('Approved', 'Completed')"); approved = cur.fetchone()["v"]
-        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Rejected'"); rejected = cur.fetchone()["v"]
-        cur.execute("SELECT COUNT(*) AS v FROM Pass_Application WHERE status='Pending'");  pending  = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM passenger"); total_users = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM pass_application WHERE status IN ('Approved', 'Completed')"); approved = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM pass_application WHERE status='Rejected'"); rejected = cur.fetchone()["v"]
+        cur.execute("SELECT COUNT(*) AS v FROM pass_application WHERE status='Pending'");  pending  = cur.fetchone()["v"]
         cur.close()
 
         # Monthly bar chart
@@ -1122,7 +1133,7 @@ def stats():
                 SELECT DATE_FORMAT(created_at, '%b %Y') AS month,
                        YEAR(created_at) AS yr, MONTH(created_at) AS mo,
                        COUNT(*) AS total
-                FROM Pass_Application
+                FROM pass_application
                 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
                 GROUP BY yr, mo, month ORDER BY yr, mo
             """)
@@ -1136,11 +1147,11 @@ def stats():
         try:
             c3 = db.cursor(dictionary=True)
             c3.execute("""
-                SELECT CONCAT(Route.source, ' to ', Route.destination) AS route_name,
+                SELECT CONCAT(route.source, ' to ', route.destination) AS route_name,
                        COUNT(*) AS total
-                FROM Pass_Application
-                JOIN Route ON Pass_Application.route_id = Route.route_id
-                GROUP BY Pass_Application.route_id
+                FROM pass_application
+                JOIN route ON pass_application.route_id = route.route_id
+                GROUP BY pass_application.route_id
                 ORDER BY total DESC LIMIT 6
             """)
             rows = c3.fetchall(); c3.close()
@@ -1156,7 +1167,7 @@ def stats():
                 SELECT DAY(created_at) AS day_num,
                        DATE_FORMAT(created_at, '%b %d') AS day_label,
                        COUNT(*) AS total
-                FROM Pass_Application
+                FROM pass_application
                 WHERE YEAR(created_at)  = YEAR(NOW())
                   AND MONTH(created_at) = MONTH(NOW())
                 GROUP BY day_num, day_label ORDER BY day_num
@@ -1175,7 +1186,7 @@ def stats():
                 SELECT DATE_FORMAT(created_at, '%b') AS month_label,
                        MONTH(created_at) AS mo,
                        COUNT(*) AS total
-                FROM Pass_Application
+                FROM pass_application
                 WHERE YEAR(created_at) = YEAR(NOW())
                 GROUP BY mo, month_label ORDER BY mo
             """)
@@ -1211,7 +1222,7 @@ def profile():
 
     query = """
     SELECT *
-    FROM Passenger
+    FROM passenger
     WHERE full_name=%s
     """
 
@@ -1255,7 +1266,7 @@ def upload_doc():
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "UPDATE Passenger SET doc_proof=%s, doc_status='Pending' WHERE full_name=%s",
+        "UPDATE passenger SET doc_proof=%s, doc_status='Pending' WHERE full_name=%s",
         (doc_uri, session["user"])
     )
     db.commit()
@@ -1269,7 +1280,7 @@ def verify_doc(passenger_name):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "UPDATE Passenger SET doc_status='Verified' WHERE full_name=%s",
+        "UPDATE passenger SET doc_status='Verified' WHERE full_name=%s",
         (passenger_name,)
     )
     db.commit()
@@ -1282,7 +1293,7 @@ def reject_doc(passenger_name):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "UPDATE Passenger SET doc_status='Rejected', doc_proof=NULL WHERE full_name=%s",
+        "UPDATE passenger SET doc_status='Rejected', doc_proof=NULL WHERE full_name=%s",
         (passenger_name,)
     )
     db.commit()
@@ -1296,7 +1307,7 @@ def view_doc(passenger_name):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
-        "SELECT doc_proof, doc_status, full_name, category FROM Passenger WHERE full_name=%s",
+        "SELECT doc_proof, doc_status, full_name, category FROM passenger WHERE full_name=%s",
         (passenger_name,)
     )
     row = cursor.fetchone()
@@ -1318,7 +1329,7 @@ def edit_profile():
         address = request.form["address"]
         photo = request.files.get("photo")
 
-        query = "UPDATE Passenger SET phone=%s, address=%s"
+        query = "UPDATE passenger SET phone=%s, address=%s"
         values = [phone, address]
 
         if photo and allowed_file(photo.filename):
@@ -1341,7 +1352,7 @@ def edit_profile():
 
     query = """
     SELECT *
-    FROM Passenger
+    FROM passenger
     WHERE full_name=%s
     """
 
@@ -1373,13 +1384,13 @@ def change_password():
         new_password = request.form["new_password"]
 
         query = """
-        SELECT * FROM Passenger
+        SELECT * FROM passenger
         WHERE full_name=%s
         AND password=%s
         """
 
         cursor.execute(
-            "SELECT * FROM Passenger WHERE full_name=%s",
+            "SELECT * FROM passenger WHERE full_name=%s",
             (user,)
         )
 
@@ -1388,7 +1399,7 @@ def change_password():
         if data and (data["password"] == old_password or check_password_hash(data["password"], old_password)):
 
             cursor.execute(
-                "UPDATE Passenger SET password=%s WHERE full_name=%s",
+                "UPDATE passenger SET password=%s WHERE full_name=%s",
                 (new_password, user)
             )
 
@@ -1415,7 +1426,7 @@ def feedback():
     try:
         # Always fetch today's usage for display
         cursor.execute(
-            "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
+            "SELECT COUNT(*) FROM feedback WHERE passenger_name=%s AND DATE(created_at) = CURDATE()",
             (user,)
         )
         used_today = cursor.fetchone()[0]
@@ -1428,7 +1439,7 @@ def feedback():
     try:
         # Fetch last submission time for cooldown display
         cursor.execute(
-            "SELECT created_at FROM Feedback WHERE passenger_name=%s ORDER BY created_at DESC LIMIT 1",
+            "SELECT created_at FROM feedback WHERE passenger_name=%s ORDER BY created_at DESC LIMIT 1",
             (user,)
         )
         last_row = cursor.fetchone()
@@ -1466,7 +1477,7 @@ def feedback():
 
         # ── Layer 4: Duplicate message detection ──────────────────
         cursor.execute(
-            "SELECT COUNT(*) FROM Feedback WHERE passenger_name=%s AND message=%s",
+            "SELECT COUNT(*) FROM feedback WHERE passenger_name=%s AND message=%s",
             (user, message)
         )
         if cursor.fetchone()[0] > 0:
@@ -1475,14 +1486,14 @@ def feedback():
         # ── All checks passed — insert ────────────────────────────
         try:
             cursor.execute(
-                "INSERT INTO Feedback (passenger_name, message, topic) VALUES (%s, %s, %s)",
+                "INSERT INTO feedback (passenger_name, message, topic) VALUES (%s, %s, %s)",
                 (user, message, topic)
             )
         except Exception as insert_err:
             app.logger.warning(f"Feedback insert with topic failed ({insert_err}), retrying without topic column")
             # Fallback: insert without topic in case column doesn't exist yet
             cursor.execute(
-                "INSERT INTO Feedback (passenger_name, message) VALUES (%s, %s)",
+                "INSERT INTO feedback (passenger_name, message) VALUES (%s, %s)",
                 (user, message)
             )
         get_db().commit()
@@ -1505,7 +1516,7 @@ def admin_login():
 
         cursor = get_db().cursor(dictionary=True)
 
-        query = "SELECT * FROM Admin WHERE username=%s"
+        query = "SELECT * FROM admin WHERE username=%s"
 
         cursor.execute(query, (username,))
 
@@ -1535,7 +1546,7 @@ def view_feedback():
 
     try:
         cursor.execute(
-            "SELECT * FROM Feedback ORDER BY created_at DESC"
+            "SELECT * FROM feedback ORDER BY created_at DESC"
         )
         feedbacks = cursor.fetchall()
         
@@ -1565,7 +1576,7 @@ def manage_users():
     cursor = get_db().cursor(dictionary=True)
 
     cursor.execute(
-        "SELECT * FROM Passenger"
+        "SELECT * FROM passenger"
     )
 
     users = cursor.fetchall()
@@ -1585,18 +1596,18 @@ def delete_user(id):
     cursor = db.cursor()
 
     # Get the passenger's full name first to clean up related records in other tables
-    cursor.execute("SELECT full_name FROM Passenger WHERE passenger_id=%s", (id,))
+    cursor.execute("SELECT full_name FROM passenger WHERE passenger_id=%s", (id,))
     user_row = cursor.fetchone()
     if user_row:
         full_name = user_row[0]
         # Delete related applications
-        cursor.execute("DELETE FROM Pass_Application WHERE passenger_name=%s", (full_name,))
+        cursor.execute("DELETE FROM pass_application WHERE passenger_name=%s", (full_name,))
         # Delete related passes
-        cursor.execute("DELETE FROM Pass WHERE passenger_name=%s", (full_name,))
+        cursor.execute("DELETE FROM pass WHERE passenger_name=%s", (full_name,))
         # Delete related feedback
-        cursor.execute("DELETE FROM Feedback WHERE passenger_name=%s", (full_name,))
+        cursor.execute("DELETE FROM feedback WHERE passenger_name=%s", (full_name,))
         # Finally delete the passenger
-        cursor.execute("DELETE FROM Passenger WHERE passenger_id=%s", (id,))
+        cursor.execute("DELETE FROM passenger WHERE passenger_id=%s", (id,))
         db.commit()
 
     return redirect("/manage_users")
@@ -1618,7 +1629,7 @@ def manage_routes():
         fare = request.form["fare"]
 
         query = """
-        INSERT INTO Route
+        INSERT INTO route
         (source, destination, base_fare)
         VALUES (%s, %s, %s)
         """
@@ -1630,7 +1641,7 @@ def manage_routes():
 
         get_db().commit()
 
-    cursor.execute("SELECT *, base_fare AS fare FROM Route")
+    cursor.execute("SELECT *, base_fare AS fare FROM route")
 
     routes = cursor.fetchall()
 
@@ -1646,7 +1657,7 @@ def delete_route(id):
         return redirect("/admin_login")
     try:
         cursor = get_db().cursor()
-        cursor.execute("DELETE FROM Route WHERE route_id=%s", (id,))
+        cursor.execute("DELETE FROM route WHERE route_id=%s", (id,))
         get_db().commit()
         return redirect("/manage_routes?msg=Route+deleted+successfully.&type=success")
     except Exception as e:
@@ -1659,7 +1670,7 @@ def update_route_fare(id):
         return redirect("/admin_login")
     fare = request.form.get("fare")
     cursor = get_db().cursor()
-    cursor.execute("UPDATE Route SET base_fare=%s WHERE route_id=%s", (fare, id))
+    cursor.execute("UPDATE route SET base_fare=%s WHERE route_id=%s", (fare, id))
     get_db().commit()
     return redirect("/manage_routes?msg=Fare+updated+successfully!&type=success")
 
@@ -1671,7 +1682,7 @@ def forgot_password():
         email = request.form["email"]
         db = get_db()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM Passenger WHERE email=%s", (email,))
+        cursor.execute("SELECT * FROM passenger WHERE email=%s", (email,))
         user = cursor.fetchone()
         if not user:
             return redirect("/forgot_password?msg=No+account+found+with+that+email.&type=error")
@@ -1765,7 +1776,7 @@ def verify_otp():
         # Update password
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("UPDATE Passenger SET password=%s WHERE email=%s", (new_password, stored_email))
+        cursor.execute("UPDATE passenger SET password=%s WHERE email=%s", (new_password, stored_email))
         db.commit()
 
         # Clear OTP session data
@@ -1843,7 +1854,7 @@ def pending_count():
         return jsonify({"count": 0})
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT COUNT(*) AS cnt FROM Pass_Application WHERE status='Pending'")
+    cursor.execute("SELECT COUNT(*) AS cnt FROM pass_application WHERE status='Pending'")
     result = cursor.fetchone()
     return jsonify({"count": result["cnt"]})
 
@@ -1856,19 +1867,19 @@ def renew_pass(pass_id):
     cursor = db.cursor(dictionary=True)
 
     # Get old pass details
-    cursor.execute("SELECT * FROM Pass WHERE pass_id=%s", (pass_id,))
+    cursor.execute("SELECT * FROM pass WHERE pass_id=%s", (pass_id,))
     old_pass = cursor.fetchone()
     if not old_pass:
         return redirect("/view_pass?msg=Pass+not+found.&type=error")
 
     # Check no pending application exists
-    cursor.execute("SELECT * FROM Pass_Application WHERE passenger_name=%s AND status='Pending'", (session["user"],))
+    cursor.execute("SELECT * FROM pass_application WHERE passenger_name=%s AND status='Pending'", (session["user"],))
     if cursor.fetchone():
         return redirect("/view_pass?msg=You+already+have+a+pending+renewal+application.&type=warning")
 
     # Get route from the original completed application for this passenger
     cursor.execute("""
-        SELECT route_id FROM Pass_Application
+        SELECT route_id FROM pass_application
         WHERE passenger_name=%s AND status='Completed'
         ORDER BY application_id DESC LIMIT 1
     """, (session["user"],))
@@ -1878,13 +1889,13 @@ def renew_pass(pass_id):
         route_id = app_route["route_id"]
     else:
         # Fallback if no completed applications exist
-        cursor.execute("SELECT route_id FROM Route LIMIT 1")
+        cursor.execute("SELECT route_id FROM route LIMIT 1")
         default_route = cursor.fetchone()
         route_id = default_route["route_id"] if default_route else None
 
     # Submit renewal application
     cursor.execute(
-        "INSERT INTO Pass_Application (passenger_name, route_id, pass_type, duration, status) VALUES (%s, %s, %s, %s, 'Pending')",
+        "INSERT INTO pass_application (passenger_name, route_id, pass_type, duration, status) VALUES (%s, %s, %s, %s, 'Pending')",
         (session["user"], route_id, old_pass["pass_type"], 1)
     )
     get_db().commit()
@@ -1899,7 +1910,7 @@ def activity():
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT 'application' AS type, status, created_at AS event_date, route_id
-        FROM Pass_Application
+        FROM pass_application
         WHERE passenger_name=%s
         ORDER BY created_at DESC
     """, (session["user"],))
