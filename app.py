@@ -70,6 +70,25 @@ def _run_migrations():
         db = get_db()
         c = db.cursor()
 
+        # 0. Clean up any orphaned records (where passenger_name does not match a valid full_name)
+        try:
+            c.execute("""
+                DELETE FROM Pass_Application 
+                WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+            """)
+            c.execute("""
+                DELETE FROM Pass 
+                WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+            """)
+            c.execute("""
+                DELETE FROM Feedback 
+                WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+            """)
+            db.commit()
+            print("Migration: Purged orphaned records from database")
+        except Exception as cleanup_err:
+            print(f"Migration clean-up warning (non-fatal): {cleanup_err}")
+
         # 1. Create Feedback table if it doesn't exist
         c.execute("""
             CREATE TABLE IF NOT EXISTS Feedback (
