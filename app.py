@@ -96,6 +96,20 @@ def _run_migrations():
                 """)
             except Exception:
                 pass  # Feedback table may not exist yet on first run
+
+            # Clean stale 'Approved' applications for passengers who already have an Active pass
+            # These are duplicates/leftovers that cause "Pay & Activate" to appear incorrectly
+            try:
+                c.execute("""
+                    DELETE FROM Pass_Application
+                    WHERE status = 'Approved'
+                    AND passenger_name IN (
+                        SELECT passenger_name FROM Pass WHERE status = 'Active'
+                    )
+                """)
+            except Exception:
+                pass
+
             db.commit()
             print("Migration: Purged orphaned records from database")
         except Exception as cleanup_err:
@@ -362,6 +376,7 @@ def dashboard():
     user = session["user"]
     applications = []
     doc_status = 'Not Uploaded'
+    has_active_pass = False
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
@@ -374,6 +389,10 @@ def dashboard():
             ORDER BY application_id DESC
         """, (user,))
         applications = cursor.fetchall()
+
+        # Check if user already has an Active pass (used to hide Pay & Activate button)
+        cursor.execute("SELECT pass_id FROM Pass WHERE passenger_name=%s AND status='Active'", (user,))
+        has_active_pass = cursor.fetchone() is not None
 
         # Fetch document verification status
         cursor.execute("SELECT doc_status FROM Passenger WHERE full_name=%s", (user,))
@@ -389,7 +408,9 @@ def dashboard():
         "dashboard.html",
         user=user,
         applications=applications,
-        doc_status=doc_status
+        doc_status=doc_status,
+        has_active_pass=has_active_pass
+
     )
 @app.route("/view_pass")
 def view_pass():
@@ -722,6 +743,15 @@ def activate_pass(app_id):
     
     if not app_data:
         return "Invalid application", 400
+
+    # Guard: reject activation if user already has an Active pass (prevent duplicates)
+    cursor.execute("SELECT pass_id FROM Pass WHERE passenger_name=%s AND status='Active'", (session["user"],))
+    existing_active = cursor.fetchone()
+    if existing_active:
+        # Clean up this stale Approved application and return OK so the UI redirects cleanly
+        cursor.execute("UPDATE Pass_Application SET status='Completed' WHERE application_id=%s", (app_id,))
+        db.commit()
+        return "OK"
         
     # Mark application as completed
     cursor.execute("UPDATE Pass_Application SET status='Completed' WHERE application_id=%s", (app_id,))

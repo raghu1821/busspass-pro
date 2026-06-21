@@ -123,8 +123,13 @@
             </td>
             <td>
               {% if app.status == 'Approved' %}
-                <button class="btn btn-success btn-sm"
-                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} to {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration or 1 }}', {{ app.base_fare or 20 }}, '{{ app.category }}')">&#128179; Pay &amp; Activate</button>
+                {% if has_active_pass %}
+                  {# User already has an active pass — this is a stale entry, just show Completed label #}
+                  <span style="color:var(--text-muted);font-size:12px;">Pass Already Active</span>
+                {% else %}
+                  <button class="btn btn-success btn-sm"
+                    onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} to {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration or 1 }}', {{ app.base_fare or 20 }}, '{{ app.category }}')">&#128179; Pay &amp; Activate</button>
+                {% endif %}
               {% elif app.status == 'Pending' %}
                 <span style="color:var(--text-muted);font-size:12px;">Under Review</span>
               {% else %}
