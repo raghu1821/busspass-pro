@@ -1801,10 +1801,10 @@ def activity():
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
-        SELECT 'application' AS type, status, applied_on AS event_date, route_id
+        SELECT 'application' AS type, status, created_at AS event_date, route_id
         FROM Pass_Application
         WHERE passenger_name=%s
-        ORDER BY applied_on DESC
+        ORDER BY created_at DESC
     """, (session["user"],))
     events = cursor.fetchall()
     return render_template("activity.html", events=events, user=session["user"])

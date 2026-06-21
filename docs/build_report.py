@@ -17,7 +17,7 @@ from docx.oxml import OxmlElement
 
 DOCS_DIR   = os.path.dirname(os.path.abspath(__file__))
 SS_DIR     = os.path.join(DOCS_DIR, "screenshots")
-OUT_PATH   = os.path.join(DOCS_DIR, "BCS403_Bus_Pass_Management_Report_v2.docx")
+OUT_PATH   = os.path.join(DOCS_DIR, "BCS403_Bus_Pass_Management_Report_v3.docx")
 ER_IMG     = os.path.join(SS_DIR, "er_diagram.png")   # placeholder if exists
 
 doc = Document()

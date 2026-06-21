@@ -107,10 +107,19 @@ def run():
         ss(page, "05_view_pass_qr")
 
         # ── 7. Alerts page ────────────────────────────────────────────────────
-        print("[7] Alerts page...")
+        # Alerts are integrated into the Passenger Dashboard. We log in as STUDENT_EMAIL (who has no document uploaded)
+        # and capture the dashboard showing the "Document Required" alert banner.
+        print("[7] Alerts page (showing dashboard alert)...")
         try:
-            page.goto(f"{BASE}/alerts")
+            page.goto(f"{BASE}/logout")
             page.wait_for_load_state("networkidle")
+            page.goto(f"{BASE}/login")
+            page.wait_for_load_state("networkidle")
+            page.fill('input[name="email"]',    STUDENT_EMAIL)
+            page.fill('input[name="password"]', STUDENT_PASSWORD)
+            page.click('button[type="submit"]')
+            page.wait_for_load_state("networkidle")
+            time.sleep(1.5)
             ss(page, "06_alerts_page")
         except Exception as e:
             print(f"  ! alerts: {e}")
@@ -125,9 +134,19 @@ def run():
             print(f"  ! feedback: {e}")
 
         # ── 9. Pass History ───────────────────────────────────────────────────
-        print("[9] Pass History page...")
+        # In the application, travel/application history is located at /activity.
+        print("[9] Pass History page (via /activity)...")
         try:
-            page.goto(f"{BASE}/history")
+            page.goto(f"{BASE}/logout")
+            page.wait_for_load_state("networkidle")
+            page.goto(f"{BASE}/login")
+            page.wait_for_load_state("networkidle")
+            page.fill('input[name="email"]',    PASS_USER_EMAIL)
+            page.fill('input[name="password"]', PASS_USER_PASSWORD)
+            page.click('button[type="submit"]')
+            page.wait_for_load_state("networkidle")
+            time.sleep(1.5)
+            page.goto(f"{BASE}/activity")
             page.wait_for_load_state("networkidle")
             ss(page, "08_pass_history")
         except Exception as e:
@@ -178,18 +197,26 @@ def run():
         except Exception as e:
             print(f"  ! admin login: {e}")
 
-        page.goto(f"{BASE}/admin_dashboard")
+        page.goto(f"{BASE}/admin")
         page.wait_for_load_state("networkidle")
         time.sleep(3)
         ss(page, "12_admin_dashboard")
 
         # ── 14. Manage Applications ───────────────────────────────────────────
-        print("[14] Manage Applications...")
+        # Both admin dashboard and manage applications are on the /admin route.
+        # To show application details / management, we open the passenger details modal by clicking "View".
+        print("[14] Manage Applications (showing details modal on /admin)...")
         try:
-            page.goto(f"{BASE}/manage_applications")
+            page.goto(f"{BASE}/admin")
             page.wait_for_load_state("networkidle")
-            time.sleep(1)
+            time.sleep(2)
+            # Click the first "View" button to show passenger details modal
+            page.click('button:has-text("View")')
+            time.sleep(1.5)
             ss(page, "13_manage_applications")
+            # Close the modal or refresh to return to clean state
+            page.goto(f"{BASE}/admin")
+            page.wait_for_load_state("networkidle")
         except Exception as e:
             print(f"  ! manage_applications: {e}")
 
@@ -222,22 +249,13 @@ def run():
             print(f"  ! stats: {e}")
 
         # ── 18. Admin Feedback ────────────────────────────────────────────────
-        print("[18] Admin Feedback...")
+        print("[18] Admin Feedback (via /view_feedback)...")
         try:
-            page.goto(f"{BASE}/admin_feedback")
+            page.goto(f"{BASE}/view_feedback")
             page.wait_for_load_state("networkidle")
             ss(page, "17_admin_feedback")
         except Exception as e:
             print(f"  ! admin_feedback: {e}")
-
-        # ── 19. Admin Passes list ─────────────────────────────────────────────
-        print("[19] Admin - View all passes...")
-        try:
-            page.goto(f"{BASE}/admin_passes")
-            page.wait_for_load_state("networkidle")
-            ss(page, "18_admin_passes")
-        except Exception as e:
-            print(f"  ! admin_passes: {e}")
 
         browser.close()
 
