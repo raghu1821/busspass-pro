@@ -408,7 +408,7 @@ def add_chapter2():
         ("Payment",   ["payment_id (PK)", "application_id (FK)", "amount", "payment_mode", "payment_date", "transaction_ref"]),
         ("Concession_Category", ["category_id (PK)", "category_name (UNIQUE)", "concession_rate", "description"]),
         ("Alert",     ["alert_id (PK)", "passenger_name (FK)", "message", "alert_date", "is_read"]),
-        ("Feedback",  ["feedback_id (PK)", "passenger_name (FK)", "message", "submitted_at", "admin_response"]),
+        ("Admin",      ["admin_id (PK)", "username (UNIQUE)", "password"]),
     ]
     for ename, attrs in entities:
         add_body(f"• {ename}:", bold=True, space_after=2)
@@ -429,7 +429,7 @@ def add_chapter2():
         "A Pass_Application GENERATES zero or one Pass (1:1, trigger-driven)",
         "A Pass_Application has one Payment record (1:1)",
         "A Passenger can receive many Alerts (1:N)",
-        "A Passenger can submit many Feedback entries (1:N)",
+        "A Passenger can have many Payment records (1:N via Pass_Application)",
         "Concession_Category sets the discount rate for a category of Passenger",
     ]
     for r in rels:
@@ -450,7 +450,7 @@ def add_chapter2():
         ("Payment", "payment_id INT PK AUTO_INCREMENT\napplication_id INT FK → Pass_Application(application_id)\namount DECIMAL(10,2)\npayment_mode ENUM('Online','Cash','UPI','Card')\npayment_date DATE\ntransaction_ref VARCHAR(100)"),
         ("Concession_Category", "category_id INT PK AUTO_INCREMENT\ncategory_name VARCHAR(50) UNIQUE NOT NULL\nconcession_rate DECIMAL(5,2)\ndescription TEXT"),
         ("Alert", "alert_id INT PK AUTO_INCREMENT\npassenger_name VARCHAR(100) FK → Passenger(full_name)\nmessage TEXT\nalert_date DATE\nis_read BOOLEAN DEFAULT FALSE"),
-        ("Feedback", "feedback_id INT PK AUTO_INCREMENT\npassenger_name VARCHAR(100) FK → Passenger(full_name)\nmessage TEXT\nsubmitted_at DATETIME\nadmin_response TEXT"),
+        ("Admin", "admin_id INT PK AUTO_INCREMENT\nusername VARCHAR(100) UNIQUE NOT NULL\npassword VARCHAR(100) NOT NULL"),
     ]
     for tname, cols in tables_info:
         add_body(f"Table: {tname}", bold=True, space_before=8, space_after=2)
@@ -567,9 +567,9 @@ def add_chapter3():
         ("QR Verification Page",
          "Bus conductors or inspectors can scan/enter a QR code to instantly validate a passenger's pass "
          "and view its status (Active/Expired/Revoked)."),
-        ("Feedback & Alerts Page",
-         "Passengers can submit feedback. Admins can view all feedback and post responses. "
-         "Renewal alerts appear automatically when a pass is within 7 days of expiry."),
+        ("Payment History Page",
+         "Passengers can view all their payment transactions, amounts paid, payment mode, and transaction "
+         "references for each pass issued. Admins can view a consolidated payment report."),
     ]
     for title, desc in screens:
         add_body(f"• {title}:", bold=True, space_before=6, space_after=2)
@@ -659,12 +659,12 @@ def add_chapter4():
           "View statistics: total passes issued, revenue, pending requests",
           "Bar charts showing monthly pass issuance trends",
           "Pie charts for route-wise and category-wise distribution"]),
-        ("4.8", "Feedback & Alert Module",
-         "Handles passenger communication and automated notifications.",
-         ["Passengers submit feedback messages to the admin",
-          "Admin views feedback and posts responses",
-          "Automated renewal alerts inserted by trigger trg_renewal_reminder",
-          "Alerts appear on dashboard when pass expiry is within 7 days"]),
+        ("4.8", "Document Verification Module",
+         "Handles passenger document upload and admin verification.",
+         ["Passengers upload ID proof documents (PDF/image) during registration",
+          "Admin views and approves or rejects document submissions",
+          "Document status shown on passenger dashboard (Not Uploaded/Pending/Verified)",
+          "Only verified passengers can apply for concession-based pass fares"]),
         ("4.9", "QR Code Verification Module",
          "Validates passes at the point of travel.",
          ["Each approved pass carries a unique QR code (UUID-based)",
@@ -874,7 +874,7 @@ def add_chapter6():
         "6.5  Manage Applications (Approve / Reject)",
         "6.6  Manage Routes Page",
         "6.7  QR Code Verification Page",
-        "6.8  Feedback and Alerts Page",
+        "6.8  Payment History Page",
     ]
     for snap in snapshots:
         add_body(snap, bold=True, space_before=10)
@@ -946,8 +946,8 @@ def add_chapter8():
     doc.add_paragraph()
     add_body(
         "The system was designed with a normalized relational database (up to 3NF) using MySQL 8.0, "
-        "consisting of 8 interrelated tables: Passenger, Route, Pass_Application, Pass, Payment, "
-        "Concession_Category, Alert, and Feedback. The backend was implemented using Python 3.x with the "
+        "consisting of 6 interrelated tables: Passenger, Route, Pass_Application, Pass, Payment, "
+        "and Admin. The backend was implemented using Python 3.x with the "
         "Flask micro-framework, and the frontend was rendered dynamically using Jinja2 templates with "
         "HTML5 and CSS3."
     )

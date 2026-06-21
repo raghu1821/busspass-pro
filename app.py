@@ -63,9 +63,9 @@ def get_db():
 
 print("Database helper ready")
 
-# ── Auto-Migrations: Ensure Feedback table & columns exist ────────
+# ── Auto-Migrations: Ensure all required tables & columns exist ────────
 def _run_migrations():
-    """Ensure Feedback table and all required columns exist on startup."""
+    """Ensure Payment table and all required columns exist on startup."""
     try:
         db = get_db()
         c = db.cursor()
@@ -80,16 +80,43 @@ def _run_migrations():
                 DELETE FROM Pass 
                 WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
             """)
-            c.execute("""
-                DELETE FROM Feedback 
-                WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
-            """)
+            # Clean orphaned Payment records (where application_id is not in Pass_Application)
+            try:
+                c.execute("""
+                    DELETE FROM Payment 
+                    WHERE application_id NOT IN (SELECT application_id FROM Pass_Application)
+                """)
+            except Exception:
+                pass  # Payment table may not exist yet on first run
+            # Clean orphaned Feedback records
+            try:
+                c.execute("""
+                    DELETE FROM Feedback 
+                    WHERE passenger_name NOT IN (SELECT full_name FROM Passenger)
+                """)
+            except Exception:
+                pass  # Feedback table may not exist yet on first run
             db.commit()
             print("Migration: Purged orphaned records from database")
         except Exception as cleanup_err:
             print(f"Migration clean-up warning (non-fatal): {cleanup_err}")
 
-        # 1. Create Feedback table if it doesn't exist
+        # 1. Create Payment table if it doesn't exist
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS Payment (
+                payment_id     INT AUTO_INCREMENT PRIMARY KEY,
+                application_id INT NOT NULL,
+                passenger_name VARCHAR(255) NOT NULL,
+                amount         DECIMAL(10,2) NOT NULL,
+                payment_mode   ENUM('Online','UPI','Card','Cash') DEFAULT 'Online',
+                payment_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                transaction_ref VARCHAR(100) DEFAULT NULL
+            )
+        """)
+        db.commit()
+        print("Migration: Ensured Payment table exists")
+
+        # 2. Also ensure Feedback table exists (used by /feedback route)
         c.execute("""
             CREATE TABLE IF NOT EXISTS Feedback (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -100,20 +127,7 @@ def _run_migrations():
             )
         """)
         db.commit()
-
-        # 2. Add 'topic' column if missing
-        c.execute("SHOW COLUMNS FROM Feedback LIKE 'topic'")
-        if not c.fetchone():
-            c.execute("ALTER TABLE Feedback ADD COLUMN topic VARCHAR(50) DEFAULT 'General'")
-            db.commit()
-            print("Migration: Added topic column to Feedback")
-
-        # 3. Add 'created_at' column if missing
-        c.execute("SHOW COLUMNS FROM Feedback LIKE 'created_at'")
-        if not c.fetchone():
-            c.execute("ALTER TABLE Feedback ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-            db.commit()
-            print("Migration: Added created_at column to Feedback")
+        print("Migration: Ensured Feedback table exists")
 
         # 4. Add created_at to Pass_Application if missing
         c.execute("SHOW COLUMNS FROM Pass_Application LIKE 'created_at'")
@@ -729,6 +743,35 @@ def activate_pass(app_id):
             VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
         """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration"]))
     
+    # Calculate fare: fetch route base_fare and apply category discount
+    cursor.execute("""
+        SELECT Route.base_fare, Passenger.category
+        FROM Route
+        JOIN Pass_Application ON Route.route_id = Pass_Application.route_id
+        JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+        WHERE Pass_Application.application_id = %s
+    """, (app_id,))
+    fare_data = cursor.fetchone()
+    amount = 0.00
+    if fare_data:
+        base_fare = float(fare_data['base_fare'] or 0)
+        category  = fare_data['category'] or 'General'
+        duration  = app_data.get('duration', 1) or 1
+        # Apply concession based on category
+        discounts = {'Student': 0.50, 'Senior Citizen': 0.50, 'Physically Challenged': 0.75,
+                     'Employee': 0.20, 'General': 0.0}
+        discount  = discounts.get(category, 0.0)
+        # Multiply base_fare by duration (months/days) and apply discount
+        amount = round(base_fare * int(duration) * (1 - discount), 2)
+
+    # Record payment in Payment table
+    import random, string as _string
+    txn_ref = 'TXN' + ''.join(random.choices(_string.ascii_uppercase + _string.digits, k=10))
+    cursor.execute("""
+        INSERT INTO Payment (application_id, passenger_name, amount, payment_mode, transaction_ref)
+        VALUES (%s, %s, %s, 'Online', %s)
+    """, (app_id, app_data["passenger_name"], amount, txn_ref))
+
     # Generate QR Code immediately for new pass
     cursor.execute("SELECT pass_id FROM Pass ORDER BY pass_id DESC LIMIT 1")
     new_pass = cursor.fetchone()

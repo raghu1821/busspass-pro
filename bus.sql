@@ -48,14 +48,18 @@ CREATE TABLE `pass` (
   PRIMARY KEY (`pass_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Feedback Table (Stores passenger suggestions/issues)
-CREATE TABLE `feedback` (
-  `feedback_id` INT NOT NULL AUTO_INCREMENT,
-  `passenger_name` VARCHAR(100) DEFAULT NULL,
-  `message` TEXT,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `topic` VARCHAR(50) DEFAULT 'General',
-  PRIMARY KEY (`feedback_id`)
+-- 5. Payment Table (Stores payment records for issued bus passes)
+CREATE TABLE `payment` (
+  `payment_id` INT NOT NULL AUTO_INCREMENT,
+  `application_id` INT NOT NULL,
+  `passenger_name` VARCHAR(255) NOT NULL,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `payment_mode` ENUM('Online','UPI','Card','Cash') DEFAULT 'Online',
+  `payment_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `transaction_ref` VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (`payment_id`),
+  KEY `application_id` (`application_id`),
+  CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`application_id`) REFERENCES `pass_application` (`application_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 6. Admin Table (Stores backend administrator credentials)
@@ -100,8 +104,8 @@ DELETE FROM passenger WHERE email IN ('m123@gmail.com', 'r123@gmail.com', 'ra123
 -- View all bus routes and their corresponding base fares
 SELECT * FROM route;
 
--- View all passenger feedback submissions
-SELECT * FROM feedback;
+-- View all payment transactions
+SELECT * FROM payment;
 
 -- View all administrators
 SELECT * FROM admin;
