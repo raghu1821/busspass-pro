@@ -368,9 +368,9 @@ body("Each entity from the ER diagram maps to a relational table. Relationships 
 for tname, cols in [
     ("Passenger",           "passenger_id INT PK AUTO_INCREMENT | full_name VARCHAR(100) NOT NULL | email VARCHAR(100) UNIQUE NOT NULL | phone VARCHAR(15) | address TEXT | category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') | password VARCHAR(255) | photo LONGTEXT | doc_proof LONGTEXT | doc_status VARCHAR(20)"),
     ("Route",               "route_id INT PK AUTO_INCREMENT | source VARCHAR(100) | destination VARCHAR(100) | base_fare DECIMAL(10,2)"),
-    ("Pass_Application",    "application_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | route_id INT FK | pass_type VARCHAR(50) | duration INT | status VARCHAR(50) | created_at TIMESTAMP"),
-    ("Pass",                "pass_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | pass_type VARCHAR(50) | valid_until DATE | status VARCHAR(50) | qr_code LONGTEXT"),
-    ("Payment",             "payment_id INT PK AUTO_INCREMENT | application_id INT FK | passenger_name VARCHAR(100) | amount DECIMAL(10,2) | payment_method VARCHAR(50) | transaction_id VARCHAR(100) | created_at TIMESTAMP"),
+    ("Pass_Application",    "application_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | passenger_id INT FK | route_id INT FK | pass_type VARCHAR(50) | duration INT | status VARCHAR(50) | created_at TIMESTAMP"),
+    ("Pass",                "pass_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | passenger_id INT FK | pass_type VARCHAR(50) | valid_until DATE | status VARCHAR(50) | qr_code LONGTEXT"),
+    ("Payment",             "payment_id INT PK AUTO_INCREMENT | application_id INT FK | passenger_name VARCHAR(100) | passenger_id INT FK | amount DECIMAL(10,2) | payment_method VARCHAR(50) | transaction_id VARCHAR(100) | created_at TIMESTAMP"),
     ("Admin",               "admin_id INT PK AUTO_INCREMENT | username VARCHAR(100) | password VARCHAR(100)"),
 ]:
     body(f"Table: {tname}", bold=True, sb=10, sa=2)
@@ -561,20 +561,24 @@ for label, sql in [
     ("Pass_Application Table", """CREATE TABLE pass_application (
   application_id INT AUTO_INCREMENT PRIMARY KEY,
   passenger_name VARCHAR(100) DEFAULT NULL,
+  passenger_id   INT DEFAULT NULL,
   route_id       INT DEFAULT NULL,
   pass_type      VARCHAR(50) DEFAULT NULL,
   duration       INT DEFAULT NULL,
   status         VARCHAR(50) DEFAULT NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (route_id) REFERENCES route(route_id)
+  FOREIGN KEY (route_id) REFERENCES route(route_id),
+  FOREIGN KEY (passenger_id) REFERENCES passenger(passenger_id)
 );"""),
     ("Pass Table", """CREATE TABLE pass (
   pass_id        INT AUTO_INCREMENT PRIMARY KEY,
   passenger_name VARCHAR(100) DEFAULT NULL,
+  passenger_id   INT DEFAULT NULL,
   pass_type      VARCHAR(50) DEFAULT NULL,
   valid_until    DATE DEFAULT NULL,
   status         VARCHAR(50) DEFAULT NULL,
-  qr_code        LONGTEXT
+  qr_code        LONGTEXT,
+  FOREIGN KEY (passenger_id) REFERENCES passenger(passenger_id)
 );"""),
     ("Payment Table", """CREATE TABLE payment (
   payment_id     INT AUTO_INCREMENT PRIMARY KEY,
