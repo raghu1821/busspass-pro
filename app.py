@@ -552,7 +552,7 @@ def admin():
         CASE WHEN Passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
         FROM Pass_Application
         JOIN Route ON Pass_Application.route_id = Route.route_id
-        JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+        LEFT JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
         WHERE passenger_name LIKE %s
         ORDER BY Pass_Application.application_id DESC
         """
@@ -578,7 +578,7 @@ def admin():
         CASE WHEN Passenger.doc_proof IS NOT NULL THEN 1 ELSE 0 END AS has_doc
         FROM Pass_Application
         JOIN Route ON Pass_Application.route_id = Route.route_id
-        JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
+        LEFT JOIN Passenger ON Pass_Application.passenger_name = Passenger.full_name
         ORDER BY Pass_Application.application_id DESC
         """
 
