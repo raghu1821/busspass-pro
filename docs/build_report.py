@@ -10,7 +10,7 @@ build_report.py – generates the final BCS403 project report with:
 import os, glob
 from docx import Document
 from docx.shared import Pt, Cm, Inches, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -26,10 +26,10 @@ doc = Document()
 sec = doc.sections[0]
 sec.page_width    = Cm(21.0)
 sec.page_height   = Cm(29.7)
-sec.left_margin   = Cm(3.3)
-sec.right_margin  = Cm(2.54)
-sec.top_margin    = Cm(1.91)
-sec.bottom_margin = Cm(1.91)
+sec.left_margin   = Cm(1.3)
+sec.right_margin  = Cm(1.0)
+sec.top_margin    = Cm(0.75)
+sec.bottom_margin = Cm(0.75)
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 TNR = "Times New Roman"
@@ -115,15 +115,34 @@ def add_hf(section, title="BUS PASS MANAGEMENT SYSTEM"):
     # Header
     hdr = section.header
     hp  = hdr.paragraphs[0] if hdr.paragraphs else hdr.add_paragraph()
-    hp.clear(); hp.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    _set(hp.add_run(title), 10)
-    # Footer – text left, page no right
+    hp.clear()
+    hp.paragraph_format.tab_stops.clear_all()
+    hp.paragraph_format.tab_stops.add_tab_stop(Cm(9.35), WD_TAB_ALIGNMENT.CENTER)
+    hp.paragraph_format.tab_stops.add_tab_stop(Cm(18.7), WD_TAB_ALIGNMENT.RIGHT)
+    hrun = hp.add_run(f"\t\t{title.upper()}")
+    _set(hrun, 10)
+    
+    # Footer – Department left, Year center, page no right
     ftr = section.footer
     fp  = ftr.paragraphs[0] if ftr.paragraphs else ftr.add_paragraph()
     fp.clear()
-    _set(fp.add_run("Department of CS&E, BIT  2025-26"), 10)
-    fp.add_run("\t\t\t\t\t\t")
+    fp.paragraph_format.tab_stops.clear_all()
+    fp.paragraph_format.tab_stops.add_tab_stop(Cm(9.35), WD_TAB_ALIGNMENT.CENTER)
+    fp.paragraph_format.tab_stops.add_tab_stop(Cm(18.7), WD_TAB_ALIGNMENT.RIGHT)
+    
+    run_dept = fp.add_run("DEPARTMENT OF CS&E,BIT")
+    _set(run_dept, 10)
+    run_tab1 = fp.add_run("\t")
+    _set(run_tab1, 10)
+    run_year = fp.add_run("2025-26")
+    _set(run_year, 10)
+    run_tab2 = fp.add_run("\t")
+    _set(run_tab2, 10)
+    run_page = fp.add_run("Page | ")
+    _set(run_page, 10)
+    
     pgr = fp.add_run()
+    _set(pgr, 10)
     for tag, txt in [('w:fldChar','begin'), ('w:instrText','PAGE'), ('w:fldChar','end')]:
         el = OxmlElement(tag)
         if tag == 'w:instrText':
@@ -331,14 +350,14 @@ body("The Entity-Relationship (ER) diagram below represents the conceptual struc
 insert_image(ER_IMG, width_cm=15, caption="Entity-Relationship Diagram – Bus Pass Management System")
 doc.add_paragraph()
 body("Key Entities:", bold=True, sa=4)
-for e in ["Passenger","Route","Pass_Application","Pass","Feedback","Admin"]:
+for e in ["Passenger","Route","Pass_Application","Pass","Payment","Admin"]:
     bullet(e)
 body("Key Relationships:", bold=True, sa=4)
 for r in [
     "A Passenger APPLIES FOR zero or more Pass_Applications (1:N)",
     "A Route is associated with many Pass_Applications (1:N)",
     "A Pass is generated for a Passenger upon application approval and payment (1:1)",
-    "A Passenger submits many Feedbacks (1:N)",
+    "A Pass has an associated Payment record (1:1)",
 ]:
     bullet(r)
 page_break()
@@ -351,7 +370,7 @@ for tname, cols in [
     ("Route",               "route_id INT PK AUTO_INCREMENT | source VARCHAR(100) | destination VARCHAR(100) | base_fare DECIMAL(10,2)"),
     ("Pass_Application",    "application_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | route_id INT FK | pass_type VARCHAR(50) | duration INT | status VARCHAR(50) | created_at TIMESTAMP"),
     ("Pass",                "pass_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | pass_type VARCHAR(50) | valid_until DATE | status VARCHAR(50) | qr_code LONGTEXT"),
-    ("Feedback",            "feedback_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | message TEXT | created_at DATETIME | topic VARCHAR(50)"),
+    ("Payment",             "payment_id INT PK AUTO_INCREMENT | application_id INT FK | passenger_name VARCHAR(100) | amount DECIMAL(10,2) | payment_method VARCHAR(50) | transaction_id VARCHAR(100) | created_at TIMESTAMP"),
     ("Admin",               "admin_id INT PK AUTO_INCREMENT | username VARCHAR(100) | password VARCHAR(100)"),
 ]:
     body(f"Table: {tname}", bold=True, sb=10, sa=2)
@@ -413,9 +432,9 @@ for title, desc in [
     ("QR Code Verification Page",
      "Conductors enter a QR code to instantly verify a passenger's pass — shows name, "
      "route, validity period, and current status."),
-    ("Feedback & Alerts Page",
-     "Passengers submit feedback to the admin. Admins post responses. Automated renewal "
-     "alerts appear here when a pass expires within 7 days."),
+    ("Payment Portal & Receipts",
+     "Passengers view transit pass payment details and retrieve printed receipts for "
+     "completed card and UPI transaction records."),
 ]:
     body(f"• {title}:", bold=True, sb=8, sa=2)
     body(f"  {desc}", sa=4)
@@ -482,11 +501,11 @@ modules = [
       "Manage passengers, passes, routes, applications from one dashboard",
       "Real-time statistics: passes issued, revenue, pending applications",
       "Bar charts for monthly issuance trends, pie charts for category distribution"]),
-    ("4.8","Feedback Module",
-     "Handles passenger communication and admin console feedback review.",
-     ["Passengers submit feedback messages with topic selection to the admin panel",
-      "Admins view all feedback submissions in a dedicated panel",
-      "Enforces a rate-limiting rules of max 5 feedback messages per day"]),
+    ("4.8","Payment Module",
+     "Handles transit fee processing and transaction logging.",
+     ["Passengers submit payments for approved pass applications via Visa, Mastercard, or UPI",
+      "Admins view the complete system financial ledger showing transaction IDs and amounts",
+      "Enforces billing accuracy and records transaction timestamps for audit purposes"]),
     ("4.9","QR Code Verification Module",
      "Real-time pass validation at the point of travel.",
      ["Each approved pass carries a UUID-based unique QR code",
@@ -557,12 +576,15 @@ for label, sql in [
   status         VARCHAR(50) DEFAULT NULL,
   qr_code        LONGTEXT
 );"""),
-    ("Feedback Table", """CREATE TABLE feedback (
-  feedback_id    INT AUTO_INCREMENT PRIMARY KEY,
+    ("Payment Table", """CREATE TABLE payment (
+  payment_id     INT AUTO_INCREMENT PRIMARY KEY,
+  application_id INT,
   passenger_name VARCHAR(100) DEFAULT NULL,
-  message        TEXT,
-  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-  topic          VARCHAR(50) DEFAULT 'General'
+  amount         DECIMAL(10,2) NOT NULL,
+  payment_method VARCHAR(50) DEFAULT 'Card',
+  transaction_id VARCHAR(100) DEFAULT NULL,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (application_id) REFERENCES pass_application(application_id) ON DELETE CASCADE
 );"""),
     ("Admin Table", """CREATE TABLE admin (
   admin_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -615,7 +637,7 @@ snapshot_defs = [
     ("04_apply_pass_form",     "Apply for Pass Form – Route selection and concession-based fare preview"),
     ("05_view_pass_qr",        "View Digital Pass & QR Code – Active pass card with scan-to-verify QR"),
     ("06_alerts_page",         "Alerts Page – Renewal reminders and expiry notifications"),
-    ("07_feedback_page",       "Feedback Page – Passenger feedback submission and topic selection"),
+    ("07_feedback_page",       "Payment History – Complete passenger transaction records and receipts"),
     ("08_pass_history",        "Pass History – Complete application and travel pass history log"),
     ("09_qr_verify_page",      "QR Code Verification – Real-time pass validation for bus conductors"),
     ("10_profile_page",        "Profile Page – Passenger profile with document upload and verification"),
@@ -625,7 +647,7 @@ snapshot_defs = [
     ("14_manage_routes",       "Manage Routes – Add, update, and delete BMTC bus routes"),
     ("15_manage_users",        "Manage Users – View and manage all registered passengers"),
     ("16_stats_analytics",     "Statistics & Analytics – System KPIs, charts and route popularity"),
-    ("17_admin_feedback",      "Admin Feedback Panel – View all passenger feedback submissions"),
+    ("17_admin_feedback",      "Admin Payments Panel – View passenger pass transaction ledger"),
 ]
 
 for fn, caption in snapshot_defs:
@@ -692,7 +714,7 @@ for para in [
     "problems in the public transport domain.",
 
     "The system implements a fully normalized relational database (up to 3NF) using MySQL 8.0, "
-    "consisting of 6 relational tables: passenger, route, pass_application, pass, feedback, and admin. "
+    "consisting of 6 relational tables: passenger, route, pass_application, pass, payment, and admin. "
     "The backend was implemented using Python 3.x with the Flask micro-framework, and the frontend "
     "was rendered dynamically using Jinja2 templates with HTML5 and CSS3.",
 
