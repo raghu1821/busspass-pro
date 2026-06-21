@@ -9,7 +9,7 @@ with app.test_client() as client:
         
     db = get_db()
     c = db.cursor()
-    c.execute("INSERT INTO Pass_Application (passenger_name, status, duration_months, pass_type, route_id) VALUES ('test_user3', 'Approved', 12, 'Yearly', 1)")
+    c.execute("INSERT INTO Pass_Application (passenger_name, status, duration, pass_type, route_id) VALUES ('test_user3', 'Approved', 12, 'Yearly', 1)")
     db.commit()
     c.execute("SELECT LAST_INSERT_ID()")
     app_id = c.fetchone()[0]

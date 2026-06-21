@@ -60,7 +60,7 @@ entities = [
       ("passenger_name","VARCHAR(100)","FK"),
       ("route_id",      "INT","FK"),
       ("pass_type",     "ENUM",""),
-      ("duration_months","INT",""),
+      ("duration",      "INT",""),
       ("status",        "ENUM",""),
       ("created_at",    "TIMESTAMP","")]),
 

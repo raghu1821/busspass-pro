@@ -107,7 +107,7 @@
               <span>{{ app.destination }}</span>
             </td>
             <td>{{ app.pass_type }}</td>
-            <td>{% if app.pass_type == 'Yearly' %}1 Year{% elif app.pass_type == 'Daily' %}1 Day{% else %}{{ app.duration_months }} month(s){% endif %}</td>
+            <td>{% if app.pass_type == 'Yearly' %}1 Year{% elif app.pass_type == 'Daily' %}1 Day{% else %}{{ app.duration }} month(s){% endif %}</td>
             <td>
               {% if app.status == 'Pending' %}
                 <span class="badge badge-pending">&#9203; Pending</span>
@@ -124,7 +124,7 @@
             <td>
               {% if app.status == 'Approved' %}
                 <button class="btn btn-success btn-sm"
-                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} to {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration_months or 1 }}', {{ app.base_fare or 20 }}, '{{ app.category }}')">&#128179; Pay &amp; Activate</button>
+                  onclick="showPayModal('{{ app.application_id }}', '{{ app.source }} to {{ app.destination }}', '{{ app.pass_type }}', '{{ app.duration or 1 }}', {{ app.base_fare or 20 }}, '{{ app.category }}')">&#128179; Pay &amp; Activate</button>
               {% elif app.status == 'Pending' %}
                 <span style="color:var(--text-muted);font-size:12px;">Under Review</span>
               {% else %}

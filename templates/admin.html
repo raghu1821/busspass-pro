@@ -111,7 +111,7 @@
               <span>{{ app.destination }}</span>
             </td>
             <td>{{ app.pass_type }}</td>
-            <td>{% if app.pass_type == 'Yearly' %}1 Year{% elif app.pass_type == 'Daily' %}1 Day{% else %}{{ app.duration_months }} mo.{% endif %}</td>
+            <td>{% if app.pass_type == 'Yearly' %}1 Year{% elif app.pass_type == 'Daily' %}1 Day{% else %}{{ app.duration }} mo.{% endif %}</td>
             <td>
               {% set ds = app.doc_status if app.doc_status else 'Not Uploaded' %}
               {% if ds == 'Verified' %}

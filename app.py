@@ -168,6 +168,18 @@ def _run_migrations():
         except Exception as e:
             print(f"Migration category ENUM warning: {e}")
 
+        # Ensure duration_months is renamed to duration in Pass_Application
+        try:
+            c.execute("SHOW COLUMNS FROM Pass_Application LIKE 'duration_months'")
+            if c.fetchone():
+                c.execute("ALTER TABLE Pass_Application CHANGE COLUMN duration_months duration INT DEFAULT NULL")
+                db.commit()
+                print("Migration: Renamed duration_months to duration in Pass_Application")
+            else:
+                print("Migration: Pass_Application duration column already updated")
+        except Exception as e:
+            print(f"Migration duration column warning: {e}")
+
         c.close()
         print("Migrations: All checks passed.")
     except Exception as e:
@@ -493,11 +505,11 @@ def apply_pass():
 
         pass_type = request.form["pass_type"]
 
-        duration_months = request.form["duration_months"]
+        duration = request.form["duration"]
 
         query = """
         INSERT INTO Pass_Application
-        (passenger_name, route_id, pass_type, duration_months, status)
+        (passenger_name, route_id, pass_type, duration, status)
         VALUES (%s, %s, %s, %s, %s)
         """
 
@@ -505,7 +517,7 @@ def apply_pass():
             passenger_name,
             route_id,
             pass_type,
-            duration_months,
+            duration,
             "Pending"
         )
 
@@ -686,7 +698,7 @@ def activate_pass(app_id):
         cursor.execute("""
             INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
             VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s DAY), 'Active')
-        """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
+        """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration"]))
     elif app_data["pass_type"] == 'Yearly':
         cursor.execute("""
             INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
@@ -696,7 +708,7 @@ def activate_pass(app_id):
         cursor.execute("""
             INSERT INTO Pass (passenger_name, pass_type, valid_until, status)
             VALUES (%s, %s, DATE_ADD(CURDATE(), INTERVAL %s MONTH), 'Active')
-        """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration_months"]))
+        """, (app_data["passenger_name"], app_data["pass_type"], app_data["duration"]))
     
     # Generate QR Code immediately for new pass
     cursor.execute("SELECT pass_id FROM Pass ORDER BY pass_id DESC LIMIT 1")
@@ -789,7 +801,7 @@ def export_applications():
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT a.application_id, a.passenger_name, r.source, r.destination, 
-               a.pass_type, a.duration_months, a.status, a.created_at
+               a.pass_type, a.duration, a.status, a.created_at
         FROM Pass_Application a
         JOIN Route r ON a.route_id = r.route_id
         ORDER BY a.application_id DESC
@@ -802,7 +814,7 @@ def export_applications():
     
     # Header
     writer.writerow(['Application ID', 'Passenger Name', 'Route Source', 'Route Destination', 
-                     'Pass Type', 'Duration (Months)', 'Status', 'Applied At'])
+                     'Pass Type', 'Duration', 'Status', 'Applied At'])
                      
     for row in rows:
         writer.writerow([
@@ -811,7 +823,7 @@ def export_applications():
             row['source'], 
             row['destination'], 
             row['pass_type'], 
-            row['duration_months'], 
+            row['duration'], 
             row['status'],
             row['created_at'].strftime("%Y-%m-%d %H:%M:%S") if row.get('created_at') else 'N/A'
         ])
@@ -1787,7 +1799,7 @@ def renew_pass(pass_id):
 
     # Submit renewal application
     cursor.execute(
-        "INSERT INTO Pass_Application (passenger_name, route_id, pass_type, duration_months, status) VALUES (%s, %s, %s, %s, 'Pending')",
+        "INSERT INTO Pass_Application (passenger_name, route_id, pass_type, duration, status) VALUES (%s, %s, %s, %s, 'Pending')",
         (session["user"], route_id, old_pass["pass_type"], 1)
     )
     get_db().commit()
