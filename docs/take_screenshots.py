@@ -18,8 +18,8 @@ os.makedirs(OUTDIR, exist_ok=True)
 PASSENGER_EMAIL    = "charu@gmail.com"      # Has Approved application + Verified doc
 PASSENGER_PASSWORD = "charu123"
 
-PASS_USER_EMAIL    = "pc_test@example.com"  # Has Active pass
-PASS_USER_PASSWORD = "password123"
+PASS_USER_EMAIL    = "charu@gmail.com"  # Has Active pass
+PASS_USER_PASSWORD = "charu123"
 
 STUDENT_EMAIL      = "r123@gmail.com"       # Student with Approved app - for fare preview
 STUDENT_PASSWORD   = "ragu123"
@@ -153,9 +153,9 @@ def run():
             print(f"  ! history: {e}")
 
         # ── 10. QR Verify page ────────────────────────────────────────────────
-        print("[10] QR Verify page (pass_id=450025)...")
+        print("[10] QR Verify page (pass_id=480021)...")
         try:
-            page.goto(f"{BASE}/verify/450025")
+            page.goto(f"{BASE}/verify/480021")
             page.wait_for_load_state("networkidle")
             time.sleep(1)
             ss(page, "09_qr_verify_page")
