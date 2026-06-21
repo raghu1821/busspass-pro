@@ -157,9 +157,14 @@ def _run_migrations():
 
         # 8. Ensure category ENUM supports 'Physically Challenged'
         try:
-            c.execute("ALTER TABLE Passenger MODIFY COLUMN category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') NOT NULL")
-            db.commit()
-            print("Migration: Updated Passenger category enum to include Physically Challenged")
+            c.execute("SHOW COLUMNS FROM Passenger LIKE 'category'")
+            row = c.fetchone()
+            if row and 'Physically Challenged' not in row[1]:
+                c.execute("ALTER TABLE Passenger MODIFY COLUMN category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') NOT NULL")
+                db.commit()
+                print("Migration: Updated Passenger category enum to include Physically Challenged")
+            else:
+                print("Migration: Passenger category enum already supports Physically Challenged")
         except Exception as e:
             print(f"Migration category ENUM warning: {e}")
 
@@ -194,7 +199,7 @@ def verify_pass(pass_id):
     cursor.execute("""
         SELECT Pass.*, Passenger.photo, Passenger.category
         FROM Pass
-        JOIN Passenger ON Pass.passenger_name = Passenger.full_name
+        LEFT JOIN Passenger ON Pass.passenger_name = Passenger.full_name
         WHERE Pass.pass_id = %s
     """, (pass_id,))
     pass_data = cursor.fetchone()
@@ -363,7 +368,7 @@ def view_pass():
     query = """
     SELECT Pass.*, Passenger.photo
     FROM Pass
-    JOIN Passenger
+    LEFT JOIN Passenger
     ON Pass.passenger_name = Passenger.full_name
     WHERE Pass.passenger_name=%s
     ORDER BY pass_id DESC
@@ -414,8 +419,8 @@ def generate_qr(pass_id):
     query = """
     SELECT Pass.*, Passenger.full_name
     FROM Pass
-    JOIN Passenger ON Pass.passenger_name = Passenger.full_name
-    WHERE Pass.pass_id=%s AND Passenger.full_name=%s
+    LEFT JOIN Passenger ON Pass.passenger_name = Passenger.full_name
+    WHERE Pass.pass_id=%s AND Pass.passenger_name=%s
     """
     cursor.execute(query, (pass_id, session["user"]))
     pass_data = cursor.fetchone()
@@ -829,7 +834,7 @@ def download_pass(pass_id):
     cursor.execute("""
         SELECT Pass.*, Passenger.photo, Passenger.category, Passenger.phone, Passenger.email
         FROM Pass
-        JOIN Passenger ON Pass.passenger_name = Passenger.full_name
+        LEFT JOIN Passenger ON Pass.passenger_name = Passenger.full_name
         WHERE Pass.pass_id = %s AND Pass.passenger_name = %s
     """, (pass_id, session["user"]))
     pass_data = cursor.fetchone()
