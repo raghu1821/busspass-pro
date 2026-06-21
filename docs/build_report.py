@@ -331,15 +331,14 @@ body("The Entity-Relationship (ER) diagram below represents the conceptual struc
 insert_image(ER_IMG, width_cm=15, caption="Entity-Relationship Diagram – Bus Pass Management System")
 doc.add_paragraph()
 body("Key Entities:", bold=True, sa=4)
-for e in ["Passenger","Route","Pass_Application","Pass","Payment","Concession_Category","Alert","Feedback"]:
+for e in ["Passenger","Route","Pass_Application","Pass","Feedback","Admin"]:
     bullet(e)
 body("Key Relationships:", bold=True, sa=4)
 for r in [
     "A Passenger APPLIES FOR zero or more Pass_Applications (1:N)",
-    "A Route is associated with many Pass_Applications and Passes (1:N)",
-    "A Pass_Application GENERATES one Pass on approval (1:1, trigger-driven)",
-    "A Pass_Application has one Payment record (1:1)",
-    "A Passenger receives many Alerts and submits many Feedbacks (1:N)",
+    "A Route is associated with many Pass_Applications (1:N)",
+    "A Pass is generated for a Passenger upon application approval and payment (1:1)",
+    "A Passenger submits many Feedbacks (1:N)",
 ]:
     bullet(r)
 page_break()
@@ -348,14 +347,12 @@ sh("2.2","Logical Database Design (ER Mapping)")
 body("Each entity from the ER diagram maps to a relational table. Relationships are implemented "
      "using foreign keys. All tables use surrogate integer primary keys with AUTO_INCREMENT.", sa=8)
 for tname, cols in [
-    ("Passenger",           "passenger_id INT PK AUTO_INCREMENT | full_name VARCHAR(100) NOT NULL | email VARCHAR(150) UNIQUE NOT NULL | phone VARCHAR(15) | address TEXT | category ENUM('Student','Employee','Senior Citizen','General') | password_hash VARCHAR(255) | registered_at DATETIME"),
-    ("Route",               "route_id INT PK AUTO_INCREMENT | route_name VARCHAR(100) | source VARCHAR(100) | destination VARCHAR(100) | base_fare DECIMAL(10,2) | distance_km FLOAT"),
-    ("Concession_Category", "category_id INT PK AUTO_INCREMENT | category_name VARCHAR(50) UNIQUE | concession_rate DECIMAL(5,2) | description TEXT"),
-    ("Pass_Application",    "application_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) FK | route_id INT FK | category VARCHAR(50) | pass_type ENUM | application_date DATE | status ENUM('Pending','Approved','Rejected') | final_fare DECIMAL(10,2)"),
-    ("Pass",                "pass_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) FK | route_id INT FK | start_date DATE | end_date DATE CHECK(end>start) | pass_type ENUM | category VARCHAR(50) | status ENUM('Active','Expired','Revoked') | qr_code_data TEXT"),
-    ("Payment",             "payment_id INT PK AUTO_INCREMENT | application_id INT FK | amount DECIMAL(10,2) | payment_mode ENUM | payment_date DATE | transaction_ref VARCHAR(100)"),
-    ("Alert",               "alert_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) FK | message TEXT | alert_date DATE | is_read BOOLEAN"),
-    ("Feedback",            "feedback_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) FK | message TEXT | submitted_at DATETIME | admin_response TEXT"),
+    ("Passenger",           "passenger_id INT PK AUTO_INCREMENT | full_name VARCHAR(100) NOT NULL | email VARCHAR(100) UNIQUE NOT NULL | phone VARCHAR(15) | address TEXT | category ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') | password VARCHAR(255) | photo LONGTEXT | doc_proof LONGTEXT | doc_status VARCHAR(20)"),
+    ("Route",               "route_id INT PK AUTO_INCREMENT | source VARCHAR(100) | destination VARCHAR(100) | base_fare DECIMAL(10,2)"),
+    ("Pass_Application",    "application_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | route_id INT FK | pass_type VARCHAR(50) | duration INT | status VARCHAR(50) | created_at TIMESTAMP"),
+    ("Pass",                "pass_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | pass_type VARCHAR(50) | valid_until DATE | status VARCHAR(50) | qr_code LONGTEXT"),
+    ("Feedback",            "feedback_id INT PK AUTO_INCREMENT | passenger_name VARCHAR(100) | message TEXT | created_at DATETIME | topic VARCHAR(50)"),
+    ("Admin",               "admin_id INT PK AUTO_INCREMENT | username VARCHAR(100) | password VARCHAR(100)"),
 ]:
     body(f"Table: {tname}", bold=True, sb=10, sa=2)
     rows = [[c.split(' ',1)[0], c.split(' ',1)[1] if ' ' in c else ''] for c in cols.split(' | ')]
@@ -373,9 +370,10 @@ for nf, desc in [
      "Since every table uses a single-column surrogate primary key (INT AUTO_INCREMENT), "
      "there are no partial dependencies by definition."),
     ("Third Normal Form (3NF)",
-     "No transitive dependencies exist. The Concession_Category table was extracted to eliminate "
-     "the transitive dependency: application_id → category → concession_rate. "
-     "Route details are stored only in the Route table and are never duplicated in Pass or Pass_Application."),
+     "No transitive dependencies exist. Non-prime attributes are directly dependent on the primary keys. "
+     "Category concessions are calculated dynamically at the application layer, avoiding the need to store "
+     "redundant concession rates in the database. Passenger, Route, and Pass data are fully decoupled and "
+     "linked via primary/foreign key relationships."),
 ]:
     body(nf, bold=True, sb=10, sa=4)
     body(desc, sa=6)
@@ -385,17 +383,6 @@ body("final_fare  =  base_fare  ×  (1  −  concession_rate)", align=WD_ALIGN_P
 body("Example: Student – Route 500C (base_fare ₹600) – Concession 50%  →  final_fare = ₹300", sa=8)
 page_break()
 
-sh("2.4","Triggers")
-add_table([
-    ("trg_renewal_reminder",   "AFTER UPDATE ON Pass",            "Inserts a renewal alert when pass expiry ≤ 7 days"),
-    ("trg_pass_status_update", "AFTER UPDATE ON Pass_Application","Creates a Pass record automatically when status → Approved"),
-], ["Trigger Name","Event","Purpose"])
-
-sh("2.5","Stored Procedures")
-add_table([
-    ("GetPassengerHistory(passenger_id)",      "Returns complete pass history, payment records, and active pass details for a passenger"),
-    ("GetRouteSummary(route_id, month, year)", "Returns total passes issued, revenue collected, and category-wise count for a route in a given month"),
-], ["Procedure Name","Purpose"])
 page_break()
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -483,24 +470,23 @@ modules = [
       "Admin reviews and approves or rejects renewal applications",
       "System automatically creates a new Pass record upon approval",
       "Track renewal request status: Pending / Approved / Rejected"]),
-    ("4.6","Payment Module",
-     "Records all financial transactions for pass issuance and renewals.",
-     ["Record payment details including amount, mode, and date",
-      "Support multiple payment modes: Online, Cash, UPI, Card",
-      "Link each payment with the corresponding Pass_Application record",
-      "Store transaction reference numbers for audit and reconciliation"]),
+    ("4.6","Payment Simulation Module",
+     "Handles simulated passenger checkout for pass activation.",
+     ["Presents a simulated payment gateway modal on the passenger dashboard",
+      "Supports simulated options for VISA, Mastercard, and UPI payment modes",
+      "Validates simulated card input constraints and expiry fields",
+      "Successful payment triggers pass activation and QR code generation"]),
     ("4.7","Admin Module",
      "Central control panel for system administrators.",
      ["Secure admin login with Flask session management",
       "Manage passengers, passes, routes, applications from one dashboard",
       "Real-time statistics: passes issued, revenue, pending applications",
       "Bar charts for monthly issuance trends, pie charts for category distribution"]),
-    ("4.8","Feedback & Alert Module",
-     "Handles passenger communication and automated notifications.",
-     ["Passengers submit feedback messages to the admin panel",
-      "Admins view all feedback and post written responses",
-      "Automated renewal alerts triggered by trg_renewal_reminder",
-      "Alerts displayed on passenger dashboard 7 days before pass expiry"]),
+    ("4.8","Feedback Module",
+     "Handles passenger communication and admin console feedback review.",
+     ["Passengers submit feedback messages with topic selection to the admin panel",
+      "Admins view all feedback submissions in a dedicated panel",
+      "Enforces a rate-limiting rules of max 5 feedback messages per day"]),
     ("4.9","QR Code Verification Module",
      "Real-time pass validation at the point of travel.",
      ["Each approved pass carries a UUID-based unique QR code",
@@ -535,87 +521,54 @@ def code_block(text):
     r.font.size = Pt(9)
 
 for label, sql in [
-    ("Passenger Table", """CREATE TABLE Passenger (
-  passenger_id  INT AUTO_INCREMENT PRIMARY KEY,
-  full_name     VARCHAR(100) NOT NULL,
-  email         VARCHAR(150) UNIQUE NOT NULL,
-  phone         VARCHAR(15),
-  address       TEXT,
-  category      ENUM('Student','Employee','Senior Citizen','General') NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ("Passenger Table", """CREATE TABLE passenger (
+  passenger_id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name    VARCHAR(100) NOT NULL,
+  email        VARCHAR(100) UNIQUE NOT NULL,
+  phone        VARCHAR(15) DEFAULT NULL,
+  address      TEXT,
+  category     ENUM('Student','Employee','Senior Citizen','General','Physically Challenged') NOT NULL,
+  password     VARCHAR(255) NOT NULL,
+  photo        LONGTEXT,
+  doc_proof    LONGTEXT,
+  doc_status   VARCHAR(20) DEFAULT 'Not Uploaded'
 );"""),
-    ("Route Table", """CREATE TABLE Route (
+    ("Route Table", """CREATE TABLE route (
   route_id    INT AUTO_INCREMENT PRIMARY KEY,
-  route_name  VARCHAR(100) NOT NULL,
-  source      VARCHAR(100),
-  destination VARCHAR(100),
-  base_fare   DECIMAL(10,2),
-  distance_km FLOAT
+  source      VARCHAR(100) DEFAULT NULL,
+  destination VARCHAR(100) DEFAULT NULL,
+  base_fare   DECIMAL(10,2) DEFAULT NULL
 );"""),
-    ("Pass_Application Table", """CREATE TABLE Pass_Application (
-  application_id   INT AUTO_INCREMENT PRIMARY KEY,
-  passenger_name   VARCHAR(100),
-  route_id         INT,
-  category         VARCHAR(50),
-  pass_type        ENUM('Monthly','Quarterly','Annual'),
-  application_date DATE,
-  status           ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-  final_fare       DECIMAL(10,2),
-  FOREIGN KEY (route_id) REFERENCES Route(route_id)
+    ("Pass_Application Table", """CREATE TABLE pass_application (
+  application_id INT AUTO_INCREMENT PRIMARY KEY,
+  passenger_name VARCHAR(100) DEFAULT NULL,
+  route_id       INT DEFAULT NULL,
+  pass_type      VARCHAR(50) DEFAULT NULL,
+  duration       INT DEFAULT NULL,
+  status         VARCHAR(50) DEFAULT NULL,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (route_id) REFERENCES route(route_id)
 );"""),
-    ("Pass Table", """CREATE TABLE Pass (
+    ("Pass Table", """CREATE TABLE pass (
   pass_id        INT AUTO_INCREMENT PRIMARY KEY,
-  passenger_name VARCHAR(100),
-  route_id       INT,
-  start_date     DATE,
-  end_date       DATE,
-  pass_type      ENUM('Monthly','Quarterly','Annual'),
-  category       VARCHAR(50),
-  status         ENUM('Active','Expired','Revoked') DEFAULT 'Active',
-  qr_code_data   TEXT,
-  CONSTRAINT chk_dates CHECK (end_date > start_date),
-  FOREIGN KEY (route_id) REFERENCES Route(route_id)
+  passenger_name VARCHAR(100) DEFAULT NULL,
+  pass_type      VARCHAR(50) DEFAULT NULL,
+  valid_until    DATE DEFAULT NULL,
+  status         VARCHAR(50) DEFAULT NULL,
+  qr_code        LONGTEXT
 );"""),
-    ("Payment Table", """CREATE TABLE Payment (
-  payment_id      INT AUTO_INCREMENT PRIMARY KEY,
-  application_id  INT,
-  amount          DECIMAL(10,2),
-  payment_mode    ENUM('Online','Cash','UPI','Card'),
-  payment_date    DATE,
-  transaction_ref VARCHAR(100),
-  FOREIGN KEY (application_id) REFERENCES Pass_Application(application_id)
+    ("Feedback Table", """CREATE TABLE feedback (
+  feedback_id    INT AUTO_INCREMENT PRIMARY KEY,
+  passenger_name VARCHAR(100) DEFAULT NULL,
+  message        TEXT,
+  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  topic          VARCHAR(50) DEFAULT 'General'
 );"""),
-    ("Trigger: trg_renewal_reminder", """DELIMITER //
-CREATE TRIGGER trg_renewal_reminder
-AFTER UPDATE ON Pass FOR EACH ROW
-BEGIN
-  IF NEW.end_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-     AND NEW.status = 'Active' THEN
-    INSERT INTO Alert (passenger_name, message, alert_date)
-    VALUES (NEW.passenger_name,
-            CONCAT('Your pass expires on ', NEW.end_date, '. Please renew.'),
-            CURDATE());
-  END IF;
-END //
-DELIMITER ;"""),
-    ("Trigger: trg_pass_status_update", """DELIMITER //
-CREATE TRIGGER trg_pass_status_update
-AFTER UPDATE ON Pass_Application FOR EACH ROW
-BEGIN
-  IF NEW.status = 'Approved' AND OLD.status != 'Approved' THEN
-    INSERT INTO Pass (passenger_name, route_id, start_date, end_date,
-                      pass_type, category, qr_code_data)
-    VALUES (NEW.passenger_name, NEW.route_id, CURDATE(),
-            CASE NEW.pass_type
-              WHEN 'Monthly'   THEN DATE_ADD(CURDATE(), INTERVAL 1 MONTH)
-              WHEN 'Quarterly' THEN DATE_ADD(CURDATE(), INTERVAL 3 MONTH)
-              WHEN 'Annual'    THEN DATE_ADD(CURDATE(), INTERVAL 1 YEAR)
-            END,
-            NEW.pass_type, NEW.category, UUID());
-  END IF;
-END //
-DELIMITER ;"""),
+    ("Admin Table", """CREATE TABLE admin (
+  admin_id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(100) DEFAULT NULL,
+  password VARCHAR(100) DEFAULT NULL
+);"""),
 ]:
     body(label, bold=True, sb=10, sa=2)
     code_block(sql)
@@ -626,31 +579,22 @@ flask_sample = (
     "@app.route('/apply_pass', methods=['GET', 'POST'])\n"
     "def apply_pass():\n"
     "    if 'user' not in session:\n"
-    "        return redirect(url_for('login'))\n"
-    "    conn   = get_db_connection()\n"
-    "    cursor = conn.cursor(dictionary=True)\n"
+    "        return redirect('/login')\n"
+    "    passenger_name = session['user']\n"
+    "    db = get_db()\n"
+    "    cursor = db.cursor(dictionary=True)\n"
     "    if request.method == 'POST':\n"
     "        route_id  = request.form['route_id']\n"
     "        pass_type = request.form['pass_type']\n"
-    "        category  = session['category']\n"
-    "        cursor.execute(\n"
-    "            'SELECT concession_rate FROM Concession_Category WHERE category_name=%s',\n"
-    "            (category,))\n"
-    "        conc = cursor.fetchone()\n"
-    "        concession = float(conc['concession_rate']) if conc else 0\n"
-    "        cursor.execute(\n"
-    "            'SELECT base_fare FROM Route WHERE route_id=%s', (route_id,))\n"
-    "        route     = cursor.fetchone()\n"
-    "        base_fare = float(route['base_fare']) if route else 0\n"
-    "        final_fare = base_fare * (1 - concession)\n"
-    "        cursor.execute(\n"
-    "            'INSERT INTO Pass_Application (passenger_name, route_id, category,'\n"
-    "            ' pass_type, application_date, status, final_fare)'\n"
-    "            ' VALUES (%s,%s,%s,%s,CURDATE(),\\'Pending\\',%s)',\n"
-    "            (session['user'], route_id, category, pass_type, final_fare))\n"
-    "        conn.commit()\n"
-    "        flash('Application submitted successfully!', 'success')\n"
-    "        return redirect(url_for('dashboard'))\n"
+    "        duration  = request.form['duration']\n"
+    "        query = '''\n"
+    "        INSERT INTO Pass_Application\n"
+    "        (passenger_name, route_id, pass_type, duration, status)\n"
+    "        VALUES (%s, %s, %s, %s, 'Pending')\n"
+    "        '''\n"
+    "        cursor.execute(query, (passenger_name, route_id, pass_type, duration))\n"
+    "        db.commit()\n"
+    "        return redirect('/dashboard?msg=Application+submitted+successfully!&type=success')\n"
     "    cursor.execute('SELECT *, base_fare AS fare FROM Route')\n"
     "    routes = cursor.fetchall()\n"
     "    return render_template('apply_pass.html', routes=routes)"
@@ -748,16 +692,15 @@ for para in [
     "problems in the public transport domain.",
 
     "The system implements a fully normalized relational database (up to 3NF) using MySQL 8.0, "
-    "consisting of 8 interrelated tables: Passenger, Route, Pass_Application, Pass, Payment, "
-    "Concession_Category, Alert, and Feedback. The backend was implemented using Python 3.x with "
-    "the Flask micro-framework, and the frontend was rendered dynamically using Jinja2 templates "
-    "with HTML5 and CSS3.",
+    "consisting of 6 relational tables: passenger, route, pass_application, pass, feedback, and admin. "
+    "The backend was implemented using Python 3.x with the Flask micro-framework, and the frontend "
+    "was rendered dynamically using Jinja2 templates with HTML5 and CSS3.",
 
     "Key achievements of this project include an end-to-end digital workflow for bus pass application, "
-    "approval, and issuance; automated pass creation and renewal alerts using MySQL triggers; QR "
+    "approval, and issuance; application-layer pass generation and renewal logic in Flask; QR "
     "code-based pass verification for real-time validation; concession-based fare calculation for "
     "multiple passenger categories; a comprehensive admin dashboard with statistical graphs and charts; "
-    "and data integrity enforced through primary keys, foreign keys, NOT NULL, UNIQUE, and CHECK constraints.",
+    "and data integrity enforced through primary keys, foreign keys, NOT NULL, and UNIQUE constraints.",
 
     "Future enhancements could include integration with real-time payment gateways, mobile applications "
     "for commuters, GPS-based route tracking, Aadhaar-linked passenger verification, and multi-city "
