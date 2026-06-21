@@ -19,7 +19,11 @@
     <div class="gov-sub-name">Bangalore Metropolitan Transport Corporation &nbsp;|&nbsp; Administration Console</div>
   </div>
   <div class="gov-header-right">
-    <div>&#128737; Admin Access Only</div>
+    {% if session.get('admin') %}
+      <div style="font-weight: bold; color: #fff; font-size: 0.95rem;">👤 Logged in: {{ session.get('admin') }}</div>
+    {% else %}
+      <div>&#128737; Admin Access Only</div>
+    {% endif %}
     <div>Secure Government System</div>
   </div>
 </div>
@@ -39,6 +43,11 @@
     <li><a href="/manage_users">&#128101; Users</a></li>
     <li><a href="/manage_routes">&#128506; Routes</a></li>
     <li><a href="/view_feedback">&#128172; Feedback</a></li>
+    {% if session.get('admin') %}
+    <li class="admin-user-display" style="color: #34d399; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; padding: 0 10px; border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2);">
+      👤 {{ session.get('admin') }}
+    </li>
+    {% endif %}
     <li><a href="/logout" class="nav-logout">&#128274; Logout</a></li>
   </ul>
 
@@ -51,6 +60,11 @@
 
 <!-- Mobile nav drawer -->
 <div class="mobile-nav" id="mobileNav">
+  {% if session.get('admin') %}
+  <div style="padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.1); font-weight: bold; color: var(--gov-navy); background: #f8fafc; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+    👤 {{ session.get('admin') }}
+  </div>
+  {% endif %}
   <a href="/admin">&#128203; Applications</a>
   <a href="/stats">&#128202; Statistics</a>
   <a href="/manage_users">&#128101; Users</a>

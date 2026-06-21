@@ -1475,20 +1475,13 @@ def admin_login():
 
         cursor = get_db().cursor(dictionary=True)
 
-        query = """
-        SELECT * FROM Admin
-        WHERE username=%s
-        AND password=%s
-        """
+        query = "SELECT * FROM Admin WHERE username=%s"
 
-        cursor.execute(
-            query,
-            (username, password)
-        )
+        cursor.execute(query, (username,))
 
         admin = cursor.fetchone()
 
-        if admin:
+        if admin and (admin["password"] == password or check_password_hash(admin["password"], password)):
 
             session["admin"] = admin["username"]
 
