@@ -1,18 +1,35 @@
-
-import os, time
+"""
+Fresh screenshot script using real TiDB Cloud credentials.
+Connects to local Flask server on http://127.0.0.1:5000
+Uses passengers with actual data from the database.
+"""
+import os, time, sys
 from playwright.sync_api import sync_playwright
 
 BASE   = "http://127.0.0.1:5000"
-OUTDIR = os.path.join(os.path.dirname(__file__), "screenshots")
+OUTDIR = r"c:\Users\ragha\OneDrive\Documents\projects\PROJECT\BUSS_PASS_MANAGEMENT\docs\screenshots"
 os.makedirs(OUTDIR, exist_ok=True)
 
-# ── credentials (adjust if different) ──────────────────────────────────────
-PASSENGER_EMAIL    = "raghavendrakarkanaller@gmail.com"
-PASSENGER_PASSWORD = "raghavendra"
-ADMIN_EMAIL        = "admin@buspass.com"
-ADMIN_PASSWORD     = "admin123"
+# Best credentials from DB:
+# - charu: Physically Challenged, Verified doc, Approved application (good for dashboard)
+# - PC Test User: Physically Challenged, Verified doc, Active pass (good for view_pass)
+# Admin: username=admin, password=admin123 (via /admin_login)
 
-def ss(page, name, full=True):
+PASSENGER_EMAIL    = "charu@gmail.com"      # Has Approved application + Verified doc
+PASSENGER_PASSWORD = "charu123"
+
+PASS_USER_EMAIL    = "pc_test@example.com"  # Has Active pass
+PASS_USER_PASSWORD = "password123"
+
+STUDENT_EMAIL      = "r123@gmail.com"       # Student with Approved app - for fare preview
+STUDENT_PASSWORD   = "ragu123"
+
+ADMIN_USER     = "admin"
+ADMIN_PASSWORD = "admin123"
+
+def ss(page, name, full=True, delay=0):
+    if delay:
+        time.sleep(delay)
     path = os.path.join(OUTDIR, f"{name}.png")
     page.screenshot(path=path, full_page=full)
     print(f"  [OK] {name}.png")
@@ -24,20 +41,20 @@ def run():
         ctx     = browser.new_context(viewport={"width": 1400, "height": 900})
         page    = ctx.new_page()
 
-        # ── 1. Login page ────────────────────────────────────────────────
+        # ── 1. Login page ─────────────────────────────────────────────────────
+        print("\n[1] Login page...")
         page.goto(f"{BASE}/login")
         page.wait_for_load_state("networkidle")
         ss(page, "01_login_page")
 
-        # ── 2. Register page ─────────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/register")
-            page.wait_for_load_state("networkidle")
-            ss(page, "02_register_page")
-        except:
-            pass
+        # ── 2. Register page ──────────────────────────────────────────────────
+        print("[2] Register page...")
+        page.goto(f"{BASE}/register")
+        page.wait_for_load_state("networkidle")
+        ss(page, "02_register_page")
 
-        # ── 3. Log in as passenger ────────────────────────────────────────
+        # ── 3. Log in as passenger (charu - has Approved app + verified doc) ──
+        print("[3] Logging in as charu (Physically Challenged, approved app)...")
         page.goto(f"{BASE}/login")
         page.wait_for_load_state("networkidle")
         try:
@@ -46,126 +63,185 @@ def run():
             page.click('button[type="submit"]')
             page.wait_for_load_state("networkidle")
             time.sleep(1)
+            print(f"   Landed on: {page.url}")
         except Exception as e:
             print(f"  ! login attempt: {e}")
 
-        # ── 4. Passenger Dashboard ────────────────────────────────────────
+        # ── 4. Passenger Dashboard ────────────────────────────────────────────
+        print("[4] Passenger Dashboard...")
         page.goto(f"{BASE}/dashboard")
         page.wait_for_load_state("networkidle")
+        time.sleep(1)
         ss(page, "03_passenger_dashboard")
 
-        # ── 5. Apply Pass form ────────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/apply_pass")
-            page.wait_for_load_state("networkidle")
-            ss(page, "04_apply_pass_form")
-        except:
-            pass
-
-        # ── 6. My Pass / View Pass ────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/view_pass")
-            page.wait_for_load_state("networkidle")
-            ss(page, "05_view_pass_qr")
-        except:
-            pass
-
-        # ── 7. Alerts ─────────────────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/alerts")
-            page.wait_for_load_state("networkidle")
-            ss(page, "06_alerts_page")
-        except:
-            pass
-
-        # ── 8. Feedback ───────────────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/feedback")
-            page.wait_for_load_state("networkidle")
-            ss(page, "07_feedback_page")
-        except:
-            pass
-
-        # ── 9. Passenger history ──────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/history")
-            page.wait_for_load_state("networkidle")
-            ss(page, "08_pass_history")
-        except:
-            pass
-
-        # ── 10. QR Verify page ────────────────────────────────────────────
-        try:
-            page.goto(f"{BASE}/verify_pass")
-            page.wait_for_load_state("networkidle")
-            ss(page, "09_qr_verify_page")
-        except:
-            pass
-
-        # ── 11. Log out and log in as Admin ───────────────────────────────
+        # ── 5. Apply Pass form ────────────────────────────────────────────────
+        print("[5] Apply Pass form (using student - ragu for fare preview)...")
         page.goto(f"{BASE}/logout")
         page.wait_for_load_state("networkidle")
         page.goto(f"{BASE}/login")
         page.wait_for_load_state("networkidle")
+        page.fill('input[name="email"]',    STUDENT_EMAIL)
+        page.fill('input[name="password"]', STUDENT_PASSWORD)
+        page.click('button[type="submit"]')
+        page.wait_for_load_state("networkidle")
+        time.sleep(1)
+        page.goto(f"{BASE}/apply_pass")
+        page.wait_for_load_state("networkidle")
+        time.sleep(1)
+        ss(page, "04_apply_pass_form")
+
+        # ── 6. View Pass / QR page (using PC Test User with active pass) ───────
+        print("[6] View Pass / QR page (PC Test User - active pass)...")
+        page.goto(f"{BASE}/logout")
+        page.wait_for_load_state("networkidle")
+        page.goto(f"{BASE}/login")
+        page.wait_for_load_state("networkidle")
+        page.fill('input[name="email"]',    PASS_USER_EMAIL)
+        page.fill('input[name="password"]', PASS_USER_PASSWORD)
+        page.click('button[type="submit"]')
+        page.wait_for_load_state("networkidle")
+        time.sleep(1)
+        page.goto(f"{BASE}/view_pass")
+        page.wait_for_load_state("networkidle")
+        time.sleep(1)
+        ss(page, "05_view_pass_qr")
+
+        # ── 7. Alerts page ────────────────────────────────────────────────────
+        print("[7] Alerts page...")
         try:
-            page.fill('input[name="email"]',    ADMIN_EMAIL)
+            page.goto(f"{BASE}/alerts")
+            page.wait_for_load_state("networkidle")
+            ss(page, "06_alerts_page")
+        except Exception as e:
+            print(f"  ! alerts: {e}")
+
+        # ── 8. Feedback page ──────────────────────────────────────────────────
+        print("[8] Feedback page...")
+        try:
+            page.goto(f"{BASE}/feedback")
+            page.wait_for_load_state("networkidle")
+            ss(page, "07_feedback_page")
+        except Exception as e:
+            print(f"  ! feedback: {e}")
+
+        # ── 9. Pass History ───────────────────────────────────────────────────
+        print("[9] Pass History page...")
+        try:
+            page.goto(f"{BASE}/history")
+            page.wait_for_load_state("networkidle")
+            ss(page, "08_pass_history")
+        except Exception as e:
+            print(f"  ! history: {e}")
+
+        # ── 10. QR Verify page ────────────────────────────────────────────────
+        print("[10] QR Verify page (pass_id=450025)...")
+        try:
+            page.goto(f"{BASE}/verify/450025")
+            page.wait_for_load_state("networkidle")
+            time.sleep(1)
+            ss(page, "09_qr_verify_page")
+        except Exception as e:
+            print(f"  ! verify: {e}")
+
+        # ── 11. Profile page ──────────────────────────────────────────────────
+        print("[11] Profile page...")
+        try:
+            page.goto(f"{BASE}/login")
+            page.wait_for_load_state("networkidle")
+            page.fill('input[name="email"]',    PASSENGER_EMAIL)
+            page.fill('input[name="password"]', PASSENGER_PASSWORD)
+            page.click('button[type="submit"]')
+            page.wait_for_load_state("networkidle")
+            page.goto(f"{BASE}/profile")
+            page.wait_for_load_state("networkidle")
+            ss(page, "10_profile_page")
+        except Exception as e:
+            print(f"  ! profile: {e}")
+
+        # ── 12. Admin Login ───────────────────────────────────────────────────
+        print("[12] Admin Login page...")
+        page.goto(f"{BASE}/logout")
+        page.wait_for_load_state("networkidle")
+        page.goto(f"{BASE}/admin_login")
+        page.wait_for_load_state("networkidle")
+        ss(page, "11_admin_login_page")
+
+        # ── 13. Admin login and dashboard ─────────────────────────────────────
+        print("[13] Admin Dashboard...")
+        try:
+            page.fill('input[name="username"]', ADMIN_USER)
             page.fill('input[name="password"]', ADMIN_PASSWORD)
             page.click('button[type="submit"]')
             page.wait_for_load_state("networkidle")
-            time.sleep(1)
+            time.sleep(2)
+            print(f"   Landed on: {page.url}")
         except Exception as e:
             print(f"  ! admin login: {e}")
 
-        # ── 12. Admin Dashboard ───────────────────────────────────────────
         page.goto(f"{BASE}/admin_dashboard")
         page.wait_for_load_state("networkidle")
-        time.sleep(2)  # let charts render
-        ss(page, "10_admin_dashboard")
+        time.sleep(3)
+        ss(page, "12_admin_dashboard")
 
-        # ── 13. Manage Applications ───────────────────────────────────────
+        # ── 14. Manage Applications ───────────────────────────────────────────
+        print("[14] Manage Applications...")
         try:
             page.goto(f"{BASE}/manage_applications")
             page.wait_for_load_state("networkidle")
-            ss(page, "11_manage_applications")
-        except:
-            pass
+            time.sleep(1)
+            ss(page, "13_manage_applications")
+        except Exception as e:
+            print(f"  ! manage_applications: {e}")
 
-        # ── 14. Manage Routes ─────────────────────────────────────────────
+        # ── 15. Manage Routes ─────────────────────────────────────────────────
+        print("[15] Manage Routes...")
         try:
             page.goto(f"{BASE}/manage_routes")
             page.wait_for_load_state("networkidle")
-            ss(page, "12_manage_routes")
-        except:
-            pass
+            ss(page, "14_manage_routes")
+        except Exception as e:
+            print(f"  ! manage_routes: {e}")
 
-        # ── 15. Manage Users ──────────────────────────────────────────────
+        # ── 16. Manage Users ──────────────────────────────────────────────────
+        print("[16] Manage Users...")
         try:
             page.goto(f"{BASE}/manage_users")
             page.wait_for_load_state("networkidle")
-            ss(page, "13_manage_users")
-        except:
-            pass
+            ss(page, "15_manage_users")
+        except Exception as e:
+            print(f"  ! manage_users: {e}")
 
-        # ── 16. Stats / Analytics ─────────────────────────────────────────
+        # ── 17. Stats / Analytics ─────────────────────────────────────────────
+        print("[17] Stats / Analytics...")
         try:
             page.goto(f"{BASE}/stats")
             page.wait_for_load_state("networkidle")
             time.sleep(2)
-            ss(page, "14_stats_analytics")
-        except:
-            pass
+            ss(page, "16_stats_analytics")
+        except Exception as e:
+            print(f"  ! stats: {e}")
 
-        # ── 17. Admin Feedback View ───────────────────────────────────────
+        # ── 18. Admin Feedback ────────────────────────────────────────────────
+        print("[18] Admin Feedback...")
         try:
             page.goto(f"{BASE}/admin_feedback")
             page.wait_for_load_state("networkidle")
-            ss(page, "15_admin_feedback")
-        except:
-            pass
+            ss(page, "17_admin_feedback")
+        except Exception as e:
+            print(f"  ! admin_feedback: {e}")
+
+        # ── 19. Admin Passes list ─────────────────────────────────────────────
+        print("[19] Admin - View all passes...")
+        try:
+            page.goto(f"{BASE}/admin_passes")
+            page.wait_for_load_state("networkidle")
+            ss(page, "18_admin_passes")
+        except Exception as e:
+            print(f"  ! admin_passes: {e}")
 
         browser.close()
 
-    print("\nAll screenshots saved to:", OUTDIR)
+    print(f"\nAll screenshots saved to: {OUTDIR}")
     return OUTDIR
 
 if __name__ == "__main__":

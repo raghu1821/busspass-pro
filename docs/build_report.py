@@ -17,7 +17,7 @@ from docx.oxml import OxmlElement
 
 DOCS_DIR   = os.path.dirname(os.path.abspath(__file__))
 SS_DIR     = os.path.join(DOCS_DIR, "screenshots")
-OUT_PATH   = os.path.join(DOCS_DIR, "BCS403_Bus_Pass_Management_Report.docx")
+OUT_PATH   = os.path.join(DOCS_DIR, "BCS403_Bus_Pass_Management_Report_v2.docx")
 ER_IMG     = os.path.join(SS_DIR, "er_diagram.png")   # placeholder if exists
 
 doc = Document()
@@ -665,21 +665,23 @@ heading("CHAPTER-6", 14); heading("SNAPSHOTS", 16)
 page_break()
 
 snapshot_defs = [
-    ("01_login_page",          "Login Page – Entry point for passengers and administrator"),
-    ("02_register_page",       "Registration Page – New passenger account creation form"),
-    ("03_passenger_dashboard", "Passenger Dashboard – Active pass, QR code, and renewal alerts"),
-    ("04_apply_pass_form",     "Apply for Pass Form – Route selection and fare calculation"),
-    ("05_view_pass_qr",        "View Pass & QR Code – Pass details and QR for verification"),
-    ("06_alerts_page",         "Alerts Page – Renewal reminders and system notifications"),
-    ("07_feedback_page",       "Feedback Page – Passenger feedback submission form"),
-    ("08_pass_history",        "Pass History – Complete application and pass history"),
-    ("09_qr_verify_page",      "QR Code Verification – Real-time pass validation"),
-    ("10_admin_dashboard",     "Admin Dashboard – Statistics, charts, and system overview"),
-    ("11_manage_applications", "Manage Applications – Approve/Reject pass applications"),
-    ("12_manage_routes",       "Manage Routes – Add, update, and delete bus routes"),
-    ("13_manage_users",        "Manage Users – View and manage registered passengers"),
-    ("14_stats_analytics",     "Statistics & Analytics – Revenue and issuance graphs"),
-    ("15_admin_feedback",      "Admin Feedback Panel – View and respond to passenger feedback"),
+    ("01_login_page",          "Login Page – Citizen authentication portal for bus pass services"),
+    ("02_register_page",       "Registration Page – New passenger account creation with category selection"),
+    ("03_passenger_dashboard", "Passenger Dashboard – Applications, quick actions, and pass status"),
+    ("04_apply_pass_form",     "Apply for Pass Form – Route selection and concession-based fare preview"),
+    ("05_view_pass_qr",        "View Digital Pass & QR Code – Active pass card with scan-to-verify QR"),
+    ("06_alerts_page",         "Alerts Page – Renewal reminders and expiry notifications"),
+    ("07_feedback_page",       "Feedback Page – Passenger feedback submission and topic selection"),
+    ("08_pass_history",        "Pass History – Complete application and travel pass history log"),
+    ("09_qr_verify_page",      "QR Code Verification – Real-time pass validation for bus conductors"),
+    ("10_profile_page",        "Profile Page – Passenger profile with document upload and verification"),
+    ("11_admin_login_page",    "Admin Login Page – Secure admin authentication portal"),
+    ("12_admin_dashboard",     "Admin Dashboard – All applications with approve/revoke actions"),
+    ("13_manage_applications", "Manage Applications – Full pass application management panel"),
+    ("14_manage_routes",       "Manage Routes – Add, update, and delete BMTC bus routes"),
+    ("15_manage_users",        "Manage Users – View and manage all registered passengers"),
+    ("16_stats_analytics",     "Statistics & Analytics – System KPIs, charts and route popularity"),
+    ("17_admin_feedback",      "Admin Feedback Panel – View all passenger feedback submissions"),
 ]
 
 for fn, caption in snapshot_defs:
@@ -688,6 +690,7 @@ for fn, caption in snapshot_defs:
     body(caption, sa=6)
     insert_image(img_path, width_cm=14, caption=caption)
     doc.add_paragraph()
+
 
 page_break()
 
